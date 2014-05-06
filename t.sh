@@ -10,3 +10,6 @@ while [ -n "$*" ]
 (echo "my name is xuxh"; cd ~)
 
 { echo "my name is xuxh";}
+
+CRT_DIR=`pwd`
+echo ${CRT_DIR}
