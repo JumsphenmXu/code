@@ -25,7 +25,7 @@ int n;
 static void problem1_init() {
     // cin >> n;
     int t, i = 0;
-    while (scanf("%d", &t)) {
+    while (scanf("%d", &t) != EOF) {
         val[i++] = t;
     }
     n = i;
