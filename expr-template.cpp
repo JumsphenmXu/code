@@ -223,9 +223,23 @@ Expr<ComplexExpr<Expr<Constant>, Expr<E>, ExprDiv> > operator/ (double lhs, E rh
 }
 
 
+template<typename Func>
+double integrate(Func f, double low, double high, double eps = 0.0001) {
+	double start = low, ans = 0.0;
+	while (start < high) {
+		ans += f(start);
+		start += eps;
+	}
+
+	return ans;
+}
+
+
+
 int main() {
     Var x;
     cout << (x * x * x)(2) << endl;
     cout << (x * x + 2.0)(2) << endl;
+    cout << integrate(x*x*x/3, 0, 1) << endl;
     return 0;
 }
