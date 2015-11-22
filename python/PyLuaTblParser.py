@@ -391,6 +391,28 @@ class PyLuaTblParser(object):
 		return self.__dumpDict(self.luaTblDict)
 
 
+	def update(self, d):
+		self.luaTblDict[key] = self.__loadDict(d)
+
+
+	def __getitem__(self, key):
+		keys = self.luaTblDict.keys()
+		if key not in keys:
+			raise KeyError
+
+		return self.luaTblDict[key]
+
+
+	def __setitem__(self, key, value):
+		self.luaTblDict[key] = {}
+		if type(value) is list:
+			self.luaTblDict[key] = self.__loadList(value)
+		elif type(value) is dict:
+			self.luaTblDict[key] = self.__loadDict(value)
+		else:
+			self.luaTblDict[key] = {1: value}
+
+
 if __name__ == '__main__':
 	s = '{array = {65,23,5,{1, 2, 3},hello="world"},dict = {mixed = {43,54.33,false,9,string = {"value", "hello",{11,22,},}},array = {3,6,4},string = "value"}}'
 	parser = PyLuaTblParser()
@@ -399,3 +421,7 @@ if __name__ == '__main__':
 	pdict = parser.dumpDict()
 	print 'pidct: ', pdict
 	parser.loadDict(pdict)
+
+	print 'getter parser["array"][1] =', parser["array"][1]
+	parser["array"] = {"name": "xuxinhui", "age": 25, 2:13}
+	print 'setter parser["array"] =', parser["array"]
