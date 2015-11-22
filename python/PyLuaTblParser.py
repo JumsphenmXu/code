@@ -79,7 +79,7 @@ class PyLuaTblParser(object):
 			elif t[i] == '}':
 				rightBracketsCnt += 1
 				if i == len(t) - 1 and leftBracketsCnt == rightBracketsCnt:
-					parts.append(t[start:i+1])
+					parts.append(t[start:i+1].strip())
 					return parts
 			elif t[i] == ',' or i == len(t) - 1:
 				if leftBracketsCnt != rightBracketsCnt:
@@ -91,7 +91,7 @@ class PyLuaTblParser(object):
 
 				if i == len(t) - 1:
 					i = i + 1
-				parts.append(t[start: i])
+				parts.append(t[start: i].strip())
 				start = i + 1
 				leftBracketsCnt = 0
 				rightBracketsCnt = 0
@@ -102,6 +102,7 @@ class PyLuaTblParser(object):
 	# 	namely, we validate the item type (numeric, bool, nil, array, dict, string etc.),
 	#	and pick out the invalid items and raise ValueError to notify the caller.
 	def __itemParse(self, s):
+		# print "__itemParse s =", s
 		# remove the leading and trailing whitespace
 		s = s.strip()
 
@@ -115,19 +116,19 @@ class PyLuaTblParser(object):
 				break
 
 		t = s[i:j+1]
-		t = t.strip()
-		if len(t) == 0:
-			return None, PyLuaTblParser.KLASS_OTHERS
-
 		res = None
-
 		# if we have PATTERN like {member1, member2, member3, ..., membern},
 		# we parse it as a list.
 		if len(t) != len(s):
-			res = []
+			ret = []
 			resTmp = self.__partition(t)
 			for item in resTmp:
-				res.append(self.__itemParse(item))
+				ans, status = self.__itemParse(item)
+				ret.append(ans)
+		
+			res = {}
+			for i in xrange(len(ret)):
+				res[i+1] = ret[i]
 			return res, PyLuaTblParser.KLASS_ISLIST
 
 		# if we have PATTERN like '"string values"' or "'string values'",
@@ -175,7 +176,7 @@ class PyLuaTblParser(object):
 			leftPart = t[0:equalIdx].strip()
 			rightPart = t[equalIdx+1:len(t)].strip()
 
-			if leftPart == "nil" or len(leftPart) == 0:
+			if leftPart == "nil" or len(leftPart) == 0 or len(rightPart) == 0:
 				print 'Failed to parse item #%s#, dict key can not be nil.' % t
 				raise ValueError
 
@@ -187,8 +188,6 @@ class PyLuaTblParser(object):
 					raise ValueError
 			
 			res = {}
-			# print 'leftPart =', leftPart
-			# print 'rightPart =', rightPart
 			res[leftPart] = self.__load(rightPart)
 		return res, PyLuaTblParser.KLASS_ISDICT 
 
@@ -219,6 +218,7 @@ class PyLuaTblParser(object):
 
 	def load(self, s):
 		self.luaTblDict = self.__load(s)
+		print 'load(self, s) -->', self.luaTblDict
 
 
 	def __dump(self, data):
@@ -279,15 +279,30 @@ class PyLuaTblParser(object):
 				fp.write(s)
 
 
+	def __loadList(self, lst):
+		assert type(lst) is list
+		res = []
+		for i in xrange(len(lst)):
+			if type(lst[i]) is dict:
+				res.append(self.__loadDict(lst[i]))
+			elif type(lst[i]) is list:
+				res.append(self.__loadList(lst[i]))
+			else:
+				if lst[i] == False or lst[i] == True:
+					res.append({i+1: str(lst[i]).lower()})
+				else:
+					res.append({i+1: str(lst[i])})
+
+		return self.__xtransfer(res)
+
+
 	def __loadDict(self, d):
 		assert type(d) is dict
 		dictTmp = {}
 		keys = d.keys()
-		for key in keys():
+		for key in keys:
 			if type(d[key]) is list:
-				dictTmp[key] = {}
-				for i in xrange(len(d[key])):
-					dictTmp[key][i+1] = d[key][i]
+				dictTmp[key] = self.__loadList(d[key])
 			elif type(d[key]) is dict:
 				dictTmp[key] = self.__loadDict(d[key])
 			else:
@@ -296,13 +311,31 @@ class PyLuaTblParser(object):
 				elif d[key] == True:
 					dictTmp[key] = "true"
 				else:
-					dictTmp[key] = d[key]
+					dictTmp[key] = {1: str(d[key])}
 
 		return dictTmp
 
 
 	def loadDict(self, d):
 		self.luaTblDict = self.__loadDict(d)
+		print 'loadDict(self, d) -->', self.luaTblDict
+
+
+	def __xtransfer(self, lst):
+		assert type(lst) is list
+		flag = True
+		for i in xrange(len(lst)):
+			if not type(lst[i]) is dict:
+				flag = False
+				return lst
+
+		res = {}
+		if flag:
+			for i in xrange(len(lst)):
+				key = lst[i].keys()[0]
+				val = lst[i][key]
+				res[key] = val
+		return res
 
 
 	def __dumpDict(self, d):
@@ -323,6 +356,7 @@ class PyLuaTblParser(object):
 						dictTmp[key].append(item[k])
 					else:
 						dictTmp[key].append(item)
+				dictTmp[key] = self.__xtransfer(dictTmp[key])
 			else:
 				# Firstly, process the special cases like nil, bool
 				if d[key] == "nil":
@@ -358,9 +392,10 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4},string = "value"}}'
-	# s = "{a=1, e = {1, 2, 3, 4, a = {1, 2, 3, c='====', nil, false}}}"
+	s = '{array = {65,23,5,{1, 2, 3},hello="world"},dict = {mixed = {43,54.33,false,9,string = {"value", "hello",{11,22,},}},array = {3,6,4},string = "value"}}'
 	parser = PyLuaTblParser()
 	parser.load(s)
-	print 'parser.dump():', parser.dump()
-	print 'parser.dumpDict():', parser.dumpDict()
+	t = parser.dump()
+	pdict = parser.dumpDict()
+	print 'pidct: ', pdict
+	parser.loadDict(pdict)
