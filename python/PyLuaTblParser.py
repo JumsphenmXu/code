@@ -435,5 +435,8 @@ if __name__ == '__main__':
 	parser.loadDict(pdict)
 
 	print 'getter parser["array"][1] =', parser["array"][1]
+	parser["well"] = ["jk", "eng"]
 	parser["array"] = {"name": "xuxinhui", "age": 25, 2:13}
 	print 'setter parser["array"] =', parser["array"]
+	print parser.dump()
+	print parser.dumpDict()
