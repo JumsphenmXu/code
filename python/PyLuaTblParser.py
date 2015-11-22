@@ -32,6 +32,16 @@ class PyLuaTblParser(object):
 		6. dumpDict(self):
 			@Description: Format the data in class PyLuaTblParser to a python dict.
 			@RETURN: a python dict
+		7. update(self, d):
+			@Param d: the data dict
+			@Description: using the dict to update the inner data structure
+			@RETURN: no return
+		8. __getitem__(self, key), __setitem__(self, key, value):
+			@Param key: the key to operate 
+			@Param value: data to set
+			@Description: By PyLuaTblParser[key], return the inner data indexed by @key,
+				when given PyLuaTblParser[key]=value, update the @key by @value.
+			@RETURN: --
 
 	"""
 
@@ -395,6 +405,8 @@ class PyLuaTblParser(object):
 		self.luaTblDict[key] = self.__loadDict(d)
 
 
+	# for the index operator functionalities,
+	# overloading __getitem__, __setitem__ function
 	def __getitem__(self, key):
 		keys = self.luaTblDict.keys()
 		if key not in keys:
