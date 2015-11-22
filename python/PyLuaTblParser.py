@@ -150,7 +150,7 @@ class PyLuaTblParser(object):
 		# we parse it as a dict
 		if equalIdx == -1:
 			# The PATTERN IS NOT a dict, we should check the special value false and nil
-			if t == "false" or t == "nil":
+			if t == "false" or t == "nil" or t == "true":
 				return t, PyLuaTblParser.KLASS_OTHERS
 
 			# Here we try to validate the PATTERN as a numeric (int or float),
@@ -187,6 +187,8 @@ class PyLuaTblParser(object):
 					raise ValueError
 			
 			res = {}
+			# print 'leftPart =', leftPart
+			# print 'rightPart =', rightPart
 			res[leftPart] = self.__load(rightPart)
 		return res, PyLuaTblParser.KLASS_ISDICT 
 
@@ -217,27 +219,148 @@ class PyLuaTblParser(object):
 
 	def load(self, s):
 		self.luaTblDict = self.__load(s)
-		print self.luaTblDict
+
+
+	def __dump(self, data):
+		assert type(data) is dict
+		keys = data.keys()
+		s = ""
+		if (len(keys)) > 1:
+			s += "{";
+
+		for key in keys:
+			value = data[key]
+			# According to the type of the key, different methods will be used
+			# to processing the output result. 
+			try:
+				i = int(key)
+			except:
+				s += str(key) + "=" + self.__dump(value) + ","
+			else:
+				# Determine the value which can be float, int, string, bool, nil
+				try:
+					# Is the value a float ?
+					i = float(value)
+				except:
+					# The value is not a float.
+					if value == "nil" or value == "false" or value == "true":
+						s += "" + str(value) + ","	
+					else:
+						s += "'" + str(value) + "',"
+				else:
+					# Yes, the value is of type float
+					s += "" + str(value) + ","
+		s = s[:-1]
+
+		if len(keys) > 1:
+			s += "}"
+		return s
+
 
 	def dump(self):
-		pass
+		dictTmp = self.luaTblDict
+		return self.__dump(dictTmp)
+
 
 	def loadLuaTable(self, f):
-		pass
+		s = ''
+		with open(f, "rb") as fp:
+			line = fp.readline()
+			while line:
+				s += line
+				line = fp.readline()
+		self.load(s)
+
 
 	def dumpLuaTable(self, f):
-		pass
+		s = self.dump()
+		if not s and len(s) > 0:
+			with open(f, "wb") as fp:
+				fp.write(s)
+
+
+	def __loadDict(self, d):
+		assert type(d) is dict
+		dictTmp = {}
+		keys = d.keys()
+		for key in keys():
+			if type(d[key]) is list:
+				dictTmp[key] = {}
+				for i in xrange(len(d[key])):
+					dictTmp[key][i+1] = d[key][i]
+			elif type(d[key]) is dict:
+				dictTmp[key] = self.__loadDict(d[key])
+			else:
+				if d[key] == False:
+					dictTmp[key] = "false"
+				elif d[key] == True:
+					dictTmp[key] = "true"
+				else:
+					dictTmp[key] = d[key]
+
+		return dictTmp
+
 
 	def loadDict(self, d):
-		pass
+		self.luaTblDict = self.__loadDict(d)
+
+
+	def __dumpDict(self, d):
+		dictTmp = {}
+		keys = d.keys()
+
+		for key in keys:
+			if type(d[key]) is dict:
+				dkeys = d[key].keys()
+				if len(dkeys) == 1:
+					dictTmp[key] = d[key][dkeys[0]]
+					continue
+
+				dictTmp[key] = []
+				for k in dkeys:
+					item = self.__dumpDict({k:d[key][k]})
+					if type(k) is int:
+						dictTmp[key].append(item[k])
+					else:
+						dictTmp[key].append(item)
+			else:
+				# Firstly, process the special cases like nil, bool
+				if d[key] == "nil":
+					if type(key) is int:
+						dictTmp[key] = None
+					continue
+				if d[key] == "false":
+					dictTmp[key] = False
+					continue
+
+				if d[key] == "true":
+					dictTmp[key] = True
+					continue
+
+				# Secondly, parse the numeric value, i.e. a float or an int
+				try:
+					f = float(d[key])
+				except ValueError:
+					dictTmp[key] = d[key]
+				else:
+					try:
+						i = int(d[key])
+					except ValueError:
+						dictTmp[key] = f
+					else:
+						dictTmp[key] = i
+				
+		return dictTmp
+
 
 	def dumpDict(self):
-		pass
+		return self.__dumpDict(self.luaTblDict)
 
 
 if __name__ == '__main__':
-	# s = '{nil, array = {65,23,5},dict = {mixed = {43,54.33,false,9,string = "value"},array = {3,6,4},string = "value"}}'
-	s = "{a=1, e = {1, 2, 3, 4, a = {1, 2, 3, c='====', nil, false}}}"
+	s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4},string = "value"}}'
+	# s = "{a=1, e = {1, 2, 3, 4, a = {1, 2, 3, c='====', nil, false}}}"
 	parser = PyLuaTblParser()
 	parser.load(s)
-	# print parser._PyLuaTblParser__partition(t)
+	print 'parser.dump():', parser.dump()
+	print 'parser.dumpDict():', parser.dumpDict()
