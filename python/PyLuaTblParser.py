@@ -234,12 +234,22 @@ class PyLuaTblParser(object):
 	def __dump(self, data):
 		assert type(data) is dict
 		keys = data.keys()
+		# print 'keys =', keys
 		s = ""
 		if (len(keys)) > 1:
 			s += "{";
 
 		for key in keys:
 			value = data[key]
+
+			if type(value) is dict:
+				try:
+					i = int(key)
+				except ValueError:
+					s += str(key) + "=" + self.__dump(value) + ","
+				else:
+					s += self.__dump(value) + ","
+				continue
 			# According to the type of the key, different methods will be used
 			# to processing the output result. 
 			try:
@@ -256,6 +266,8 @@ class PyLuaTblParser(object):
 					if value == "nil" or value == "false" or value == "true":
 						s += "" + str(value) + ","	
 					else:
+						# print 'key =', key
+						# print 'value =', value
 						s += "'" + str(value) + "',"
 				else:
 					# Yes, the value is of type float
@@ -427,16 +439,39 @@ class PyLuaTblParser(object):
 
 if __name__ == '__main__':
 	s = '{array = {65,23,5,{1, 2, 3},hello="world"},dict = {mixed = {43,54.33,false,9,string = {"value", "hello",{11,22,},}},array = {3,6,4},string = "value"}}'
+	# parser = PyLuaTblParser()
+	# parser.load(s)
+	# t = parser.dump()
+	# pdict = parser.dumpDict()
+	# print 'pidct: ', pdict
+	# parser.loadDict(pdict)
+
+	# print 'getter parser["array"][1] =', parser["array"][1]
+	# parser["well"] = ["jk", "eng"]
+	# parser["array"] = {"name": "xuxinhui", "age": 25, 2:13}
+	# print 'setter parser["array"] =', parser["array"]
+	# print parser.dump()
+	# print parser.dumpDict()
+
 	parser = PyLuaTblParser()
 	parser.load(s)
-	t = parser.dump()
-	pdict = parser.dumpDict()
-	print 'pidct: ', pdict
-	parser.loadDict(pdict)
 
-	print 'getter parser["array"][1] =', parser["array"][1]
-	parser["well"] = ["jk", "eng"]
-	parser["array"] = {"name": "xuxinhui", "age": 25, 2:13}
-	print 'setter parser["array"] =', parser["array"]
-	print parser.dump()
-	print parser.dumpDict()
+	luaTblDumpedStr = parser.dump()
+	print 'luaTblDumpedStr =', luaTblDumpedStr
+
+	luaTblDumpedDict = parser.dumpDict()
+	print 'luaTblDumpedDict =', luaTblDumpedDict
+
+	parser.loadDict(luaTblDumpedDict)
+	print 'parser dump after loadDict:', parser.dump()
+
+	# set newAttributeList to a list
+	parser['newAttributeList'] = [10, "I am XU", {"newKey": "newValue"}]
+
+	# set newAttributeDict to a dict
+	parser['newAttributeDict'] = {"DKey1": [{"Dkey2": "DVal2"}, [100, 1000, {"NICE": "GOOD"}], "I am Xin"], "LastName": "HUI"}
+
+	print 'luaTblDumpedDict after setting some new features:', parser.dumpDict()
+	print 'luaTblStr after setting some new features:', parser.dump()
+
+	print 'get array attribute in PyLuaTblParser:', parser["array"]
