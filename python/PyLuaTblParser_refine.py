@@ -50,62 +50,133 @@ class PyLuaTblParser(object):
 	KLASS_ISLIST = 0
 	KLASS_ISDICT = 1
 	KLASS_OTHERS = 2
+	__CONF_DEBUG_ = False
+
+	lDelis = ['"', '\'', '[']
+	rDelis = {'"': '"', '\'': '\'', '[': ']'}
 
 	# PyLuaTblParser class inner data structure: luaTblDict
 	def __init__(self, luaTblDict={}):
 		self.luaTblDict = luaTblDict
 
+	# Here @s is the source string, @index is the position where start to search,
+	# @deli is the delimiter to match, @flag indicates whether the result is found.
+	def __delimitMatcher(self, s, index, deli, flag):
+		i, slen = index + 1, len(s)
+		res = -1
+		while i < slen:
+			while i < slen and s[i] == deli:
+				res = i
+				flag = True
+				i = self.__delimitMatcher(s, i, deli, flag)
+			if res != -1:
+				i = res
+				break
+			else:
+				i += 1
+
+		if i == slen and not flag:
+			print 'Square bracket expression ###%s### represents a error.' % s[index: i-1]
+			raise ValueError
+
+		return i
+
+
 	# STAGE 1: preprocessing the source string
 	def __partition(self, s):
-		# remove leading and trailing whitespace
 		s = s.strip()
-
-		# remove the redundant leading and trailing brackets
-		i, j = 0, len(s) - 1
-		while i < j:
-			if s[i] == "{" and s[j] == "}":
-				i += 1
-				j -= 1
+		start, lbc, rbc, i, slen = 0, 0, 0, 0, len(s)
+		if slen > 0 and s[0] == '{' and s[slen-1] == '}':
+			i = 1
+			if slen > 1 and s[slen-2] == ',':
+				slen -= 2
 			else:
-				break
+				slen -= 1
 
-		# remove the redundant trailing comma
-		if s[j] == ",":
-			j -= 1
-
-		# get the final string we do the further processing
-		t = s[i:j+1]
-		if len(t) == 0:
-			return None
-
-		# partition starts here
-		start = 0
-		leftBracketsCnt = 0
-		rightBracketsCnt = 0
+		s = s[i: slen]
+		slen = len(s)
 		parts = []
-		for i in xrange(len(t)):
-			if t[i] == '{':
-				leftBracketsCnt += 1
-			elif t[i] == '}':
-				rightBracketsCnt += 1
-				if i == len(t) - 1 and leftBracketsCnt == rightBracketsCnt:
-					parts.append(t[start:i+1].strip())
+		i = 0
+		if PyLuaTblParser.__CONF_DEBUG_:
+			print 'start to partition, source str =', s
+		while i < slen:
+			if s[i] == '{':
+				lbc += 1
+			elif s[i] == '}':
+				rbc += 1
+				if i == slen - 1 and lbc == rbc:
+					parts.append(s[start: i+1].strip())
 					return parts
-			elif t[i] == ',' or i == len(t) - 1:
-				if leftBracketsCnt != rightBracketsCnt:
-					if i == len(t) - 1:
+			elif s[i] == '[':
+				f = ''
+				i += 1
+				if i < slen:
+					f = '"' if s[i] == '"' else ('\'' if s[i] == '\'' else '')
+				if f != '':
+					while i < slen:
+						i += 1
+						j = i
+						while i < slen and s[i] == ' ':
+							i += 1
+						end = s[i] == f if i < slen else False
+
+						i += 1
+						while i < slen and s[i] == ' ':
+							i += 1
+						end = end and (s[i] == ']' if i < slen else False)
+
+						i += 1
+						while i < slen and s[i] == ' ':
+							i += 1
+						end = end and (s[i] == '=' if i < slen else False)
+
+						if not end:
+							i = j + 1
+						else:
+							break
+				else:
+					while i < slen and s[i] != ']':
+						i += 1			
+			elif s[i] == '"' or s[i] == '\'':
+				if PyLuaTblParser.__CONF_DEBUG_:
+					print '#1# s[%d:%d] = %s' % (start, i, s[start: i])
+				f = s[i]
+				i += 1
+				while i < slen:
+					if s[i] != f:
+						i += 1
+						continue
+
+					i += 1
+					while i < slen and s[i] == ' ':
+						i += 1
+					if s[i] == ',' or s[i] == '}':
+						i -= 1
+						break
+					i += 1
+				if PyLuaTblParser.__CONF_DEBUG_:
+					print '#2# s[%d:%d] = %s' % (start, i, s[start: i])
+			elif i == slen - 1 or s[i] == ',':
+				if PyLuaTblParser.__CONF_DEBUG_:
+					print 'lbc = %d, rbc = %d' % (lbc, rbc)
+				if lbc != rbc:
+					if i == slen - 1:
 						print 'Failed to partition %s, the brackets do not match!' % t
 						raise ValueError
 					else:
+						i += 1
 						continue
-
-				if i == len(t) - 1:
-					i = i + 1
-				parts.append(t[start: i].strip())
-				start = i + 1
-				leftBracketsCnt = 0
-				rightBracketsCnt = 0
-		# end of for loop
+				else:
+					# add to the parts
+					if i == slen - 1:
+						i = i + 1
+					parts.append(s[start: i].strip())
+					if PyLuaTblParser.__CONF_DEBUG_:
+						print '#3# s[%d:%d] = %s' % (start, i, s[start: i])
+					start = i + 1
+					lbc, rbc = 0, 0
+			i += 1
+		# end main while loop
 		return parts
 
 	# STAGE 2: after the STAGE 1, we get items to do further determination,
@@ -115,7 +186,8 @@ class PyLuaTblParser(object):
 		# print "__itemParse s =", s
 		# remove the leading and trailing whitespace
 		s = s.strip()
-
+		if len(s) == 0:
+			return None
 		# remove the leading and trailing brackets
 		i, j = 0, len(s) - 1
 		while i < j:
@@ -126,6 +198,8 @@ class PyLuaTblParser(object):
 				break
 
 		t = s[i:j+1]
+		if len(t) == 0:
+			return None
 		res = None
 		# if we have PATTERN like {member1, member2, member3, ..., membern},
 		# we parse it as a list.
@@ -438,7 +512,7 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	s = '{array = {65,23,5,{1, 2, 3},hello="world"},dict = {mixed = {43,54.33,false,9,string = {"value", "hello",{11,22,},}},array = {3,6,4},string = "value"}}'
+	s = '{array = {65,23,5,{1, 2, 3},["yada,had"]="nice", hello="world,\"def,j"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,},}},array = {3,6,4},string = "value"}}'
 	# parser = PyLuaTblParser()
 	# parser.load(s)
 	# t = parser.dump()
@@ -452,26 +526,31 @@ if __name__ == '__main__':
 	# print 'setter parser["array"] =', parser["array"]
 	# print parser.dump()
 	# print parser.dumpDict()
-
+	# s = '{65,23,5, {1, 2, 3},["yada,[had"]="nice", hello="world,\"def,j"}'
 	parser = PyLuaTblParser()
-	parser.load(s)
+	parts = parser._PyLuaTblParser__partition(s)
+	print parts
+	for item in parts:
+		print "#item =", item
+		print parser._PyLuaTblParser__partition(item)
+	# parser.load(s)
 
-	luaTblDumpedStr = parser.dump()
-	print 'luaTblDumpedStr =', luaTblDumpedStr
+	# luaTblDumpedStr = parser.dump()
+	# print 'luaTblDumpedStr =', luaTblDumpedStr
 
-	luaTblDumpedDict = parser.dumpDict()
-	print 'luaTblDumpedDict =', luaTblDumpedDict
+	# luaTblDumpedDict = parser.dumpDict()
+	# print 'luaTblDumpedDict =', luaTblDumpedDict
 
-	parser.loadDict(luaTblDumpedDict)
-	print 'parser dump after loadDict:', parser.dump()
+	# parser.loadDict(luaTblDumpedDict)
+	# print 'parser dump after loadDict:', parser.dump()
 
-	# set newAttributeList to a list
-	parser['newAttributeList'] = [10, "I am XU", {"newKey": "newValue"}]
+	# # set newAttributeList to a list
+	# parser['newAttributeList'] = [10, "I am XU", {"newKey": "newValue"}]
 
-	# set newAttributeDict to a dict
-	parser['newAttributeDict'] = {"DKey1": [{"Dkey2": "DVal2"}, [100, 1000, {"NICE": "GOOD"}], "I am Xin"], "LastName": "HUI"}
+	# # set newAttributeDict to a dict
+	# parser['newAttributeDict'] = {"DKey1": [{"Dkey2": "DVal2"}, [100, 1000, {"NICE": "GOOD"}], "I am Xin"], "LastName": "HUI"}
 
-	print 'luaTblDumpedDict after setting some new features:', parser.dumpDict()
-	print 'luaTblStr after setting some new features:', parser.dump()
+	# print 'luaTblDumpedDict after setting some new features:', parser.dumpDict()
+	# print 'luaTblStr after setting some new features:', parser.dump()
 
-	print 'get array attribute in PyLuaTblParser:', parser["array"]
+	# print 'get array attribute in PyLuaTblParser:', parser["array"]

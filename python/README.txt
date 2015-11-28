@@ -44,3 +44,7 @@ PS:
 	like the following formats are illegal for the uptodate version of PyLuaTblParser:
 		KEY="ajb,ce", where in string value contains comma
 		KEY="abj\"dc", KEY='ab\'', where in string value contains quotation mark
+
+
+	And the latest bug-fix version of PyLuaTblParser can be found in
+	https://github.com/JumsphenmXu/code/blob/master/python/PyLuaTblParser.py 
