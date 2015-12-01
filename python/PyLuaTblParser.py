@@ -176,6 +176,8 @@ class PyLuaTblParser(object):
 					lbc, rbc = 0, 0
 			i += 1
 		# end main while loop
+		if PyLuaTblParser.__CONF_DEBUG_:
+			print "parts =", parts
 		return parts
 
 	# STAGE 2: after the STAGE 1, we get items to do further determination,
@@ -185,6 +187,8 @@ class PyLuaTblParser(object):
 		# print "__itemParse s =", s
 		# remove the leading and trailing whitespace
 		s = self.__eliminate_whitespace(s)
+		if PyLuaTblParser.__CONF_DEBUG_:
+			print '__itemParse after __eliminate_whitespace s =', s
 		if len(s) == 0:
 			return None, PyLuaTblParser.KLASS_ISNIL
 		# remove the leading and trailing brackets
@@ -198,6 +202,7 @@ class PyLuaTblParser(object):
 
 		t = s[i:j+1]
 		if PyLuaTblParser.__CONF_DEBUG_:
+			print '__itemParse: s =', s
 			print '__itemParse: t =', t
 		if len(t) == 0:
 			print 'None is returned'
@@ -208,14 +213,22 @@ class PyLuaTblParser(object):
 		if len(t) != len(s):
 			ret = []
 			resTmp = self.__partition(t)
+			if PyLuaTblParser.__CONF_DEBUG_:
+				print '__itemParse resTmp =',resTmp
 			for item in resTmp:
+				if PyLuaTblParser.__CONF_DEBUG_:
+					print '__itemParse item =',item
 				ans, status = self.__itemParse(item)
-				if status != PyLuaTblParser.KLASS_ISINT:
+				if status != PyLuaTblParser.KLASS_ISNIL:
 					ret.append(ans)
 		
 			res = {}
 			for i in xrange(len(ret)):
 				res[i+1] = ret[i]
+
+			if PyLuaTblParser.__CONF_DEBUG_:
+				print '__itemParse ret =',ret
+				print '__itemParse res =', res
 			return res, PyLuaTblParser.KLASS_ISLIST
 
 		# if we have PATTERN like '"string values"' or "'string values'",
@@ -227,7 +240,7 @@ class PyLuaTblParser(object):
 			else:
 				print 'Failed to parse item #%s# as a string.' % t
 				raise ValueError
-		
+
 		if PyLuaTblParser.__CONF_DEBUG_:
 			print 'Dict t =', t
 		equalIdx = t.find("=")
@@ -277,7 +290,7 @@ class PyLuaTblParser(object):
 			res = {}
 			res[leftPart] = self.__loadFromString(rightPart)
 			if PyLuaTblParser.__CONF_DEBUG_:
-				print 'res =', res
+				print 'res[leftPart] =', res[leftPart]
 			if res[leftPart] == "nil":
 				return None, PyLuaTblParser.KLASS_ISNIL
 
@@ -546,7 +559,8 @@ class PyLuaTblParser(object):
 						dictTmp[key] = float(d[key])
 					else:
 						dictTmp[key] = int(d[key])
-				
+		if not dictTmp:
+			dictTmp = {1: None}		
 		return dictTmp
 
 
@@ -579,11 +593,11 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	# s = '{array = {65,23,5,{1, 2, 3},[1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	s = '{{}}'
+	s = '{array = {65,23,5,{1, 2, 3},[1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+# 	s = '{{}}'
 	parser = PyLuaTblParser()
-	parts = parser._PyLuaTblParser__partition(s)
-	print parts
+# 	parts = parser._PyLuaTblParser__partition(s)
+# 	print parts
 	parser.load(s)
 
 	luaTblDumpedStr = parser.dump()
@@ -597,13 +611,13 @@ if __name__ == '__main__':
 
 	print '----', parser.luaTblDict
 
-	# set newAttributeList to a list
-	parser['newAttributeList'] = [10, "I am XU", {"newKey": "newValue"}]
+# 	# set newAttributeList to a list
+# 	parser['newAttributeList'] = [10, "I am XU", {"newKey": "newValue"}]
 
-	# set newAttributeDict to a dict
-	parser['newAttributeDict'] = {"DKey1": [{"Dkey2": "DVal2"}, [100, 1000, {"NICE": "GOOD"}], "I am Xin"], "LastName": "HUI"}
+# 	# set newAttributeDict to a dict
+# 	parser['newAttributeDict'] = {"DKey1": [{"Dkey2": "DVal2"}, [100, 1000, {"NICE": "GOOD"}], "I am Xin"], "LastName": "HUI"}
 
-	print 'luaTblDumpedDict after setting some new features:', parser.dumpDict()
-	print 'luaTblStr after setting some new features:', parser.dump()
+# 	print 'luaTblDumpedDict after setting some new features:', parser.dumpDict()
+# 	print 'luaTblStr after setting some new features:', parser.dump()
 
 	# print 'get array attribute in PyLuaTblParser:', parser["array"]
