@@ -172,7 +172,7 @@ class PyLuaTblParser(object):
 		if slen > 0 and s[0] == '{' and s[slen-1] == '}':
 			s = s[1: -1]
 
-		if len(s) > 0 and s[-1] == ',':
+		if len(s) > 0 and (s[-1] == ',' or s[-1] == ';'):
 			s = s[:-1]
 		slen = len(s)
 		parts = []
@@ -199,7 +199,7 @@ class PyLuaTblParser(object):
 					if i == slen - 1:
 						parts.append(s[start: slen])
 						return parts
-					if i+1 < slen and (s[i+1] == ',' or s[i+1] == '}'):
+					if i+1 < slen and (s[i+1] == ',' or s[i+1] == ';' or s[i+1] == '}'):
 						break
 					i += 1
 				if PyLuaTblParser.__CONF_DEBUG_:
@@ -222,7 +222,7 @@ class PyLuaTblParser(object):
 				else:
 					while i < slen and s[i] != ']':
 						i += 1			
-			elif i == slen - 1 or s[i] == ',':
+			elif i == slen - 1 or s[i] == ',' or s[i] == ';':
 				if PyLuaTblParser.__CONF_DEBUG_:
 					print 'lbc = %d, rbc = %d' % (lbc, rbc)
 				if lbc != rbc:
@@ -723,7 +723,7 @@ if __name__ == '__main__':
 	# s = '{1, 2, 3}'
 	# s = '{"abc", 2, 3}'
 	# s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
-	s = '{--[==[nice annotation]==]   1,hello="when"}'
+	s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 
