@@ -97,9 +97,77 @@ class PyLuaTblParser(object):
 
 		return t
 
+
+	def __eliminate_annotation(self, s):
+		i, slen, t = 0, len(s), ''
+		while i < slen:
+			if s[i] == '"' or s[i] == '\'':
+				f = s[i]
+				t += s[i]
+				i += 1
+				while i < slen:
+					t += s[i]
+					if s[i] == f and i > 1 and s[i-1] != '\\':
+						break
+					i += 1
+			elif s[i] == '-':
+				if i + 1 < slen and s[i+1] == '-':
+					if i + 2 < slen and s[i+2] == '[':
+						# --[[annotation]]
+						if i + 3 < slen and s[i+3] == '[':
+							i += 4
+							while i < slen:
+								if s[i] == ']' and i + 1 < slen and s[i+1] == ']':
+									if i > 0 and s[i-1] != '\\':
+										i += 1
+										break
+								i += 1
+						# --[====[annotation]====]
+						elif i + 3 < slen and s[i+3] == '=':
+							lcnt, rcnt = 0, 0
+							i += 3
+							while i < slen and s[i] == '=':
+								lcnt += 1
+								i += 1
+							if i < slen and s[i] == '[':
+								i += 1
+								while i < slen:
+									if s[i] == ']':
+										j = i + 1
+										rcnt = 0
+										while j < slen and s[j] == '=':
+											rcnt += 1
+											j += 1
+
+										i = j
+										if lcnt == rcnt and j < slen and s[j] == ']':
+											# match the pattern --[===[]===]
+											break
+									else:
+										i += 1
+							# this part does not match the pattern --[==[, which indicates the whole line is annotation
+							else:
+								break
+						# this part does not even match the pattern --[=, which indicates the whole line is annotation
+						else:
+							break
+					# this part does not match either --[[ or --[==[, so the whole line is annotation
+					else:
+						break
+				else:
+					t += s[i]
+			else:
+				t += s[i]
+
+			i += 1
+
+		return t
+				
+
+
 	# STAGE 1: preprocessing the source string
 	def __partition(self, s):
-		s = self.__eliminate_whitespace(s)
+		# s = self.__eliminate_whitespace(s)
 		start, lbc, rbc, i, slen = 0, 0, 0, 0, len(s)
 		if slen > 0 and s[0] == '{' and s[slen-1] == '}':
 			s = s[1: -1]
@@ -119,13 +187,13 @@ class PyLuaTblParser(object):
 				if i == slen - 1 and lbc == rbc:
 					parts.append(s[start: i+1])
 					return parts
-			elif s[i] == '"' or s[i] == '\'':
+			elif (s[i] == '"' or s[i] == '\'') and (i == 0 or (i > 0 and s[i-1] != '\\')):
 				if PyLuaTblParser.__CONF_DEBUG_:
 					print '#1# s[%d:%d] = %s' % (start, i, s[start: i])
 				f = s[i]
 				i += 1
 				while i < slen:
-					if s[i] != f or s[i-1]=='\\':
+					if s[i] != f or s[i-1] == '\\':
 						i += 1
 						continue
 					if i == slen - 1:
@@ -140,16 +208,15 @@ class PyLuaTblParser(object):
 				f = ''
 				i += 1
 				if i < slen:
-					f = '"' if s[i] == '"' else ('\'' if s[i] == '\'' else '')
+					if s[i] == '"' or s[i] == '\'':
+						f = s[i]
 				if f != '':
 					while i < slen:
 						i += 1
 						if i < slen and s[i] != f or s[i-1] == '\\':
 							continue
 						end = i < slen and s[i] == f and i+1 < slen and s[i+1] == ']' and i+2 < slen and s[i+2] == '='
-						if not end:
-							i += 1
-						else:
+						if end:
 							i += 2
 							break
 				else:
@@ -186,7 +253,7 @@ class PyLuaTblParser(object):
 	def __itemParse(self, s):
 		# print "__itemParse s =", s
 		# remove the leading and trailing whitespace
-		s = self.__eliminate_whitespace(s)
+		# s = self.__eliminate_whitespace(s)
 		if PyLuaTblParser.__CONF_DEBUG_:
 			print '__itemParse after __eliminate_whitespace s =', s
 		if len(s) == 0:
@@ -308,7 +375,7 @@ class PyLuaTblParser(object):
 
 
 	def __loadFromString(self, s):
-		s = self.__eliminate_whitespace(s)
+		# s = self.__eliminate_whitespace(s)
 		parts = self.__partition(s)
 
 		if PyLuaTblParser.__CONF_DEBUG_:
@@ -340,6 +407,9 @@ class PyLuaTblParser(object):
 
 
 	def load(self, s):
+		s = self.__eliminate_whitespace(s)
+		s = self.__eliminate_annotation(s)
+		print 'After preprocessing, s = ', s
 		self.luaTblList = self.__loadFromString(s)
 		if PyLuaTblParser.__CONF_DEBUG_:
 			print 'load(self, s) -->', self.luaTblList
@@ -484,14 +554,12 @@ class PyLuaTblParser(object):
 			else:
 				if d[key] == "nil":
 					continue
-				elif d[key] == False:
-					item = "false"
-				elif d[key] == True:
-					item = "true"
+				elif type(d[key]) is bool:
+					item = str(item).lower()
 				else:
 					item = d[key]
 
-			if type(item) is list and len(item) == 1:
+			if type(item) is list and len(item) == 1 and type(item[0]) is not list:
 				item = item[0]
 
 			if type(key) is int and key == index:
@@ -522,7 +590,7 @@ class PyLuaTblParser(object):
 		maxkey = -1
 
 		for i in xrange(len(keys)):
-			if type(keys[i]) is not int:
+			if type(keys[i]) is not int or dct[keys[i]] == {}:
 				flag = False
 				break
 			if maxkey < keys[i]:
@@ -577,11 +645,13 @@ class PyLuaTblParser(object):
 		dlen = len(data)
 
 		if dlen == 0:
-			return {1: {}}
+			return {}
 
 		res = {}
 		for i in xrange(len(data)):
 			item = data[i]
+			# print 'item = ', item
+
 			if type(item) is dict:
 				for k, v in item.items():
 					kd = self.__dumpInnerDict2PythonDict({k:v})
@@ -592,6 +662,7 @@ class PyLuaTblParser(object):
 							res[k] = kd[k]
 			elif type(item) is list:
 				tmp = self.__dumpInnerList2PythonDict(item)
+				# print 'tmp = ', tmp
 				if type(tmp) is dict:
 					tmp = self.__xtransfer(tmp)
 				res[i+1] = tmp
@@ -644,10 +715,15 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	s = '{[10]="a"}'
-	s = '{"abc", nil, hello="nice", 345}'
+	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	# s = '{[10]="a"}'
+	# s = '{"abc", nil, hello="nice", 345}'
 	# s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
+	# s = '{{{}}}'
+	# s = '{1, 2, 3}'
+	# s = '{"abc", 2, 3}'
+	# s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
+	s = '{--[==[nice annotation]==]   1,hello="when"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 
