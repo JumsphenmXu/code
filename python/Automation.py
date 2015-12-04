@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 class PyLuaTblParser(object):
-	def __init__(self, luaStr="", curPos=0, totLen=0, _debug=False):
+	def __init__(self, luaStr="", curPos=0, totLen=0, luaLst=[], _debug=False):
 		self.luaStr = luaStr
 		self.curPos = curPos
 		self.totLen = totLen
+		self.luaLst = luaLst
 		self._debug = _debug
 
 	def setDebugMode(self, _debug):
@@ -343,8 +344,276 @@ class PyLuaTblParser(object):
 		self.luaStr = s
 		self.curPos = 0
 		self.totLen = len(s)
-		print 'luaStr =', self.luaStr
-		print self.getItem()
+		self.luaLst = self.getItem()
+
+
+	def dumpList2String(self, data):
+		if self.underDebugMode():
+			print 'dumpList2String data =', data
+		assert type(data) is list
+
+		datalen = len(data)
+		s = ""
+		if datalen == 1 and type(data[0]) is list:
+			s += "{" +  self.dumpList2String(data[0]) + "}"
+			return s
+
+		s += "{"
+		for i in xrange(datalen):
+			if type(data[i]) is dict:
+				s += self.dumpDict2String(data[i]) + ","
+			elif type(data[i]) is list:
+				s += self.dumpList2String(data[i]) + ","
+			else:
+				try:
+					f = float(data[i])
+				except ValueError:
+					if data[i] == "nil" or data[i] == "false" or data[i] == "true":
+						s += str(data[i]) + ","
+					else:
+						s += "'" + str(data[i]) + "',"
+				else:
+					s += str(data[i]) + ","
+
+		if len(s) > 0 and s[-1] == ",":
+			s = s[:-1]
+		s += "}"
+		return s
+
+	def dumpDict2String(self, data):
+		if self.underDebugMode():
+			print 'dumpDict2String data =', data
+
+		assert type(data) is dict
+		keys = data.keys()
+		s = ""
+		if (len(keys)) > 1:
+			s += "{";
+
+		for key in keys:
+			value = data[key]
+
+			try:
+				f = float(key)
+			except ValueError:
+				s += "['" + str(key) + "']="
+			else:
+				s += "[" + str(key) + "]="
+
+			if type(value) is dict:
+				s += self.dumpDict2String(value) + ","
+			elif type(value) is list:
+				s += self.dumpList2String(value) + ","
+			else:
+				try:
+					print 'key = %s, value = %s' % (str(key), str(value))
+					f = float(value)
+				except ValueError:
+					if value == "nil" or value == "false" or value == "true":
+						s += str(value) + ","
+					else:
+						s += "'" + str(value) + "',"
+				else:
+					s += str(value) + ","
+
+		s = s[:-1]
+		if len(keys) > 1:
+			s += "}"
+		return s
+
+	def dump(self):
+		return self.dumpList2String(self.luaLst)
+
+	def loadLuaTable(self, f):
+		fp = open(f, "rb")
+		line = fp.read()
+		fp.close()
+		self.load(line)
+
+	def dumpLuaTable(self, f):
+		self.luaStr = self.dump()
+		fp = open(f, "wb")
+		fp.write(self.luaStr)
+		fp.close()
+
+	def loadFromList(self, lst):
+		assert type(lst) is list
+		res = []
+		for i in xrange(len(lst)):
+			item = None
+			if type(lst[i]) is dict:
+				item = self.loadFromDict(lst[i])
+			elif type(lst[i]) is list:
+				item = self.loadFromList(lst[i])
+			else:
+				if type(lst[i]) is bool:
+					item = str(lst[i]).lower()
+				elif type(lst[i]) is str and lst[i] == "nil":
+					item = None
+				else:
+					item = lst[i]
+
+			if item is not None or lst[i] == "nil":
+				if type(item) is list and len(item) == 1:
+					item = item[0]
+				res.append(item)
+
+			if PyLuaTblParser.underDebugMode():
+					print '#1# loadFromList: lst[i]=', lst[i]
+					print '#1# loadFromList: res=', res
+
+		if PyLuaTblParser.underDebugMode():
+			print 'loadFromList return:', res
+		return res
+
+
+	def loadFromDict(self, d):
+		assert type(d) is dict
+		listTmp = []
+		index = 1
+		keys = d.keys()
+
+		for key in keys:
+			item = None
+			if type(d[key]) is list:
+				item = self.loadFromList(d[key])
+			elif type(d[key]) is dict:
+				item = self.loadFromDict(d[key])
+			else:
+				if d[key] == "nil":
+					continue
+				elif type(d[key]) is bool:
+					item = str(item).lower()
+				else:
+					item = d[key]
+
+			if type(item) is list and len(item) == 1 and type(item[0]) is not list:
+				item = item[0]
+
+			if type(key) is int and key == index:
+				listTmp.append(item)
+				index += 1
+			else:
+				listTmp.append({key: item})
+
+			if PyLuaTblParser.underDebugMode():
+				print '#1# loadFromDict: key =', key
+				print '#1# loadFromDict: d[key] =', d[key]
+				print '#1# loadFromDict: listTmp =', listTmp
+
+		return listTmp
+
+
+	def loadDict(self, d):
+		self.luaLst = self.loadFromDict(d)
+		if PyLuaTblParser.underDebugMode():
+			print 'loadDict(self, d) -->', self.luaLst
+
+
+	def xtransfer(self, dct):
+		assert type(dct) is dict
+		flag = True
+		keys = dct.keys()
+		keys.sort()
+		maxkey = -1
+
+		for i in xrange(len(keys)):
+			if type(keys[i]) is not int or dct[keys[i]] == {}:
+				flag = False
+				break
+			if maxkey < keys[i]:
+				maxkey = keys[i]
+		
+		res = []
+		if flag and maxkey == len(keys):
+			for i in xrange(len(keys)):
+				res.append(dct[keys[i]])
+			
+			if len(res) == 1:
+				return res[0]
+			else:
+				return res
+
+		return dct
+
+
+	def dumpInnerDict2PythonDict(self, data):
+		assert type(data) is dict
+		res = {}
+
+		for k, v in data.items():
+			if type(v) is list:
+				res[k] = self.dumpInnerList2PythonDict(v)
+			elif type(v) is dict:
+				res[k] = self.xtransfer(self.dumpInnerDict2PythonDict(v))
+			else:
+				if type(v) is str:
+					if v == 'false':
+						res[k] = False
+					elif v == 'true':
+						res[k] = True
+					elif v == 'nil':
+						continue
+					elif len(v) > 1 and v[0] == v[-1] and v[0] == '\'' or v[0] == '"':
+						res[k] = v[1:-1]
+					else:
+						res[k] = v
+				else:
+					res[k] = v
+			if type(res[k]) is str and res[k] == 'nil':
+				res.pop(k)
+
+		return res
+
+
+	def dumpInnerList2PythonDict(self, data):
+		assert type(data) is list
+		dlen = len(data)
+
+		if dlen == 0:
+			return {}
+
+		res = {}
+		for i in xrange(dlen):
+			item = data[i]
+			if type(item) is dict:
+				for k, v in item.items():
+					kd = self.dumpInnerDict2PythonDict({k:v})
+					if k in kd.keys():
+						if type(kd[k]) is dict:
+							res[k] = self.xtransfer(kd[k])
+						else:
+							res[k] = kd[k]
+			elif type(item) is list:
+				tmp = self.dumpInnerList2PythonDict(item)
+				if type(tmp) is dict:
+					tmp = self.xtransfer(tmp)
+				res[i+1] = tmp
+				if type(res[i+1]) is str and res[i+1] == 'nil':
+					res.pop(i+1)
+			else:
+				if type(item) is str:
+					if item == 'false':
+						res[i+1] = False
+					elif item == 'true':
+						res[i+1] = True
+					elif item == 'nil':
+						res[i+1] = None
+					elif len(item) > 1 and item[0] == item[-1] and item[0] == '\'' or item[0] == '"':
+						res[i+1] = item[1:-1]
+					else:
+						res[i+1] = item
+				else:
+					res[i+1] = item
+				if type(res[i+1]) is str and res[i+1] == 'nil':
+					res.pop(i+1)
+
+		return res
+
+	def dumpDict(self):
+		return self.dumpInnerList2PythonDict(self.luaLst)
+
+
 
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
@@ -352,3 +621,6 @@ if __name__ == '__main__':
 	parser = PyLuaTblParser()
 	# parser.setDebugMode(True)
 	parser.load(s)
+
+	# print parser.dump()
+	print parser.dumpDict()
