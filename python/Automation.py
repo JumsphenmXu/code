@@ -184,7 +184,8 @@ class PyLuaTblParser(object):
 		val = None
 		self.skip()
 		ch = self.next()
-		print 'getValue key = %s, ch = %s.' % (key, ch)
+		if self.underDebugMode():
+			print 'getValue key = %s, ch = %s.' % (key, ch)
 		if ch == '"' or ch == '\'':
 			val = self.getStr(ch)
 		elif PyLuaTblParser.isDigit(ch) or ch == '-' or ch == '+':
@@ -256,7 +257,8 @@ class PyLuaTblParser(object):
 					raise ValueError('Dict should in the pattern KEY=VAL !!!')
 				self.skip()
 				val = self.getValue(key)
-				print 'key = %s, val = %s' % (str(key), str(val))
+				if self.underDebugMode():
+					print 'key = %s, val = %s' % (str(key), str(val))
 				self.skip()
 				ch = self.next()
 				if ch != '}':
@@ -308,11 +310,13 @@ class PyLuaTblParser(object):
 				if self.next() != '=':
 					raise ValueError('Dict should in the pattern KEY=VAL !!!')
 				val = self.getValue(key)
-				print 'key = %s, val = %s' % (str(key), str(val))
+				if self.underDebugMode():
+					print 'key = %s, val = %s' % (str(key), str(val))
 				self.skip()
 				ch = self.next()
 				if ch != '}':
-					print 'Already parsed $%s$.' % self.luaStr[:self.curPos]
+					if self.underDebugMode():
+						print 'Already parsed $%s$.' % self.luaStr[:self.curPos]
 					PyLuaTblParser.validate(ch)
 				else:
 					self.putback()
@@ -334,7 +338,8 @@ class PyLuaTblParser(object):
 
 	def load(self, s):
 		s = self.eliminateAnnotation(s)
-		print 'After preprocessing, SRC =', s
+		if self.underDebugMode():
+			print 'After preprocessing, SRC =', s
 		self.luaStr = s
 		self.curPos = 0
 		self.totLen = len(s)
@@ -345,5 +350,5 @@ if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	parser = PyLuaTblParser()
-	parser.setDebugMode(True)
+	# parser.setDebugMode(True)
 	parser.load(s)
