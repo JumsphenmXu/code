@@ -126,6 +126,7 @@ class PyLuaTblParser(object):
 
 	def getStr(self, quotationMark):
 		s = ''
+		self.skip()
 		ch1 = self.next()
 		if ch1 == quotationMark:
 			return s
@@ -144,6 +145,7 @@ class PyLuaTblParser(object):
 
 	def getNumber(self):
 		s = ''
+		self.skip()
 		ch = self.next()
 		while PyLuaTblParser.isDigit(ch) or ch == '.' or ch == 'e' or ch == 'E' or ch == '+' or ch == '-':
 			s += ch
@@ -168,11 +170,21 @@ class PyLuaTblParser(object):
 		else:
 			return s, False
 
+	def getVar(self):
+		self.skip()
+		s = ''
+		ch = self.next()
+		while ch is not None and PyLuaTblParser.isAlphanum(ch):
+			s += ch
+			ch = self.next()
+		self.putback()
+		return s
 
 	def getValue(self, key):
 		val = None
+		self.skip()
 		ch = self.next()
-		print 'getValue ch =', ch
+		print 'getValue key = %s, ch = %s.' % (key, ch)
 		if ch == '"' or ch == '\'':
 			val = self.getStr(ch)
 		elif PyLuaTblParser.isDigit(ch) or ch == '-' or ch == '+':
@@ -180,10 +192,12 @@ class PyLuaTblParser(object):
 		elif ch == '{':
 			val = self.getItem()
 		elif PyLuaTblParser.isAlphanum(ch):
+			self.putback()
 			val = self.getVar()
 			val, ok = self.checkSpecialStr(val)
 			if not ok:
-				raise ValueError('Illegal value for key [%s]' % str(key))
+				msg = 'Illegal value $%s$ for key $%s$' % (str(val), str(key))
+				raise ValueError(msg)
 
 		return val
 
@@ -294,6 +308,7 @@ class PyLuaTblParser(object):
 				if self.next() != '=':
 					raise ValueError('Dict should in the pattern KEY=VAL !!!')
 				val = self.getValue(key)
+				print 'key = %s, val = %s' % (str(key), str(val))
 				self.skip()
 				ch = self.next()
 				if ch != '}':
