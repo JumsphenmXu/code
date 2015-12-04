@@ -272,6 +272,10 @@ class PyLuaTblParser(object):
 		if len(t) == 0:
 			rs = []
 			s = s[1:-1]
+			if len(s) == 0:
+				rs.append({})
+				return rs, PyLuaTblParser.KLASS_ISLIST
+
 			result, status = self.__itemParse(s)
 			if status != PyLuaTblParser.KLASS_ISNIL:
 				rs.append(result)
@@ -608,7 +612,6 @@ class PyLuaTblParser(object):
 
 
 	def __dumpInnerDict2PythonDict(self, data):
-		# print '__dumpInnerDict2PythonDict data =', data
 		assert type(data) is dict
 		res = {}
 
@@ -638,7 +641,7 @@ class PyLuaTblParser(object):
 
 
 	def __dumpInnerList2PythonDict(self, data):
-		# print '__dumpInnerList2PythonDict data =', data
+		print '#1 __dumpInnerList2PythonDict data =', data
 		assert type(data) is list
 		dlen = len(data)
 
@@ -646,7 +649,7 @@ class PyLuaTblParser(object):
 			return {}
 
 		res = {}
-		for i in xrange(len(data)):
+		for i in xrange(dlen):
 			item = data[i]
 			# print 'item = ', item
 
@@ -717,6 +720,8 @@ if __name__ == '__main__':
 	# s = '{[10]="a"}'
 	# s = '{"abc", nil, hello="nice", 345}'
 	s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
+	# s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
+	s = '{{{}}}'
 	# s = '{{{}}}'
 	# s = '{1, 2, 3}'
 	s = '{"abc", 2, 3}'
