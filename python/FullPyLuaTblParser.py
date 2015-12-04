@@ -726,7 +726,7 @@ if __name__ == '__main__':
 	# s = '{1, 2, 3}'
 	s = '{"abc", 2, 3}'
 	# s = '{[--[[nice a]]"a"] = 1, "hello", --[=[annotation]=]} --hello'
-	# s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
+	s = '{--[= =[nice annotation]= =]   1,hello="when"; "{hakd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 

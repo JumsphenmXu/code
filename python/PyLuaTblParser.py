@@ -91,7 +91,17 @@ class PyLuaTblParser(object):
 	def __eliminate_whitespace(self, s):
 		i, slen, t = 0, len(s), ''
 		while i < slen:
-			if s[i] != ' ':
+			if (i == 0 or i > 0 and s[i-1] != '\\') and (s[i] == '"' or s[i] == '\''):
+				f = s[i]
+				t += s[i]
+				i += 1
+				while i < slen:
+					if s[i] == f and s[i-1] != '\\':
+						t += s[i]
+						break
+					t += s[i]
+					i += 1
+			elif s[i] != ' ':
 				t += s[i]
 			i += 1
 
@@ -110,51 +120,48 @@ class PyLuaTblParser(object):
 					if s[i] == f and i > 0 and s[i-1] != '\\':
 						break
 					i += 1
-			elif s[i] == '-':
-				if i + 1 < slen and s[i+1] == '-':
-					if i + 2 < slen and s[i+2] == '[':
-						# --[[annotation]]
-						if i + 3 < slen and s[i+3] == '[':
-							i += 4
-							while i < slen:
-								if s[i] == ']' and i + 1 < slen and s[i+1] == ']':
-									i += 1
-									break
+			elif s[i] == '-' and i + 1 < slen and s[i+1] == '-':
+				if i + 2 < slen and s[i+2] == '[':
+					# --[[annotation]]
+					if i + 3 < slen and s[i+3] == '[':
+						i += 4
+						while i < slen:
+							if s[i] == ']' and i + 1 < slen and s[i+1] == ']':
 								i += 1
-						# --[====[annotation]====]
-						elif i + 3 < slen and s[i+3] == '=':
-							lcnt, rcnt = 0, 0
-							i += 3
-							while i < slen and s[i] == '=':
-								lcnt += 1
-								i += 1
-							if i < slen and s[i] == '[':
-								i += 1
-								while i < slen:
-									if s[i] == ']':
-										j = i + 1
-										rcnt = 0
-										while j < slen and s[j] == '=':
-											rcnt += 1
-											j += 1
-
-										i = j
-										if lcnt == rcnt and j < slen and s[j] == ']':
-											# match the pattern --[===[]===]
-											break
-									else:
-										i += 1
-							# this part does not match the pattern --[==[, which indicates the whole line is annotation
-							else:
 								break
-						# this part does not even match the pattern --[=, which indicates the whole line is annotation
+							i += 1
+					# --[====[annotation]====]
+					elif i + 3 < slen and s[i+3] == '=':
+						lcnt, rcnt = 0, 0
+						i += 3
+						while i < slen and s[i] == '=':
+							lcnt += 1
+							i += 1
+						if i < slen and s[i] == '[':
+							i += 1
+							while i < slen:
+								if s[i] == ']':
+									j = i + 1
+									rcnt = 0
+									while j < slen and s[j] == '=':
+										rcnt += 1
+										j += 1
+
+									i = j
+									if lcnt == rcnt and j < slen and s[j] == ']':
+										# match the pattern --[===[]===]
+										break
+								else:
+									i += 1
+						# this part does not match the pattern --[==[, which indicates the whole line is annotation
 						else:
 							break
-					# this part does not match either --[[ or --[==[, so the whole line is annotation
+					# this part does not even match the pattern --[=, which indicates the whole line is annotation
 					else:
 						break
+				# this part does not match either --[[ or --[==[, so the whole line is annotation
 				else:
-					t += s[i]
+					break
 			else:
 				t += s[i]
 
@@ -163,51 +170,34 @@ class PyLuaTblParser(object):
 		return t
 				
 
-
 	# STAGE 1: preprocessing the source string
 	def __partition(self, s):
-		start, lbc, rbc, i, slen = 0, 0, 0, 0, len(s)
-		if slen > 0 and s[0] == '{' and s[-1] == '}':
+		if len(s) > 0 and s[0] == '{' and s[-1] == '}':
 			s = s[1: -1]
 
 		if len(s) > 0 and (s[-1] == ',' or s[-1] == ';'):
 			s = s[:-1]
-		slen = len(s)
-		parts = []
-		i = 0
+
 		if PyLuaTblParser.__CONF_DEBUG_:
-			print 'start to partition, source string:', s
+			print 'PARTITION:', s
+
+		parts = []
+		start, i, slen = 0, 0, len(s)
+		lbc, rbc = 0, 0
 		while i < slen:
 			if s[i] == '{':
 				lbc += 1
 			elif s[i] == '}':
 				rbc += 1
-				if i == slen - 1:
-					if lbc == rbc:
-						parts.append(s[start: i+1])
-						return parts
-					else:
-						print 'Failed to partition %s, the brackets do not match!' % s[start: i+1]
-						raise ValueError
 			elif (s[i] == '"' or s[i] == '\'') and (i == 0 or (i > 0 and s[i-1] != '\\')):
-				if PyLuaTblParser.__CONF_DEBUG_:
-					print '#1# s[%d:%d] = %s' % (start, i, s[start: i])
 				f = s[i]
 				i += 1
 				while i < slen:
-					if s[i] != f or s[i-1] == '\\':
-						i += 1
-						continue
-					if i == slen - 1:
-						if lbc == rbc:
-							parts.append(s[start: slen])
-							return parts
-						else:
-							print 'Failed to partition %s, the brackets do not match!' % s[start: i+1]
-							raise ValueError
-					break
+					if s[i] == f and s[i-1] != '\\':
+						break
+					i += 1
 				if PyLuaTblParser.__CONF_DEBUG_:
-					print '#2# s[%d:%d] = %s' % (start, i, s[start: i])
+					print '#1# s[%d:%d] = %s' % (start, i, s[start: i+1])
 			elif s[i] == '[':
 				f = ''
 				idx = i
@@ -222,34 +212,31 @@ class PyLuaTblParser(object):
 								i += 1
 								break
 							else:
-								print 'Failed to partition %s, the brackets do not match!' % s[idx: i]
+								print 'Failed to partition %s, the brackets do not match!' % s[idx: i+1]
 								raise ValueError
 				else:
 					while i < slen and s[i] != ']':
 						i += 1			
-			elif i == slen - 1 or s[i] == ',' or s[i] == ';':
+			elif s[i] == ',' or s[i] == ';':
 				if PyLuaTblParser.__CONF_DEBUG_:
 					print 'lbc = %d, rbc = %d' % (lbc, rbc)
-				
-				if i == slen - 1:
-					if lbc != rbc:
-						#FIXME: Here always flag an error
-						print 'Failed to partition %s, the brackets do not match!' % s
-						raise ValueError
-					else:
-						parts.append(s[start: slen])
-				
 				if lbc == rbc:
 					# add to the parts
 					parts.append(s[start: i])
 					if PyLuaTblParser.__CONF_DEBUG_:
-						print '#3# s[%d:%d] = %s' % (start, i, s[start: i])
+						print '#2# s[%d:%d] = %s' % (start, i, s[start: i+1])
 					start = i + 1
 					lbc, rbc = 0, 0
+
+			if i == slen - 1:
+				if lbc == rbc:
+					parts.append(s[start: slen])
+					return parts
+				else:
+					print 'Failed to partition %s, the brackets do not match!' % s[start: i+1]
+					raise ValueError
 			i += 1
 		# end main while loop
-		if PyLuaTblParser.__CONF_DEBUG_:
-			print "parts =", parts
 		return parts
 
 	# STAGE 2: after the STAGE 1, we get items to do further determination,
@@ -416,8 +403,9 @@ class PyLuaTblParser(object):
 
 
 	def load(self, s):
-		s = self.__eliminate_whitespace(s)
 		s = self.__eliminate_annotation(s)
+		s = self.__eliminate_whitespace(s)
+		# s = self.__eliminate_annotation(s)
 		print 'After preprocessing, s = ', s
 		self.luaTblList = self.__loadFromString(s)
 		if PyLuaTblParser.__CONF_DEBUG_:
@@ -723,19 +711,18 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	# s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{[10]="a"}'
 	# s = '{"abc"}'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{[10]="a"}'
 	# s = '{"abc", nil, hello="nice", 345}'
-	# s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
-	# s = '{{{}}}'
+	s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
 	# s = '{{{}}}'
 	# s = '{1, 2, 3}'
 	# s = '{"abc", 2, 3}'
 	s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
-	s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
+	# s = '{--[==[nice annotation]==]   1,hello="wh en"; "{ha kd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 
