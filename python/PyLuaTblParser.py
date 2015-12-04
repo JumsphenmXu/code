@@ -56,7 +56,7 @@ class PyLuaTblParser(object):
 	KLASS_ISFLT = 6
 	KLASS_ISOTHER = 7
 	__CONF_DEBUG_ = False
-	__CONF_DEBUG_ = True
+	# __CONF_DEBUG_ = True
 
 	lDelis = ['"', '\'', '[']
 	rDelis = {'"': '"', '\'': '\'', '[': ']'}
@@ -225,7 +225,7 @@ class PyLuaTblParser(object):
 				ans, status = self.__itemParse(item)
 				if status != PyLuaTblParser.KLASS_ISNIL:
 					ret.append(ans)
-		
+			
 			res = {}
 			for i in xrange(len(ret)):
 				res[i+1] = ret[i]
@@ -327,7 +327,6 @@ class PyLuaTblParser(object):
 						print "Key #%s# conflicts occurred in table %s." % (key, s)
 						raise ValueError
 				else:
-					
 					dictTmp[key] = val
 
 		return dictTmp
@@ -536,8 +535,11 @@ class PyLuaTblParser(object):
 					continue
 
 				dictTmp[key] = []
+				print 'd[key] =', d[key]
 				for k in dkeys:
+					print 'k =', k
 					item = self.__dumpInnerDict2PythonDict({k:d[key][k]})
+					print 'item =', item
 					if type(k) is int:
 						dictTmp[key].append(item[k])
 					else:
@@ -603,14 +605,14 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	# s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	s = '{[10]="a"}'
+	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	# s = '{[10]="a"}'
 	# s = '{"abc"}'
 	parser = PyLuaTblParser()
 # 	parts = parser._PyLuaTblParser__partition(s)
 # 	print parts
 	parser.load(s)
-
+	print parser.luaTblDict
 	luaTblDumpedStr = parser.dump()
 	print 'luaTblDumpedStr =', luaTblDumpedStr
 
