@@ -68,6 +68,30 @@ class PyLuaTblParser(object):
 		self.totLen = len(self.luaStr)
 		self.curPos = f
 
+	def preprocessAnnotation(self, s):
+		i, slen = 0, len(s)
+		t = ''
+		while i < slen:
+			if s[i] == '"' or s[i] == '\'':
+				f = s[i]
+				t += s[i]
+				i += 1
+				while i < slen and (s[i] != f or s[i-1] != '\\'):
+					t += s[i]
+					i += 1
+				if i < slen:
+					t += s[i]
+			elif s[i] == '-':
+				if i + 1 < slen and s[i+1] == '-':
+					while i < slen and s[i] != '\n':
+						i += 1
+				else:
+					t += s[i]
+			else:
+				t += s[i]
+			i += 1
+		return t
+
 	@staticmethod
 	def isDigit(ch):
 		if '0' <= ch and ch <= '9':
@@ -84,32 +108,38 @@ class PyLuaTblParser(object):
 	def isAlphanum(ch):
 		return PyLuaTblParser.isDigit(ch) or PyLuaTblParser.isAlphabet(ch)
 
-	@staticmethod
-	def validate(ch):
-		flag = ch is None or ch == ',' or ch == ';' or ch == '}'
-		if not flag:
-			print 'Current character is $%s$.' % ch
-			raise ValueError('Failed to found seperator comma of semicolon !!!')
 
-	def getStr(self, quotationMark):
+	def validate2(self, flag=True):
+		self.skip()
+		ch = self.next()
+		if ch is None or ch == ',' or ch == ';':
+			return
+		if ch == '}' or not flag:
+			self.putback()
+			return
+
+		# raise ValueError('Suppose to be an seperator like $,;}$')
+
+
+	def getStr(self, quotationMark, flag=True):
 		s = ''
 		self.skip()
 		ch1 = self.next()
-		if ch1 == quotationMark:
-			return s
-
-		ch2 = self.next()
-		while not (ch1 is not None and ch2 is not None and ch1 != '\\' and ch2 == quotationMark):
-			s += ch1
-			ch1 = ch2
+		if ch1 != quotationMark:
 			ch2 = self.next()
+			while not (ch1 is not None and ch2 is not None and ch1 != '\\' and ch2 == quotationMark):
+				s += ch1
+				ch1 = ch2
+				ch2 = self.next()
 
-		s += ch1
-		if ch2 != quotationMark:
-			raise ValueError('Quotation mark does not match !!!')
+			s += ch1
+			if ch2 != quotationMark:
+				raise ValueError('Quotation mark does not match !!!')
+		self.validate2(flag)
+
 		return s
 
-	def getNumber(self):
+	def getNumber(self, flag=True):
 		s = ''
 		self.skip()
 		ch = self.next()
@@ -117,6 +147,8 @@ class PyLuaTblParser(object):
 			s += ch
 			ch = self.next()
 		self.putback()
+		self.validate2(flag)
+
 		f = float(s)
 		try:
 			i = int(s)
@@ -135,7 +167,7 @@ class PyLuaTblParser(object):
 		else:
 			return s, False
 
-	def getVar(self):
+	def getVar(self, flag=True):
 		self.skip()
 		s = ''
 		ch = self.next()
@@ -143,27 +175,31 @@ class PyLuaTblParser(object):
 			s += ch
 			ch = self.next()
 		self.putback()
+		self.validate2(flag)
+
 		return s
 
-	def getValue(self, key):
+	def getValue(self, key, flag=True):
 		val = None
 		self.skip()
 		ch = self.next()
 		if self.underDebugMode():
 			print 'getValue key = %s, ch = %s.' % (key, ch)
+
 		if ch == '"' or ch == '\'':
-			val = self.getStr(ch)
+			val = self.getStr(ch, flag)
 		elif PyLuaTblParser.isDigit(ch) or ch == '-' or ch == '+':
 			self.putback()
-			val = self.getNumber()
+			val = self.getNumber(flag)
 		elif ch == '{':
 			self.printLeftToken('SRC LEFT:')
 			val = self.getItem(True)
 			if self.prev() != '}':
+				print 'self.prev() =', self.prev()
 				raise ValueError('Brackets does not match !!!')
 		elif PyLuaTblParser.isAlphabet(ch):
 			self.putback()
-			val = self.getVar()
+			val = self.getVar(flag)
 			val, ok = self.checkSpecialStr(val)
 			if not ok:
 				msg = 'Illegal value $%s$ for key $%s$' % (str(val), str(key))
@@ -175,6 +211,7 @@ class PyLuaTblParser(object):
 		ans = []
 		if self.underDebugMode():
 			self.printLeftToken('Left unparsed SRC:')
+
 		while True:
 			self.skip()
 			ch = self.next()
@@ -200,6 +237,7 @@ class PyLuaTblParser(object):
 				self.printLeftToken('SRC LEFT:')
 				item = self.getItem(True)
 				if self.prev() != '}':
+					print 'prev =%s, curPos = %d, parsed = %s' % (self.prev(), self.curPos, self.luaStr[:self.curPos])
 					raise ValueError('Brackets does not match !!!')
 				self.skip()
 				ch = self.next()
@@ -208,31 +246,13 @@ class PyLuaTblParser(object):
 					if len(ans) == 1 and ans[0] != []:
 						ans = ans[0]
 					return ans
-				if ch == '-':
-					if self.next() == '-':
-						self.skipAnnotation()
-					else:
-						self.putback()
-				elif ch != '}':
-					PyLuaTblParser.validate(ch)
 				else:
 					self.putback()
 				ans.append(item)
 				if self.underDebugMode():
 					print '{-->ans =', ans
 			elif ch == '"' or ch == '\'':
-				s = self.getStr(ch)
-				self.skip()
-				ch = self.next()
-				if ch == '-':
-					if self.next() == '-':
-						self.skipAnnotation()
-					else:
-						self.putback()
-				if ch != '}':
-					PyLuaTblParser.validate(ch)
-				else:
-					self.putback()
+				s = self.getStr(ch, True)
 				ans.append(s)
 				if self.underDebugMode():
 					print '"-->ans =', ans
@@ -241,10 +261,10 @@ class PyLuaTblParser(object):
 				ch = self.next()
 				key, val = None, None
 				if ch == '"' or ch == '\'':
-					key = self.getStr(ch)
+					key = self.getStr(ch, False)
 				else:
 					self.putback()
-					key = self.getNumber()
+					key = self.getNumber(False)
 
 				self.skip()
 				if self.next() != ']':
@@ -253,20 +273,10 @@ class PyLuaTblParser(object):
 				if self.next() != '=':
 					raise ValueError('Dict should in the pattern KEY=VAL !!!')
 				self.skip()
-				val = self.getValue(key)
+				val = self.getValue(key, True)
 				if self.underDebugMode():
 					print '[\'key\'] = %s, val = %s' % (str(key), str(val))
-				self.skip()
-				ch = self.next()
-				if ch == '-':
-					if self.next() == '-':
-						self.skipAnnotation()
-					else:
-						self.putback()
-				if ch != '}':
-					PyLuaTblParser.validate(ch)
-				else:
-					self.putback()
+
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
 
@@ -275,68 +285,36 @@ class PyLuaTblParser(object):
 				if self.underDebugMode():
 					print '[-->ans =', ans
 			elif PyLuaTblParser.isDigit(ch) or ch == '+' or ch == '-':
-				if ch == '-' and self.next() == '-':
-					self.skipAnnotation()
-					continue
-				else:
-					self.putback()
-					num = self.getNumber()
-					self.skip()
-					ch = self.next()
-					if ch == '-':
-						if self.next() == '-':
-							self.skipAnnotation()
-						else:
-							self.putback()
-					if ch != '}':
-						PyLuaTblParser.validate(ch)
+				if ch == '-':
+					if self.next() == '-':
+						self.skipAnnotation()
+						continue
 					else:
 						self.putback()
+				else:
+					self.putback()
+					num = self.getNumber(True)
 					ans.append(num)
 				if self.underDebugMode():
 					print 'N-->ans =', ans
 			elif PyLuaTblParser.isAlphabet(ch) or ch == '_':
-				key = ''
-				while PyLuaTblParser.isAlphanum(ch):
-					key += ch
-					ch = self.next()
 				self.putback()
-				self.skip()
-
+				key = self.getVar(False)
 				key, spFlag = self.checkSpecialStr(key)
 				if spFlag:
-					self.skip()
-					ch = self.next()
-					if ch == '-':
-						if self.next() == '-':
-							self.skipAnnotation()
-						else:
-							self.putback()
-					if ch != '}':
-						PyLuaTblParser.validate(ch)
-					else:
-						self.putback()
 					continue
 
-				if self.next() != '=':
-					raise ValueError('Dict should in the pattern KEY=VAL !!!')
-				val = self.getValue(key)
-				if self.underDebugMode():
-					print 'key = %s, val = %s' % (str(key), str(val))
 				self.skip()
 				ch = self.next()
-				if ch == '-':
-					if self.next() == '-':
-						self.skipAnnotation()
-					else:
+				if ch != '=':
+					if ch != ',' or ch != ',':
 						self.putback()
-				if ch != '}':
-					if self.underDebugMode():
-						print 'Already parsed $%s$.' % self.luaStr[:self.curPos]
-					PyLuaTblParser.validate(ch)
-				else:
-					self.putback()
-
+					continue
+					# raise ValueError('Dict should in the pattern KEY=VAL !!!')
+				self.skip()
+				val = self.getValue(key, True)
+				if self.underDebugMode():
+					print 'key = %s, val = %s' % (str(key), str(val))
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
 				if val is not None:
@@ -344,9 +322,9 @@ class PyLuaTblParser(object):
 				if self.underDebugMode():
 					print 'K-->ans =', ans
 					self.printLeftToken('K SRC:')
-			else:
-				msg = 'Invalid lua table string: $%s$, current character is $%s$.' % (self.luaStr[0:self.curPos], ch)
-				raise ValueError(msg)
+			# else:
+			# 	msg = 'Invalid lua table string: $%s$, current character is $%s$.' % (self.luaStr[0:self.curPos], ch)
+			# 	raise ValueError(msg)
 		
 		if len(ans) == 1 and ans[0] != {}:
 			ans = ans[0]
@@ -357,12 +335,15 @@ class PyLuaTblParser(object):
 
 
 	def load(self, s):
+		s = self.preprocessAnnotation(s)
 		if self.underDebugMode():
 			print 'After preprocessing, SRC =', s
 		self.luaStr = s
 		self.curPos = 0
 		self.totLen = len(s)
 		self.luaLst = self.getItem()
+		if type(self.luaLst) is not list:
+			self.luaLst = [self.luaLst]
 		if self.prev() != '}':
 			raise ValueError('Brackets does not match !!!')
 		if self.underDebugMode():
@@ -635,13 +616,14 @@ class PyLuaTblParser(object):
 		return self.dumpInnerList2PythonDict(self.luaLst)
 
 
-
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	# s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
-	# s = '{{}} -- hello'
+	s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
+	# s = '"hello"}'
 	# s = "{['array']={65,23,5,{1,2,3},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
+	# s = '{1, 2}'
+	# s = '{hello="world"}'
 	parser = PyLuaTblParser()
 	# parser.setDebugMode(True)
 
