@@ -199,9 +199,10 @@ class PyLuaTblParser(object):
 					if i == slen - 1:
 						parts.append(s[start: slen])
 						return parts
-					if i+1 < slen and (s[i+1] == ',' or s[i+1] == ';' or s[i+1] == '}'):
-						break
-					i += 1
+					break
+					# if i+1 < slen and (s[i+1] == ',' or s[i+1] == ';' or s[i+1] == '}'):
+					# 	break
+					# i += 1
 				if PyLuaTblParser.__CONF_DEBUG_:
 					print '#2# s[%d:%d] = %s' % (start, i, s[start: i])
 			elif s[i] == '[':
@@ -643,7 +644,7 @@ class PyLuaTblParser(object):
 
 
 	def __dumpInnerList2PythonDict(self, data):
-		print '#1 __dumpInnerList2PythonDict data =', data
+		# print '#1 __dumpInnerList2PythonDict data =', data
 		assert type(data) is list
 		dlen = len(data)
 
@@ -718,16 +719,16 @@ class PyLuaTblParser(object):
 
 
 if __name__ == '__main__':
-	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{[10]="a"}'
 	# s = '{"abc", nil, hello="nice", 345}'
 	# s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
-	s = '{{{}}}'
+	# s = '{{{}}}'
 	# s = '{{{}}}'
 	# s = '{1, 2, 3}'
 	# s = '{"abc", 2, 3}'
 	# s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
-	s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
+	# s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 
