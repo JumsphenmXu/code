@@ -118,9 +118,8 @@ class PyLuaTblParser(object):
 							i += 4
 							while i < slen:
 								if s[i] == ']' and i + 1 < slen and s[i+1] == ']':
-									if i > 0 and s[i-1] != '\\':
-										i += 1
-										break
+									i += 1
+									break
 								i += 1
 						# --[====[annotation]====]
 						elif i + 3 < slen and s[i+3] == '=':
@@ -208,15 +207,14 @@ class PyLuaTblParser(object):
 			elif s[i] == '[':
 				f = ''
 				i += 1
-				if i < slen:
-					if s[i] == '"' or s[i] == '\'':
-						f = s[i]
+				if i < slen and (s[i] == '"' or s[i] == '\''):
+					f = s[i]
 				if f != '':
 					while i < slen:
 						i += 1
 						if i < slen and s[i] != f or s[i-1] == '\\':
 							continue
-						end = i < slen and s[i] == f and i+1 < slen and s[i+1] == ']' and i+2 < slen and s[i+2] == '='
+						end = i+1 < slen and s[i+1] == ']' and i+2 < slen and s[i+2] == '='
 						if end:
 							i += 2
 							break
@@ -722,6 +720,7 @@ if __name__ == '__main__':
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{[10]="a"}'
 	# s = '{"abc", nil, hello="nice", 345}'
+	s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
 	# s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
 	# s = '{{{}}}'
 	# s = '{{{}}}'
@@ -729,6 +728,9 @@ if __name__ == '__main__':
 	# s = '{"abc", 2, 3}'
 	# s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
 	# s = '{--[==[nice annotation]==]   1,hello="when"; "{hakd"}'
+	s = '{"abc", 2, 3}'
+	# s = '{[--[[nice a]]"a"] = 1, "hello", --[=[annotation]=]} --hello'
+	s = '{--[= =[nice annotation]= =]   1,hello="when"; "{hakd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
 
