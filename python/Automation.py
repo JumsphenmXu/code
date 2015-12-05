@@ -15,6 +15,10 @@ class PyLuaTblParser(object):
 	def underDebugMode(self):
 		return self._debug
 
+	def printLeftToken(self, msg):
+		if self.underDebugMode() and self.curPos < self.totLen:
+			print msg, self.luaStr[self.curPos:self.totLen]
+
 	def eliminateAnnotation(self, s):
 		i, slen, t = 0, len(s), ''
 		while i < slen:
@@ -74,6 +78,16 @@ class PyLuaTblParser(object):
 
 			i += 1
 		return t
+
+
+	def prev(self):
+		if self.curPos > 0:
+			i = 0
+			while self.curPos - i > self.totLen:
+				i += 1
+
+			return self.luaStr[self.curPos-i-1]
+		return None
 
 
 	def next(self):
@@ -192,8 +206,11 @@ class PyLuaTblParser(object):
 		elif PyLuaTblParser.isDigit(ch) or ch == '-' or ch == '+':
 			val = self.getNumber()
 		elif ch == '{':
-			val = self.getItem()
-		elif PyLuaTblParser.isAlphanum(ch):
+			self.printLeftToken('SRC LEFT:')
+			val = self.getItem(True)
+			if self.prev() != '}':
+				raise ValueError('Brackets does not match !!!')
+		elif PyLuaTblParser.isAlphabet(ch):
 			self.putback()
 			val = self.getVar()
 			val, ok = self.checkSpecialStr(val)
@@ -204,25 +221,33 @@ class PyLuaTblParser(object):
 		return val
 
 
-	def getItem(self):
+	def getItem(self, bracketFlag=False):
 		ans = []
 		while True:
 			self.skip()
 			ch = self.next()
 
-			if ch is None:
-				break
+			if ch is None and not bracketFlag:
+				raise ValueError('Illegal expression !!!')
 
 			if ch == '}':
+				if not bracketFlag:
+					raise ValueError('Brackets does not match !!!')
 				if len(ans) == 1 and ans[0] != {}:
 					ans = ans[0]
+				self.printLeftToken('SRC RIGHT:')
 				return ans
 
 			if ch == '{':
-				item = self.getItem()
+				self.printLeftToken('SRC LEFT:')
+				item = self.getItem(True)
+				if self.prev() != '}':
+					raise ValueError('Brackets does not match !!!')
 				self.skip()
 				ch = self.next()
-				if ch != '}':
+				if ch is None and not bracketFlag:
+					break
+				elif ch != '}':
 					PyLuaTblParser.validate(ch)
 				else:
 					self.putback()
@@ -268,7 +293,9 @@ class PyLuaTblParser(object):
 					self.putback()
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
-				ans.append({key: val})
+
+				if val is not None or type(key) is int:
+					ans.append({key: val})
 				if self.underDebugMode():
 					print '[-->ans =', ans
 			elif PyLuaTblParser.isDigit(ch) or ch == '+' or ch == '-':
@@ -324,7 +351,8 @@ class PyLuaTblParser(object):
 
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
-				ans.append({key: val})
+				if val is not None:
+					ans.append({key: val})
 				if self.underDebugMode():
 					print 'K-->ans =', ans
 			else:
@@ -345,6 +373,8 @@ class PyLuaTblParser(object):
 		self.curPos = 0
 		self.totLen = len(s)
 		self.luaLst = self.getItem()
+		if self.prev() != '}':
+			raise ValueError('Brackets does not match !!!')
 
 
 	def dumpList2String(self, data):
@@ -618,8 +648,9 @@ class PyLuaTblParser(object):
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	s = '{{},{1, 2, 3,}, hello="world"}'
 	parser = PyLuaTblParser()
-	# parser.setDebugMode(True)
+	parser.setDebugMode(True)
 	parser.load(s)
 
 	# print parser.dump()
