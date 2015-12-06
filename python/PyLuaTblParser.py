@@ -42,12 +42,9 @@ class PyLuaTblParser(object):
 					i += 1
 				if i < slen:
 					t += s[i]
-			elif s[i] == '-':
-				if i + 1 < slen and s[i+1] == '-':
-					while i < slen and s[i] != '\n':
-						i += 1
-				else:
-					t += s[i]
+			elif s[i] == '-' and i + 1 < slen and s[i+1] == '-':
+				while i < slen and s[i] != '\n':
+					i += 1
 			else:
 				t += s[i]
 			i += 1
