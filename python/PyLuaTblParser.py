@@ -83,7 +83,6 @@ class PyLuaTblParser(object):
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
-
 		while self.isDigit(cur) or cur == '.' or cur == 'e' or cur == 'E' or cur == '+' or cur == '-':
 			s += cur
 			cur = self.next()
@@ -151,20 +150,12 @@ class PyLuaTblParser(object):
 
 		self.skip()
 		ch = self.next()
-		if selector == 1:
-			if ch is None or ch == ',' or ch == ';':
-				return
-			elif ch == '}':
-				self.putback()
-			else:
-				raise ValueError('Illegal lua string !!!')
-		elif selector == 2:
-			if ch == ',' or ch == ';':
-				return
-			elif ch == '}':
-				self.putback()
-			else:
-				raise ValueError('Illegal lua string !!!')
+		if (selector == 1 and ch is None) or ch == ',' or ch == ';':
+			return
+		elif ch == '}':
+			self.putback()
+		else:
+			raise ValueError('Illegal lua string !!!')
 
 	def getItem(self, bracketFlag=False):
 		ans = []
