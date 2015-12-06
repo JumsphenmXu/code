@@ -471,12 +471,6 @@ class PyLuaTblParser(object):
 				index += 1
 			else:
 				listTmp.append({key: item})
-
-			if self.underDebugMode():
-				print '#1# loadFromDict: key =', key
-				print '#1# loadFromDict: d[key] =', d[key]
-				print '#1# loadFromDict: listTmp =', listTmp
-
 		return listTmp
 
 
