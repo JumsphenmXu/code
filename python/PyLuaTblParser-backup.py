@@ -56,7 +56,7 @@ class PyLuaTblParser(object):
 		f = self.curPos - 2
 		ch = self.next()
 		if ch == '"' or ch == '\'':
-			self.getStr(ch)
+			self.getStr(ch, False)
 		
 		while ch is not None and ch != '\n':
 			ch = self.next()
