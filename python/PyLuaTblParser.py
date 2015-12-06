@@ -213,7 +213,7 @@ class PyLuaTblParser(object):
 								break
 							else:
 								print 'Failed to partition %s, the brackets do not match!' % s[idx: i+1]
-								raise ValueError
+								raise ValueError(s[idx: i+1])
 				else:
 					while i < slen and s[i] != ']':
 						i += 1			
@@ -229,12 +229,13 @@ class PyLuaTblParser(object):
 					lbc, rbc = 0, 0
 
 			if i == slen - 1:
-				if lbc == rbc:
-					parts.append(s[start: slen])
-					return parts
-				else:
-					print 'Failed to partition %s, the brackets do not match!' % s[start: i+1]
-					raise ValueError
+				parts.append(s[start: slen])
+				# if lbc == rbc:
+				# 	parts.append(s[start: slen])
+				# 	return parts
+				# else:
+				# 	print 'Failed to partition %s, the brackets do not match!' % s[start: i+1]
+				# 	raise ValueError
 			i += 1
 		# end main while loop
 		return parts
@@ -302,7 +303,7 @@ class PyLuaTblParser(object):
 				return t[1:-1], PyLuaTblParser.KLASS_ISSTR
 			else:
 				print 'Failed to parse item #%s# as a string.' % t
-				raise ValueError
+				raise ValueError(t)
 
 		if PyLuaTblParser.__CONF_DEBUG_:
 			print 'Dict t =', t
@@ -319,16 +320,26 @@ class PyLuaTblParser(object):
 			# Here we try to validate the PATTERN as a numeric (int or float),
 			# if the validation failed, we flag a ValueError to notify the caller.
 			if t.find(".") >= 0:
-				return float(t), PyLuaTblParser.KLASS_ISFLT
+				try:
+					f = float(t)
+				except ValueError:
+					return t, PyLuaTblParser.KLASS_ISSTR
+				else:
+					return f, PyLuaTblParser.KLASS_ISFLT
 			else:
-				return int(t), PyLuaTblParser.KLASS_ISINT
+				try:
+					f = int(t)
+				except ValueError:
+					return t, PyLuaTblParser.KLASS_ISSTR
+				else:
+					return f, PyLuaTblParser.KLASS_ISINT
 		else:
 			leftPart = t[0: equalIdx]
 			rightPart = t[equalIdx+1: len(t)]
 
 			if leftPart == "nil" or len(leftPart) == 0 or len(rightPart) == 0:
 				print 'Failed to parse item #%s# as a python dict !!!' % t
-				raise ValueError
+				raise ValueError(t)
 
 			if rightPart == "nil":
 				return None, PyLuaTblParser.KLASS_ISNIL
@@ -339,12 +350,12 @@ class PyLuaTblParser(object):
 				if leftPart[0] == '[':
 					if leftPart[-1] != ']':
 						print 'Failed to parse item #%s# as a dict !!!' % t
-						raise ValueError
+						raise ValueError(t)
 					tf = leftPart[1]
 					if tf == '"' or tf == '\'':
 						if leftPart[-2] != tf:
 							print 'Failed to parse item #%s# as a dict !!!' % t
-							raise ValueError
+							raise ValueError(t)
 						else:
 							leftPart = leftPart[2: -2]
 					else:
@@ -389,7 +400,7 @@ class PyLuaTblParser(object):
 				if key in dictTmp.keys():
 					if type(key) is not int:
 						print "Key #%s# conflicts occurred in table %s." % (key, s)
-						raise ValueError
+						raise ValueError(s)
 				else:
 					dictTmp[key] = val
 
@@ -658,7 +669,6 @@ class PyLuaTblParser(object):
 							res[k] = kd[k]
 			elif type(item) is list:
 				tmp = self.__dumpInnerList2PythonDict(item)
-				# print 'tmp = ', tmp
 				if type(tmp) is dict:
 					tmp = self.__xtransfer(tmp)
 				res[i+1] = tmp
@@ -717,11 +727,11 @@ if __name__ == '__main__':
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{[10]="a"}'
 	# s = '{"abc", nil, hello="nice", 345}'
-	s = '{array = {65,23,5,{1, 2, 3}, [1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
+	s = '{array = {65,23,5,{1, 2, 3},[1]=678, hello="worlddefj"},dict = {mixed = {43,54.33,"hello",yy={11,22,}},array = {3,6,4}}}'
 	# s = '{{{}}}'
 	# s = '{1, 2, 3}'
 	# s = '{"abc", 2, 3}'
-	s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
+	# s = '{[--[[nice a]]"a"] = 1, "hello", --[[annotation]]} --hello'
 	# s = '{--[==[nice annotation]==]   1,hello="wh en"; "{ha kd"}'
 	parser = PyLuaTblParser()
 	parser.load(s)
