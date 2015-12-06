@@ -324,6 +324,8 @@ class PyLuaTblParser(object):
 				s += self.dumpList2String(value) + ","
 			elif type(value) is bool:
 				s += str(value).lower()
+			elif value is None:
+				s += "nil,"
 			else:
 				try:
 					f = float(value)
@@ -437,7 +439,7 @@ class PyLuaTblParser(object):
 			else:
 				if v is not None:
 					res[k] = v
-			if type(res[k]) is None:
+			if k in res.keys() and type(res[k]) is None:
 				res.pop(k)
 		return res
 
@@ -474,8 +476,8 @@ class PyLuaTblParser(object):
 
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
-	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
+	# s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	# s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
 	# s = '"hello"}'
 	# s = "{['array']={65,23,5,{1,2,3},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
 	# s = '{1, 2}'
