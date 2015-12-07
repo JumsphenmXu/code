@@ -24,7 +24,8 @@ class PyLuaTblParser(object):
 
 	def skip(self):
 		ch = self.next()
-		while ch is not None and ch == ' ':
+		escape = '\t\n\r\b\f\v'
+		while ch is not None and (ch == ' ' or ch in escape):
 			ch = self.next()
 		if ch is not None:
 			self.putback()
@@ -83,17 +84,13 @@ class PyLuaTblParser(object):
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
-		while self.isDigit(cur) or cur == '.' or cur == 'e' or cur == 'E' or cur == '+' or cur == '-':
+		exp = ".+-*/aAbBcCdDeEfFxX"
+		while self.isDigit(cur) or cur in exp:
 			s += cur
 			cur = self.next()
 
 		self.putback()
-		try:
-			i = int(s)
-		except ValueError:
-			return float(s)
-		else:
-			return i
+		return eval(s)
 
 	def checkSpecialStr(self, s):
 		if s == 'nil':
@@ -143,7 +140,6 @@ class PyLuaTblParser(object):
 
 		return val
 
-
 	def trailing(self, selector):
 		if selector == 0:
 			return
@@ -173,8 +169,6 @@ class PyLuaTblParser(object):
 			if ch == '}':
 				if not bracketFlag:
 					raise ValueError('Brackets does not match !!!')
-				if len(ans) == 1 and ans[0] != []:
-					ans = ans[0]
 				return ans
 
 			if ch == '{':
@@ -183,7 +177,7 @@ class PyLuaTblParser(object):
 				ch = self.next()
 				if ch is None and not bracketFlag:
 					ans.append(item)
-					if len(ans) == 1 and ans[0] != []:
+					if len(ans) == 1:
 						ans = ans[0]
 					return ans
 				else:
@@ -222,7 +216,7 @@ class PyLuaTblParser(object):
 				if val is not None or type(key) is int:
 					ans.append({key: val})
 				selector = 2
-			elif self.isDigit(ch) or ch == '+' or ch == '-':
+			elif self.isDigit(ch) or ch == '+' or ch == '-' or ch == '.':
 				self.putback()
 				num = self.getNumber()
 				ans.append(num)
@@ -250,11 +244,12 @@ class PyLuaTblParser(object):
 					ans.append({key: val})
 				selector = 2
 			else:
-				raise ValueError('Invalid lua table string')
+				msg = 'Invalid lua table string, ch = %s' % ch
+				raise ValueError(msg)
 	
 			self.trailing(selector)
 		
-		if len(ans) == 1 and ans[0] != []:
+		if len(ans) == 1:
 			ans = ans[0]
 		return ans
 
@@ -273,17 +268,19 @@ class PyLuaTblParser(object):
 	def dumpList2String(self, data):
 		assert type(data) is list
 		datalen = len(data)
-		s = ""
-		if datalen == 1 and type(data[0]) is list:
-			s += "{" +  self.dumpList2String(data[0]) + "}"
-			return s
+		if datalen == 0:
+			return ''
 
-		s += "{"
+		s = "{"
 		for i in xrange(datalen):
 			if type(data[i]) is dict:
 				s += self.dumpDict2String(data[i]) + ","
 			elif type(data[i]) is list:
-				s += self.dumpList2String(data[i]) + ","
+				t = self.dumpList2String(data[i])
+				if len(data[i]) == 1 and type(data[i][0]) is list:
+					s += "{" + t + "},"
+				else:
+					s += t + ","
 			elif data[i] is None:
 				s += "nil,"
 			elif type(data[i]) is bool:
@@ -333,8 +330,8 @@ class PyLuaTblParser(object):
 					s += "'" + str(value) + "',"
 				else:
 					s += str(value) + ","
-
-		s = s[:-1]
+		if len(s) > 0 and s[-1] == ',':
+			s = s[:-1]
 		if len(keys) > 1:
 			s += "}"
 		return s
@@ -378,7 +375,13 @@ class PyLuaTblParser(object):
 		assert type(d) is dict
 		lst = []
 		index = 1
-		for key in d.keys():
+		keys = d.keys()
+
+		if len(keys) == 1 and type(d[keys[0]]) is dict:
+			lst.append(self.loadFromDict(d[keys[0]]))
+			return lst
+
+		for key in keys:
 			item = None
 			if type(d[key]) is list:
 				item = self.loadFromList(d[key])
@@ -418,7 +421,10 @@ class PyLuaTblParser(object):
 		res = []
 		if flag and maxkey == len(keys):
 			for i in xrange(len(keys)):
-				res.append(dct[keys[i]])
+				val = dct[keys[i]]
+				if type(val) is dict:
+					val = self.xtransfer(val)
+				res.append(val)
 			
 			if len(res) == 1:
 				return res[0]
@@ -446,9 +452,10 @@ class PyLuaTblParser(object):
 	def dumpLst2Dct(self, data):
 		assert type(data) is list
 		dlen = len(data)
-		if dlen == 0:
-			return {}
+		if dlen == 1 and type(data[0]) is list:
+			return {1 : self.dumpLst2Dct(data[0])}
 
+		index = 1
 		res = {}
 		for i in xrange(dlen):
 			item = data[i]
@@ -464,10 +471,14 @@ class PyLuaTblParser(object):
 				tmp = self.dumpLst2Dct(item)
 				if type(tmp) is dict:
 					tmp = self.xtransfer(tmp)
+				if len(item) == 1 and type(tmp) is list:
+					tmp = [tmp]
 				if tmp is not None:
-					res[i+1] = tmp
+					res[index] = tmp
+					index += 1
 			else:
-				res[i+1] = item
+				res[index] = item
+				index += 1
 		return res
 
 	def dumpDict(self):
@@ -476,12 +487,16 @@ class PyLuaTblParser(object):
 
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
-	# s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
 	# s = '"hello"}'
-	# s = "{['array']={65,23,5,{1,2,3},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
-	# s = '{1, 2}'
-	# s = '{{hello="world"}, hel=1}'
+	s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
+	s = '{1, 2}'
+	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true, 2, .123, 0xea, "#, 0xea, \t\r\n\\\\,k"}'
+	# s = '{1, 2, array={2, 3, 4, "hi"}}'
+	# s = '{{{{1, 2, 3}, 4}}}'
+	# s = '{{{}}}'
+	s = '{["hel\\\"\\\"\\\"\\\"\\\"l"]=1}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
@@ -499,5 +514,10 @@ if __name__ == '__main__':
 	s = parser.dump()
 	print 'luaStr:', s
 
-	d = parser.dumpDict()
-	print 'd =', d
+	parser.load(s)
+	print parser.luaLst
+	# d = parser.dumpDict()
+	# print 'd =', d
+	s = parser.dump()
+	print s
+	parser.load(s)
