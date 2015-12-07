@@ -256,7 +256,7 @@ class PyLuaTblParser(object):
 
 	def load(self, s):
 		s = self.preprocessAnnotation(s)
-		print 'After preprocessing, SRC =', s
+		# print 'After preprocessing, SRC =', s
 		self.luaStr = s
 		self.curPos = 0
 		self.totLen = len(s)
@@ -268,19 +268,12 @@ class PyLuaTblParser(object):
 	def dumpList2String(self, data):
 		assert type(data) is list
 		datalen = len(data)
-		if datalen == 0:
-			return ''
-
 		s = "{"
 		for i in xrange(datalen):
 			if type(data[i]) is dict:
 				s += self.dumpDict2String(data[i]) + ","
 			elif type(data[i]) is list:
-				t = self.dumpList2String(data[i])
-				if len(data[i]) == 1 and type(data[i][0]) is list:
-					s += "{" + t + "},"
-				else:
-					s += t + ","
+				s += self.dumpList2String(data[i]) + ","
 			elif data[i] is None:
 				s += "nil,"
 			elif type(data[i]) is bool:
@@ -337,7 +330,10 @@ class PyLuaTblParser(object):
 		return s
 
 	def dump(self):
-		self.luaStr = self.dumpList2String(self.luaLst)
+		if self.luaLst == []:
+			self.luaStr = '{}'
+		else:
+			self.luaStr = self.dumpList2String(self.luaLst)
 		return self.luaStr
 
 	def loadLuaTable(self, f):
@@ -404,35 +400,33 @@ class PyLuaTblParser(object):
 	def loadDict(self, d):
 		self.luaLst = self.loadFromDict(d)
 
+
+	def xtransferHelper(self, key, val):
+		if type(val) is dict and len(val.items()) > 1:
+			return key, self.xtransfer(val)
+
+		return key, val
+
+
 	def xtransfer(self, dct):
 		assert type(dct) is dict
+		maxKey = -1
 		flag = True
-		keys = dct.keys()
-		keys.sort()
-		maxkey = -1
 
-		for i in xrange(len(keys)):
-			if type(keys[i]) is not int or dct[keys[i]] == {}:
+		for key, val in dct.items():
+			if type(key) is not int:
 				flag = False
-				break
-			if maxkey < keys[i]:
-				maxkey = keys[i]
-		
-		res = []
-		if flag and maxkey == len(keys):
-			for i in xrange(len(keys)):
-				val = dct[keys[i]]
-				if type(val) is dict:
-					val = self.xtransfer(val)
-				res.append(val)
-			
-			if len(res) == 1:
-				return res[0]
 			else:
-				return res
+				maxKey = max(maxKey, key)
+			key, dct[key] = self.xtransferHelper(key, val)
 
-		return dct
+		if not flag or maxKey != len(dct.items()) or maxKey <= 1:
+			return dct
 
+		res = []
+		for i in xrange(len(dct.items())):
+			res.append(dct[i+1])
+		return res
 
 	def dumpDct2Dct(self, data):
 		assert type(data) is dict
@@ -441,10 +435,9 @@ class PyLuaTblParser(object):
 			if type(v) is list:
 				res[k] = self.dumpLst2Dct(v)
 			elif type(v) is dict:
-				res[k] = self.xtransfer(self.dumpDct2Dct(v))
-			else:
-				if v is not None:
-					res[k] = v
+				res[k] = self.dumpDct2Dct(v)
+			elif v is not None:
+				res[k] = v
 			if k in res.keys() and type(res[k]) is None:
 				res.pop(k)
 		return res
@@ -452,9 +445,6 @@ class PyLuaTblParser(object):
 	def dumpLst2Dct(self, data):
 		assert type(data) is list
 		dlen = len(data)
-		if dlen == 1 and type(data[0]) is list:
-			return {1 : self.dumpLst2Dct(data[0])}
-
 		index = 1
 		res = {}
 		for i in xrange(dlen):
@@ -471,8 +461,6 @@ class PyLuaTblParser(object):
 				tmp = self.dumpLst2Dct(item)
 				if type(tmp) is dict:
 					tmp = self.xtransfer(tmp)
-				if len(item) == 1 and type(tmp) is list:
-					tmp = [tmp]
 				if tmp is not None:
 					res[index] = tmp
 					index += 1
@@ -488,15 +476,18 @@ class PyLuaTblParser(object):
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	# s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
-	# s = '"hello"}'
-	s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
-	s = '{1, 2}'
+	s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
+	# s = '"hello"'
+	# s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
+	# s = '{{1, 2}, {{{{}}}}}'
 	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true, 2, .123, 0xea, "#, 0xea, \t\r\n\\\\,k"}'
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
 	# s = '{{{}}}'
-	s = '{["hel\\\"\\\"\\\"\\\"\\\"l"]=1}'
+	# s = '{["hel\\\"\\\"\\\"\\\"\\\"l"]=1}'
+	# s = '{h=1,o=1,k=3}'
+	# s = '{{11,22,33}, 4, {{{5, 6, 7}}}, hel=0}'
+	# s = '{1, 2, 3}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
@@ -516,8 +507,9 @@ if __name__ == '__main__':
 
 	parser.load(s)
 	print parser.luaLst
-	# d = parser.dumpDict()
-	# print 'd =', d
+	d = parser.dumpDict()
+	print 'd =', d
+
 	s = parser.dump()
 	print s
 	parser.load(s)
