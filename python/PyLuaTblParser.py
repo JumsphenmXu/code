@@ -22,6 +22,7 @@ class PyLuaTblParser(object):
 		else:
 			print 'Index out of bound for curPos = %d' % self.curPos
 
+	# skip the whitespace which includes \t\n\r\b\f\v and ' '
 	def skip(self):
 		ch = self.next()
 		escape = '\t\n\r\b\f\v'
@@ -65,6 +66,7 @@ class PyLuaTblParser(object):
 	def isAlphanum(self, ch):
 		return self.isDigit(ch) or self.isAlphabet(ch)
 
+	# get string which formatted as "string" or 'string'
 	def getStr(self, quotationMark):
 		s = ''
 		prev = None
@@ -81,6 +83,7 @@ class PyLuaTblParser(object):
 
 		return s
 
+	# get the number which includes float and int
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
@@ -92,6 +95,7 @@ class PyLuaTblParser(object):
 		self.putback()
 		return eval(s)
 
+	# check special string nil|false|true
 	def checkSpecialStr(self, s):
 		if s == 'nil':
 			return None, True
@@ -107,6 +111,8 @@ class PyLuaTblParser(object):
 					break
 			return s, flag
 
+	# get variable which begins with a-z or A-Z or _
+	# and the following can be a-z or A-Z or 0-9 or _
 	def getVar(self, flag=True):
 		s = ''
 		ch = self.next()
@@ -117,7 +123,7 @@ class PyLuaTblParser(object):
 		self.putback()
 		return s
 
-
+	# get value which can be table|number|string|variable
 	def getValue(self):
 		val = None
 		self.skip()
@@ -140,6 +146,7 @@ class PyLuaTblParser(object):
 
 		return val
 
+	# process the trailing , or ; or }
 	def trailing(self, selector):
 		if selector == 0:
 			return
@@ -153,6 +160,7 @@ class PyLuaTblParser(object):
 		else:
 			raise ValueError('Illegal lua string !!!')
 
+	# parse the input string as lua table
 	def getItem(self, bracketFlag=False):
 		ans = []
 		while True:
@@ -246,7 +254,7 @@ class PyLuaTblParser(object):
 			else:
 				msg = 'Invalid lua table string, ch = %s' % ch
 				raise ValueError(msg)
-	
+			# processing trailing , or ; or }
 			self.trailing(selector)
 		
 		if len(ans) == 1:
@@ -263,7 +271,6 @@ class PyLuaTblParser(object):
 		self.luaLst = self.getItem()
 		if type(self.luaLst) is not list:
 			self.luaLst = [self.luaLst]
-
 
 	def dumpList2String(self, data):
 		assert type(data) is list
@@ -401,6 +408,7 @@ class PyLuaTblParser(object):
 		self.luaLst = self.loadFromDict(d)
 
 
+	# transform dict in pattern like {1:1, 2:2, 3:3...., n:n} to list like [1,2,3...n]
 	def xtransferHelper(self, key, val):
 		if type(val) is dict and len(val.items()) > 1:
 			return key, self.xtransfer(val)
@@ -483,11 +491,12 @@ if __name__ == '__main__':
 	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true, 2, .123, 0xea, "#, 0xea, \t\r\n\\\\,k"}'
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
-	# s = '{{{}}}'
-	# s = '{["hel\\\"\\\"\\\"\\\"\\\"l"]=1}'
+	# s = '{{{{}}}}'
+	s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
 	# s = '{h=1,o=1,k=3}'
 	# s = '{{11,22,33}, 4, {{{5, 6, 7}}}, hel=0}'
-	# s = '{1, 2, 3}'
+	# s = '{1, 2, 3, hl="aa",		yi="dd"}'
+	s = '{array={1, 2, 3, true}, [4]=9, false}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
