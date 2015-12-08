@@ -31,27 +31,13 @@ class PyLuaTblParser(object):
 		if ch is not None:
 			self.putback()
 
-	def preprocessAnnotation(self, s):
-		i, slen = 0, len(s)
-		t = ''
-		while i < slen:
-			if s[i] == '"' or s[i] == '\'':
-				f = s[i]
-				t += s[i]
-				i += 1
-				while i < slen and (s[i] != f or s[i-1] == '\\'):
-					t += s[i]
-					i += 1
-				if i < slen:
-					t += s[i]
-			elif s[i] == '-' and i + 1 < slen and s[i+1] == '-':
-				while i < slen and s[i] != '\n':
-					i += 1
-			else:
-				t += s[i]
-			i += 1
-		return t
+	def annotation(self):
+		ch = self.next()
+		while ch is not None and ch != '\n':
+			ch = self.next()
 
+		if ch is not None:
+			self.putback()
 
 	def isDigit(self, ch):
 		if '0' <= ch and ch <= '9':
@@ -87,29 +73,25 @@ class PyLuaTblParser(object):
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
-		exp = ".+-*/aAbBcCdDeEfFxX"
+		exp = ".+-*/eE"
 		while self.isDigit(cur) or cur in exp:
 			s += cur
 			cur = self.next()
 
-		self.putback()
+		if cur is not None:
+			self.putback()
 		return eval(s)
 
 	# check special string nil|false|true
 	def checkSpecialStr(self, s):
 		if s == 'nil':
-			return None, True
+			return None
 		elif s == 'false':
-			return False, True
+			return False
 		elif s == 'true':
-			return True, True
-		else:
-			flag = True
-			for i in xrange(len(s)):
-				if s[i] != '_' and not self.isAlphanum(s[i]):
-					flag = False
-					break
-			return s, flag
+			return True
+
+		return s
 
 	# get variable which begins with a-z or A-Z or _
 	# and the following can be a-z or A-Z or 0-9 or _
@@ -120,7 +102,8 @@ class PyLuaTblParser(object):
 			s += ch
 			ch = self.next()
 
-		self.putback()
+		if ch is not None:
+			self.putback()
 		return s
 
 	# get value which can be table|number|string|variable
@@ -131,7 +114,15 @@ class PyLuaTblParser(object):
 
 		if ch == '"' or ch == '\'':
 			val = self.getStr(ch)
-		elif self.isDigit(ch) or ch == '-' or ch == '+':
+		elif ch == '-':
+			nxt = self.next()
+			if nxt == '-':
+				self.annotation()
+			else:
+				self.putback()
+				self.putback()
+				val = self.getNumber()
+		elif self.isDigit(ch) or ch in '.':
 			self.putback()
 			val = self.getNumber()
 		elif ch == '{':
@@ -139,10 +130,9 @@ class PyLuaTblParser(object):
 		elif self.isAlphabet(ch) or ch == '_':
 			self.putback()
 			val = self.getVar()
-			val, ok = self.checkSpecialStr(val)
-			if not ok:
-				msg = 'Value #%s# is illegal !!!' % str(val)
-				raise ValueError(msg)
+			val = self.checkSpecialStr(val)
+		else:
+			raise ValueError('Illegal value !!!')
 
 		return val
 
@@ -153,6 +143,12 @@ class PyLuaTblParser(object):
 
 		self.skip()
 		ch = self.next()
+		if ch == '-':
+			if self.next() == '-':
+				self.annotation()
+				self.skip()
+				ch = self.next()
+
 		if (selector == 1 and ch is None) or ch == ',' or ch == ';':
 			return
 		elif ch == '}':
@@ -201,6 +197,7 @@ class PyLuaTblParser(object):
 				ch = self.next()
 				key, val = None, None
 
+				# the key is either string or number
 				if ch == '"' or ch == '\'':
 					key = self.getStr(ch)
 				else:
@@ -215,16 +212,19 @@ class PyLuaTblParser(object):
 				if self.next() != '=':
 					raise ValueError('Illegal expression #equal symbol(=) missed# !!!')
 
-				self.skip()
 				val = self.getValue()
-
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
 
 				if val is not None or type(key) is int:
 					ans.append({key: val})
 				selector = 2
-			elif self.isDigit(ch) or ch == '+' or ch == '-' or ch == '.':
+			elif self.isDigit(ch) or ch in '.-':
+				nxt = self.next()
+				if nxt == '-':
+					self.annotation()
+					continue
+				self.putback()
 				self.putback()
 				num = self.getNumber()
 				ans.append(num)
@@ -232,15 +232,22 @@ class PyLuaTblParser(object):
 			elif self.isAlphabet(ch) or ch == '_':
 				self.putback()
 				key = self.getVar()
-				key, spFlag = self.checkSpecialStr(key)
+				key = self.checkSpecialStr(key)
 
 				self.skip()
 				ch = self.next()
-				if (ch == ',' or ch == ';' or ch == '}') and spFlag:
+				if ch == '-':
+					if self.next() == '-':
+						self.annotation()
+						self.skip()
+						ch = self.next()
+					else:
+						raise ValueError('Unexpected hyphen !!!')
+				
+				if ch in ',;}':
 					if ch == '}':
 						self.putback()
-					if type(key) is not str:
-						ans.append(key)
+					ans.append(key)
 					continue
 				elif ch != '=':
 					raise ValueError('Illegal expression #equal symbol(=) missed# !!!')
@@ -248,6 +255,7 @@ class PyLuaTblParser(object):
 				val = self.getValue()
 				if key is None or key == '':
 					raise ValueError('Key can not be Empty or None !!!')
+
 				if val is not None:
 					ans.append({key: val})
 				selector = 2
@@ -263,8 +271,6 @@ class PyLuaTblParser(object):
 
 
 	def load(self, s):
-		s = self.preprocessAnnotation(s)
-		# print 'After preprocessing, SRC =', s
 		self.luaStr = s
 		self.curPos = 0
 		self.totLen = len(s)
@@ -380,7 +386,7 @@ class PyLuaTblParser(object):
 		index = 1
 		keys = d.keys()
 
-		if len(keys) == 1 and type(d[keys[0]]) is dict:
+		if len(keys) == 1 and type(d[keys[0]]) is dict and keys[0] == 1:
 			lst.append(self.loadFromDict(d[keys[0]]))
 			return lst
 
@@ -406,7 +412,6 @@ class PyLuaTblParser(object):
 
 	def loadDict(self, d):
 		self.luaLst = self.loadFromDict(d)
-
 
 	# transform dict in pattern like {1:1, 2:2, 3:3...., n:n} to list like [1,2,3...n]
 	def xtransferHelper(self, key, val):
@@ -473,7 +478,8 @@ class PyLuaTblParser(object):
 					res[index] = tmp
 					index += 1
 			else:
-				res[index] = item
+				if item is not None:
+					res[index] = item
 				index += 1
 		return res
 
@@ -484,7 +490,7 @@ class PyLuaTblParser(object):
 if __name__ == '__main__':
 	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
-	s = '{{{}},{1, 2, 3,}, hello="world"}  -- i am xuxinhui '
+	# s = '{{{}},{1, 2, 3,}, hello="world"}, "hh"'
 	# s = '"hello"'
 	# s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
 	# s = '{{1, 2}, {{{{}}}}}'
@@ -492,11 +498,18 @@ if __name__ == '__main__':
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
 	# s = '{{{{}}}}'
-	s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
+	# s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
 	# s = '{h=1,o=1,k=3}'
 	# s = '{{11,22,33}, 4, {{{5, 6, 7}}}, hel=0}'
 	# s = '{1, 2, 3, hl="aa",		yi="dd"}'
-	s = '{array={1, 2, 3, true}, [4]=9, false}'
+	# s = '{array={1, 2, 3, true}, [4]=9, false}'
+	# s = '{abc}'
+	# s = '{var={{var=1}}} --}'
+	# s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4,},string = "value",},}'
+	# s = '{abc}'
+	s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
+	s = '{23,.24,-0.98e1,-.1}'
+	s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
