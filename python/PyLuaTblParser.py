@@ -22,6 +22,13 @@ class PyLuaTblParser(object):
 		else:
 			print 'Index out of bound for curPos = %d' % self.curPos
 
+	def getCurPos(self):
+		return self.curPos
+
+
+	def setCurPos(self, curPos):
+		self.curPos = curPos
+
 	# skip the whitespace which includes \t\n\r\b\f\v and ' '
 	def skip(self):
 		ch = self.next()
@@ -32,12 +39,50 @@ class PyLuaTblParser(object):
 			self.putback()
 
 	def annotation(self):
+		self.skip()
 		ch = self.next()
-		while ch is not None and ch != '\n':
-			ch = self.next()
-
-		if ch is not None:
+		if ch != '-':
 			self.putback()
+			return
+		elif self.next() != '-':
+			self.putback()
+			self.putback()
+			return
+
+		ch = self.next()
+		if ch != '[':
+			while ch is not None and ch != '\n':
+				ch = self.next()
+			# check cascading annotation like lua table = {--[[annotation1]]  --[[annotation2]] 1,2}
+			self.annotation()
+			return
+
+		ch = self.next()
+		lEqCnt, rEqCnt = 0, 0
+		while ch is not None and ch == '=':
+			lEqCnt += 1
+			ch = self.next()
+		if ch != '[':	# if it does not have pattern --[==[
+			while ch is not None and ch != '\n':
+				ch = self.next()
+		else:	# if it has pattern --[==[, we are now try to find ]==]
+			while True:
+				ch = self.next()
+				if ch is None:
+					break
+				while ch is not None and ch != ']':
+					ch = self.next()
+				if ch is None:
+					break
+				ch = self.next()
+				while ch is not None and ch == '=':
+					rEqCnt += 1
+					ch = self.next()
+				if ch == ']' and lEqCnt == rEqCnt:
+					break
+				rEqCnt = 0
+		# check cascading annotation like lua table = {--[==[annotation1]==]  --[[annotation2]] 1,2}
+		self.annotation()
 
 	def isDigit(self, ch):
 		if '0' <= ch and ch <= '9':
@@ -109,20 +154,12 @@ class PyLuaTblParser(object):
 	# get value which can be table|number|string|variable
 	def getValue(self):
 		val = None
+		self.annotation()
 		self.skip()
 		ch = self.next()
-
 		if ch == '"' or ch == '\'':
 			val = self.getStr(ch)
-		elif ch == '-':
-			nxt = self.next()
-			if nxt == '-':
-				self.annotation()
-			else:
-				self.putback()
-				self.putback()
-				val = self.getNumber()
-		elif self.isDigit(ch) or ch in '.':
+		elif self.isDigit(ch) or ch in '.-':
 			self.putback()
 			val = self.getNumber()
 		elif ch == '{':
@@ -141,14 +178,9 @@ class PyLuaTblParser(object):
 		if selector == 0:
 			return
 
+		self.annotation()
 		self.skip()
 		ch = self.next()
-		if ch == '-':
-			if self.next() == '-':
-				self.annotation()
-				self.skip()
-				ch = self.next()
-
 		if (selector == 1 and ch is None) or ch == ',' or ch == ';':
 			return
 		elif ch == '}':
@@ -160,6 +192,7 @@ class PyLuaTblParser(object):
 	def getItem(self, bracketFlag=False):
 		ans = []
 		while True:
+			self.annotation()
 			self.skip()
 			ch = self.next()
 			selector = 0
@@ -193,10 +226,11 @@ class PyLuaTblParser(object):
 				ans.append(s)
 				selector = 2
 			elif ch == '[':
-				self.skip()
-				ch = self.next()
+				self.annotation()
 				key, val = None, None
 
+				self.skip()
+				ch = self.next()
 				# the key is either string or number
 				if ch == '"' or ch == '\'':
 					key = self.getStr(ch)
@@ -204,10 +238,13 @@ class PyLuaTblParser(object):
 					self.putback()
 					key = self.getNumber()
 
+				self.annotation()
 				self.skip()
-				if self.next() != ']':
+				ch = self.next()
+				if ch != ']':
 					raise ValueError('Square brackets does not match !!!')
 
+				self.annotation()
 				self.skip()
 				if self.next() != '=':
 					raise ValueError('Illegal expression #equal symbol(=) missed# !!!')
@@ -220,12 +257,6 @@ class PyLuaTblParser(object):
 					ans.append({key: val})
 				selector = 2
 			elif self.isDigit(ch) or ch in '.-':
-				nxt = self.next()
-				if nxt == '-':
-					self.annotation()
-					continue
-				self.putback()
-				self.putback()
 				num = self.getNumber()
 				ans.append(num)
 				selector = 2
@@ -234,16 +265,9 @@ class PyLuaTblParser(object):
 				key = self.getVar()
 				key = self.checkSpecialStr(key)
 
+				self.annotation()
 				self.skip()
 				ch = self.next()
-				if ch == '-':
-					if self.next() == '-':
-						self.annotation()
-						self.skip()
-						ch = self.next()
-					else:
-						raise ValueError('Unexpected hyphen !!!')
-				
 				if ch in ',;}':
 					if ch == '}':
 						self.putback()
@@ -509,7 +533,7 @@ if __name__ == '__main__':
 	# s = '{abc}'
 	s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
 	s = '{23,.24,-0.98e1,-.1}'
-	s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
+	s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
