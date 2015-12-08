@@ -118,13 +118,14 @@ class PyLuaTblParser(object):
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
-		exp = ".+-*/eE"
+		exp = ".+-*/aAbBcCdDeEfFxX"
 		while self.isDigit(cur) or cur in exp:
 			s += cur
 			cur = self.next()
 
 		if cur is not None:
 			self.putback()
+
 		return eval(s)
 
 	# check special string nil|false|true
@@ -186,6 +187,7 @@ class PyLuaTblParser(object):
 		elif ch == '}':
 			self.putback()
 		else:
+			print 'trailing ch =', ch
 			raise ValueError('Illegal lua string !!!')
 
 	# parse the input string as lua table
@@ -257,6 +259,7 @@ class PyLuaTblParser(object):
 					ans.append({key: val})
 				selector = 2
 			elif self.isDigit(ch) or ch in '.-':
+				self.putback()
 				num = self.getNumber()
 				ans.append(num)
 				selector = 2
@@ -518,7 +521,7 @@ if __name__ == '__main__':
 	# s = '"hello"'
 	# s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
 	# s = '{{1, 2}, {{{{}}}}}'
-	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true, 2, .123, 0xea, "#, 0xea, \t\r\n\\\\,k"}'
+	s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true, 2, .123, "#, 0xea, \t\r\n\\\\,k"}'
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
 	# s = '{{{{}}}}'
@@ -531,9 +534,9 @@ if __name__ == '__main__':
 	# s = '{var={{var=1}}} --}'
 	# s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4,},string = "value",},}'
 	# s = '{abc}'
-	s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
+	# s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
 	s = '{23,.24,-0.98e1,-.1}'
-	s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
+	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
