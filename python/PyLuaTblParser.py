@@ -22,17 +22,15 @@ class PyLuaTblParser(object):
 		else:
 			print 'Index out of bound for curPos = %d' % self.curPos
 
-	def getCurPos(self):
-		return self.curPos
-
-
-	def setCurPos(self, curPos):
-		self.curPos = curPos
+	def prev(self):
+		if 1 < self.curPos <= self.totLen:
+			return self.luaStr[self.curPos-2]
+		return None
 
 	# skip the whitespace which includes \t\n\r\b\f\v and ' '
 	def skip(self):
 		ch = self.next()
-		escape = '\t\n\r\b\f\v'
+		escape = '\t\n\r\b\f\v\a'
 		while ch is not None and (ch == ' ' or ch in escape):
 			ch = self.next()
 		if ch is not None:
@@ -103,13 +101,18 @@ class PyLuaTblParser(object):
 	# get string which formatted as "string" or 'string'
 	def getStr(self, quotationMark):
 		s = ''
-		prev = None
 		cur = self.next()
 		while cur is not None:
-			if cur == quotationMark and prev != '\\':
+			if cur == quotationMark and len(s) > 0 and s[-1] != '\\':
 				break
+
+			if cur in '\'\"abtrfnv' and len(s) > 0 and s[-1] == '\\':
+				# if we have \\\'(\\\"), then let it be \'(\")
+				s = s[:-1] + cur
+				cur = self.next()
+				continue
+
 			s += cur
-			prev = cur
 			cur = self.next()
 
 		if cur != quotationMark:
@@ -129,8 +132,6 @@ class PyLuaTblParser(object):
 		if cur is not None:
 			self.putback()
 
-		if s == '':
-			print 'getNumber luaStr =', self.luaStr
 		return eval(s)
 
 	# check special string nil|false|true
@@ -179,6 +180,52 @@ class PyLuaTblParser(object):
 
 		return val
 
+	def track_error(self, ch):
+		if ch is None:
+			raise ValueError
+		if self.isDigit(ch):
+			raise ValueError
+		if self.isAlphabet(ch) or ch == '_':
+			if ch in 'eE':
+				raise ValueError
+			raise ValueError
+		if ch in ',;':
+			raise ValueError
+		if ch in '+-*/=%':
+			if ch == '=':
+				raise ValueError
+			if ch == '-':
+				raise ValueError
+			raise ValueError
+		if ch in '.$#@^&?|"`~:\'':
+			if ch == '.':
+				raise ValueError
+			if ch == '"':
+				raise ValueError
+			if ch == '\'':
+				raise ValueError
+			raise ValueError
+		if ch in '[]{':
+			if ch == '[':
+				raise ValueError
+			if ch == ']':
+				raise ValueError
+			if ch == '{':
+				raise ValueError
+		if ch in '\t\r\n\a\v\f\b ':
+			if ch == '\n':
+				raise ValueError
+			if ch == ' ':
+				raise ValueError
+			raise ValueError
+		if ch == '\\':
+			raise ValueError
+
+		if ch == '}':
+			raise ValueError
+
+		raise ValueError
+
 	# process the trailing , or ; or }
 	def trailing(self, selector):
 		if selector == 0:
@@ -192,7 +239,21 @@ class PyLuaTblParser(object):
 		elif ch == '}':
 			self.putback()
 		else:
-			raise ValueError('Illegal lua string !!!')
+			self.track_error(ch)
+			# cur = self.curPos - 2
+			# self.track_error(self.luaStr[cur-5])
+			# self.track_error(self.luaStr[cur-4])
+			# self.track_error(self.luaStr[cur-3])
+			# self.track_error(self.luaStr[cur-2])
+			# self.track_error(self.luaStr[cur-1])
+			# self.track_error(self.luaStr[cur])
+			# self.track_error(self.luaStr[cur+1])
+			# self.track_error(self.luaStr[cur+2])
+			# self.track_error(self.luaStr[cur+3])
+			# self.track_error(self.luaStr[cur+4])
+			# self.track_error(self.luaStr[cur+5])
+			# self.track_error(self.luaStr[cur+6])
+			# a = "\\a\\a\\a\\a"
 
 	# parse the input string as lua table
 	def getItem(self, bracketFlag=False):
@@ -309,6 +370,17 @@ class PyLuaTblParser(object):
 		if type(self.luaLst) is not list:
 			self.luaLst = [self.luaLst]
 
+	def strValue(self, s):
+		t, i, slen = '', 0, len(s)
+		while i < slen:
+			if s[i] in '\'\"\a\b\f\v\t\r\n':
+				t += '\\' + s[i]
+			else:
+				t += s[i]
+			i += 1
+
+		return t
+
 	def dumpList2String(self, data):
 		assert type(data) is list
 		datalen = len(data)
@@ -326,7 +398,7 @@ class PyLuaTblParser(object):
 				try:
 					f = float(data[i])
 				except ValueError:
-					s += "'" + str(data[i]) + "',"
+					s += "'" + self.strValue(str(data[i])) + "',"
 				else:
 					s += str(data[i]) + ","
 
@@ -348,7 +420,7 @@ class PyLuaTblParser(object):
 			try:
 				f = float(key)
 			except ValueError:
-				s += "['" + str(key) + "']="
+				s += "['" + self.strValue(str(key)) + "']="
 			else:
 				s += "[" + str(key) + "]="
 
@@ -364,7 +436,7 @@ class PyLuaTblParser(object):
 				try:
 					f = float(value)
 				except ValueError:
-					s += "'" + str(value) + "',"
+					s += "'" + self.strValue(str(value)) + "',"
 				else:
 					s += str(value) + ","
 		if len(s) > 0 and s[-1] == ',':
@@ -514,12 +586,12 @@ if __name__ == '__main__':
 	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{{{}},{1, 2, 3,}, hello="world"}, "hh"'
 	# s = '"hello"'
-	# s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
+	s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
 	# s = '{{1, 2}, {{{{}}}}}'
 	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true,s 2, .123, "#, 0xea, \t\r\n\\\\,k"}'
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
-	# s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
+	s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
 	# s = '{h=1,o=1,k=3}'
 	# s = '{{11,22,33}, 4, {{{5, 6, 7}}}, hel=0}'
 	# s = '{1, 2, 3, hl="aa",		yi="dd"}'
@@ -531,17 +603,20 @@ if __name__ == '__main__':
 	# s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
 	# s = '{23,.24,-0.98e1,-.1}'
 	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
-	s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
+	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
 	# s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
 	# s = '{[\'seperate name test\']=123, [\"seperate name 2\"]= {[\'seperate name 3\'] = 321},}'
 	# s = '{[--[==[comment]=]==]1]=1}'
 	# s = '{[34]=1, name={helo=1}}'
-	s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
+	# s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
 	# s = "{{1.123,-415,-64.13},{},root=123}"
 	# s = '{1, 2, 3}'
 	# s = '{{{{}}}}'
 	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
-	s = '{var={{var=1}}}'
+	s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
+	# s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
+	# s = '{var={"val", {["key"]="val"},}, {}, [11]=-1, var, arb, }'
+	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
 	parser = PyLuaTblParser()
 
 	parser.load(s)
