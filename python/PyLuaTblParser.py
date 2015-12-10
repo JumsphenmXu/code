@@ -124,7 +124,7 @@ class PyLuaTblParser(object):
 		# print 'return s =', s
 		return s
 
-	# get the number which includes float and int
+	# get the number which includes float|int|hexadecimal|expression
 	def getNumber(self, flag=True):
 		s = ''
 		cur = self.next()
@@ -150,7 +150,8 @@ class PyLuaTblParser(object):
 		return s
 
 	# get variable which begins with a-z or A-Z or _
-	# and the following can be a-z or A-Z or 0-9 or _
+	# and the following can be a-z or A-Z or 0-9 or _,
+	# which is used as (KEY, VALUE) pair, like var = {...}
 	def getVar(self, flag=True):
 		s = ''
 		ch = self.next()
@@ -609,7 +610,7 @@ if __name__ == '__main__':
 	# s = '{abc}'
 	# s = '{a = 1,{["object with 1 member"] = {"array with 1 element",},},"test"}'
 	# s = '{23,.24,-0.98e1,-.1}'
-	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
+	s = '{{[1] = "nil", nil, nil, [3] = 34, {},--[[yy]]--[===[kk]===][6] --[=[tt--[[ddd]]]=]= --[[dd]]nil, io --[[oo]]= 90,--[[name]]-.23}}'
 	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
 	# s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
 	# s = '{[\'seperate name test\']=123, [\"seperate name 2\"]= {[\'seperate name 3\'] = 321},}'
@@ -629,7 +630,7 @@ if __name__ == '__main__':
 	# s = '{{{}}}'
 	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
 	# s = '{var={var="\\a"}}'
-	s = '{var={"\\a\\vb ", --hafd [1]=3, jkd="worl\\\\d, \a\b\t\r, \nvar=\\a\\d\\f\\flag"}, "jakfajfdka", 1.234, -.34, -2e2}'
+	s = '{var={"\\a\\vb ", --hafd [1]=3, jkd="worl\\\\d", \a\b\t\r, \nvar="\\a\\d\\f\\flag"}, "jakfajfdka", 1.234, -.34, -2e2\n\\\n}'
 	parser = PyLuaTblParser()
 
 	print 'SOURCE s =', s
