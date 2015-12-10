@@ -101,7 +101,7 @@ class PyLuaTblParser(object):
 	# get string which formatted as "string" or 'string'
 	def getStr(self, quotationMark):
 		s = ''
-		mp = {'"': '"', '\'': '\'', 'a': '\a', 'b': '\b', 't': '\t', 'r': '\r', 'n': '\n', 'f': '\f', 'v': '\v'}
+		mp = {'\"': '\"', '\'': '\'', 'a': '\a', 'b': '\b', 't': '\t', 'r': '\r', 'n': '\n', 'f': '\f', 'v': '\v'}
 		prev = None
 		cur = self.next()
 		while cur is not None:
@@ -377,7 +377,7 @@ class PyLuaTblParser(object):
 		s = "{"
 		for i in xrange(datalen):
 			if type(data[i]) is dict:
-				s += self.dumpDict2String(data[i]) + ","
+				s += self.dumpDict2String(data[i])
 			elif type(data[i]) is list:
 				s += self.dumpList2String(data[i]) + ","
 			elif data[i] is None:
@@ -392,8 +392,8 @@ class PyLuaTblParser(object):
 				else:
 					s += str(data[i]) + ","
 
-		if len(s) > 0 and s[-1] == ",":
-			s = s[:-1]
+		# if len(s) > 0 and s[-1] == ",":
+		# 	s = s[:-1]
 		s += "}"
 		return s
 
@@ -415,7 +415,7 @@ class PyLuaTblParser(object):
 				s += "[" + str(key) + "]="
 
 			if type(value) is dict:
-				s += self.dumpDict2String(value) + ","
+				s += self.dumpDict2String(value)
 			elif type(value) is list:
 				s += self.dumpList2String(value) + ","
 			elif type(value) is bool:
@@ -429,8 +429,8 @@ class PyLuaTblParser(object):
 					s += "'" + self.strValue(str(value)) + "',"
 				else:
 					s += str(value) + ","
-		if len(s) > 0 and s[-1] == ',':
-			s = s[:-1]
+		# if len(s) > 0 and s[-1] == ',':
+		# 	s = s[:-1]
 		if len(keys) > 1:
 			s += "}"
 		return s
@@ -608,6 +608,7 @@ if __name__ == '__main__':
 	s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
 	# s = '{var={"val", {["key"]="val"},}, {}, [11]=-1, var, arb, }'
 	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
+	s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4,},string = "value",},}'
 	parser = PyLuaTblParser()
 
 	print 'SOURCE s =', s
@@ -617,20 +618,20 @@ if __name__ == '__main__':
 	s = parser.dump()
 	print 'luaStr:', parser.luaStr
 
-	d = parser.dumpDict()
-	print 'luaDct:', d
+	# d = parser.dumpDict()
+	# print 'luaDct:', d
 
-	parser.loadDict(d)
-	print 'loadDict luaLst:', parser.luaLst
+	# parser.loadDict(d)
+	# print 'loadDict luaLst:', parser.luaLst
 
-	s = parser.dump()
-	print 'luaStr:', s
+	# s = parser.dump()
+	# print 'luaStr:', s
 
-	parser.load(s)
-	print parser.luaLst
-	d = parser.dumpDict()
-	print 'd =', d
+	# parser.load(s)
+	# print parser.luaLst
+	# d = parser.dumpDict()
+	# print 'd =', d
 
-	s = parser.dump()
-	print s
-	parser.load(s)
+	# s = parser.dump()
+	# print s
+	# parser.load(s)
