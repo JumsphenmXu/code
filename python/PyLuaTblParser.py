@@ -101,23 +101,27 @@ class PyLuaTblParser(object):
 	# get string which formatted as "string" or 'string'
 	def getStr(self, quotationMark):
 		s = ''
+		mp = {'"': '"', '\'': '\'', 'a': '\a', 'b': '\b', 't': '\t', 'r': '\r', 'n': '\n', 'f': '\f', 'v': '\v'}
+		prev = None
 		cur = self.next()
 		while cur is not None:
-			if cur == quotationMark and len(s) > 0 and s[-1] != '\\':
+			if cur == quotationMark and prev != '\\':
 				break
 
-			if cur in '\'\"abtrfnv' and len(s) > 0 and s[-1] == '\\':
+			if cur in '\'\"abtrfnv' and prev == '\\':
 				# if we have \\\'(\\\"), then let it be \'(\")
-				s = s[:-1] + cur
+				s = s[:-1] + mp[cur]
+				prev = cur
 				cur = self.next()
 				continue
 
 			s += cur
+			prev = cur
 			cur = self.next()
 
 		if cur != quotationMark:
 			raise ValueError('Quotation mark does not match !!!')
-
+		# print 'return s =', s
 		return s
 
 	# get the number which includes float and int
@@ -176,11 +180,11 @@ class PyLuaTblParser(object):
 			val = self.getVar()
 			val = self.checkSpecialStr(val)
 		else:
-			raise ValueError('Illegal value !!!')
+			self.xTraceError(ch)
 
 		return val
 
-	def track_error(self, ch):
+	def xTraceError(self, ch):
 		if ch is None:
 			raise ValueError
 		if self.isDigit(ch):
@@ -239,21 +243,7 @@ class PyLuaTblParser(object):
 		elif ch == '}':
 			self.putback()
 		else:
-			self.track_error(ch)
-			# cur = self.curPos - 2
-			# self.track_error(self.luaStr[cur-5])
-			# self.track_error(self.luaStr[cur-4])
-			# self.track_error(self.luaStr[cur-3])
-			# self.track_error(self.luaStr[cur-2])
-			# self.track_error(self.luaStr[cur-1])
-			# self.track_error(self.luaStr[cur])
-			# self.track_error(self.luaStr[cur+1])
-			# self.track_error(self.luaStr[cur+2])
-			# self.track_error(self.luaStr[cur+3])
-			# self.track_error(self.luaStr[cur+4])
-			# self.track_error(self.luaStr[cur+5])
-			# self.track_error(self.luaStr[cur+6])
-			# a = "\\a\\a\\a\\a"
+			self.xTraceError(ch)
 
 	# parse the input string as lua table
 	def getItem(self, bracketFlag=False):
@@ -371,14 +361,14 @@ class PyLuaTblParser(object):
 			self.luaLst = [self.luaLst]
 
 	def strValue(self, s):
+		mp = {'"': '\\\"', '\'': '\\\'', '\a': '\\a', '\b': '\\b', '\t': '\\t', '\r': '\\r', '\n': '\\n', '\f': '\\f', '\v': '\\v'}
 		t, i, slen = '', 0, len(s)
 		while i < slen:
 			if s[i] in '\'\"\a\b\f\v\t\r\n':
-				t += '\\' + s[i]
+				t += mp[s[i]]
 			else:
 				t += s[i]
 			i += 1
-
 		return t
 
 	def dumpList2String(self, data):
@@ -547,6 +537,7 @@ class PyLuaTblParser(object):
 				res[k] = v
 			if k in res.keys() and res[k] is None:
 				res.pop(k)
+			
 		return res
 
 	def dumpLst2Dct(self, lst):
@@ -614,11 +605,12 @@ if __name__ == '__main__':
 	# s = '{{{{}}}}'
 	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
 	s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
-	# s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
+	s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
 	# s = '{var={"val", {["key"]="val"},}, {}, [11]=-1, var, arb, }'
 	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
 	parser = PyLuaTblParser()
 
+	print 'SOURCE s =', s
 	parser.load(s)
 	print 'luaLst:', parser.luaLst
 
