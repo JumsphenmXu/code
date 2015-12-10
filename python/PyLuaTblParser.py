@@ -190,6 +190,20 @@ class PyLuaTblParser(object):
 		if self.isDigit(ch):
 			raise ValueError
 		if self.isAlphabet(ch) or ch == '_':
+			if ch == 'a':
+				raise ValueError
+			if ch == 'b':
+				raise ValueError
+			if ch == 't':
+				raise ValueError
+			if ch == 'n':
+				raise ValueError
+			if ch == 'v':
+				raise ValueError
+			if ch == 'f':
+				raise ValueError
+			if ch == 'r':
+				raise ValueError
 			if ch in 'eE':
 				raise ValueError
 			raise ValueError
@@ -392,8 +406,6 @@ class PyLuaTblParser(object):
 				else:
 					s += str(data[i]) + ","
 
-		# if len(s) > 0 and s[-1] == ",":
-		# 	s = s[:-1]
 		s += "}"
 		return s
 
@@ -429,8 +441,7 @@ class PyLuaTblParser(object):
 					s += "'" + self.strValue(str(value)) + "',"
 				else:
 					s += str(value) + ","
-		# if len(s) > 0 and s[-1] == ',':
-		# 	s = s[:-1]
+
 		if len(keys) > 1:
 			s += "}"
 		return s
@@ -518,7 +529,11 @@ class PyLuaTblParser(object):
 			dct[key] = self.xtransferHelper(val)
 
 		if not flag or maxKey != len(dct.items()):
-			return dct
+			res = {}
+			for k, v in dct.items():
+				if v is not None:
+					res[k] = v
+			return res
 
 		res = []
 		for i in xrange(len(dct.items())):
@@ -533,9 +548,11 @@ class PyLuaTblParser(object):
 				res[k] = self.dumpLst2Dct(v)
 			elif type(v) is dict:
 				res[k] = self.dumpDct2Dct(v)
-			elif v is not None:
+			else:
 				res[k] = v
-			if k in res.keys() and res[k] is None:
+
+			res[k] = self.xtransfer(res[k])
+			if res[k] is None:
 				res.pop(k)
 			
 		return res
@@ -550,39 +567,38 @@ class PyLuaTblParser(object):
 			if type(item) is dict:
 				r = self.dumpDct2Dct(item)
 				for k, v in r.items():
-					if v is not None:
-						res[k] = v
+					res[k] = v
 			elif type(item) is list:
 				r = self.dumpLst2Dct(item)
 				r = self.xtransfer(r)
-				if r is not None:
-					res[index] = r
-					index += 1
-			else:
-				if item is not None:
-					res[index] = item
+				res[index] = r
 				index += 1
-		ret = {}
-		for k, v in res.items():
-			ret[k] = self.xtransfer(v)
+			else:
+				res[index] = item
+				index += 1
 
-		return ret
+		return res
 
 	def dumpDict(self):
-		return self.dumpLst2Dct(self.luaLst)
+		d = self.dumpLst2Dct(self.luaLst)
+		res = {}
+		for k, v in d.items():
+			if v is not None:
+				res[k] = v
+		return res
 
 
 if __name__ == '__main__':
-	s = '{"hello",key="value", {"in", 3, 4, [1.23]=56, nil, {mixed="inin", nice={0,9,8}}}, 1, 2} --hello'
-	s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
+	s = '{"hello",key="value", {"in\a\b", 3, 4, [1.23]=56, nil, --yye    \n{mixed="inin", nice={0,9,\a\b8}}}, 1, 2} --hello'
+	# s = '{array = {65,23,5,{1, 2, 3},["a"]=nil, nil, {{}}, [1]=678, ["yada,had"]="nice", hello="worl,[]\\\"ddefj"},dict = {mixed = {43,54.33,false,9,string = {"value]", "hello",{11,22,}}},array = {3,6,4},string = "value"}}'
 	# s = '{{{}},{1, 2, 3,}, hello="world"}, "hh"'
 	# s = '"hello"'
-	s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
+	# s = "{['array']={65,23,5,{1,2,3},{{11,22,33}},{{}},[1]=78,['yada,had']='nice',['hello']='worl,[]\"ddefj'},['dict']={['mixed']={43,54.33,9,['string']={'value]','hello',{11,22}}},['array']={3,6,4},['string']='value'}}"
 	# s = '{{1, 2}, {{{{}}}}}'
 	# s = '{hello="world"; {hhh=2, [4]=1},{{}}, hel=1,nil, false, true,s 2, .123, "#, 0xea, \t\r\n\\\\,k"}'
 	# s = '{1, 2, array={2, 3, 4, "hi"}}'
 	# s = '{{{{1, 2, 3}, 4}}}'
-	s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
+	# s = '{["hel\\\'\\\'\\\'\\\'\\\'l"]=1}'
 	# s = '{h=1,o=1,k=3}'
 	# s = '{{11,22,33}, 4, {{{5, 6, 7}}}, hel=0}'
 	# s = '{1, 2, 3, hl="aa",		yi="dd"}'
@@ -604,11 +620,16 @@ if __name__ == '__main__':
 	# s = '{1, 2, 3}'
 	# s = '{{{{}}}}'
 	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
-	s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
-	s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
+	# s = '{[\'u\\\'root\\\'\'] = {5,4,6},1,6,7,string = \'value\',}'
+	# s = '{array = \'abc\\\"bca!@#$%^&*()+_| \',1,4,\'d\'}'
 	# s = '{var={"val", {["key"]="val"},}, {}, [11]=-1, var, arb, }'
 	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
-	s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4,},string = "value",},}'
+	# s = '{array = {65,23,5,},dict = {mixed = {43,54.33,false,9,string = "value",},array = {3,6,4,},string = "value",},}'
+	# s = '{5,6,8,{},nil,{nil,nil},[\'root\'] = 5}'
+	# s = '{{{}}}'
+	# s = '{{[1] = "nil", nil, nil, [3] = 34, {},[6] = nil, io = 90}}'
+	# s = '{var={var="\\a"}}'
+	s = '{var={"\\a\\vb ", --hafd [1]=3, jkd="worl\\\\d, \a\b\t\r, \nvar=\\a\\d\\f\\flag"}, "jakfajfdka", 1.234, -.34, -2e2}'
 	parser = PyLuaTblParser()
 
 	print 'SOURCE s =', s
@@ -618,20 +639,20 @@ if __name__ == '__main__':
 	s = parser.dump()
 	print 'luaStr:', parser.luaStr
 
-	# d = parser.dumpDict()
-	# print 'luaDct:', d
+	d = parser.dumpDict()
+	print 'luaDct:', d
 
-	# parser.loadDict(d)
-	# print 'loadDict luaLst:', parser.luaLst
+	parser.loadDict(d)
+	print 'loadDict luaLst:', parser.luaLst
 
-	# s = parser.dump()
-	# print 'luaStr:', s
+	s = parser.dump()
+	print 'luaStr:', s
 
-	# parser.load(s)
-	# print parser.luaLst
-	# d = parser.dumpDict()
-	# print 'd =', d
+	parser.load(s)
+	print parser.luaLst
+	d = parser.dumpDict()
+	print 'd =', d
 
-	# s = parser.dump()
-	# print s
-	# parser.load(s)
+	s = parser.dump()
+	print s
+	parser.load(s)
