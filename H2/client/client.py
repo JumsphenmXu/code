@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import socket, sys, os
-
+import conf.conf
 
 def justifyInfo(info, alphanum=True):
 	if alphanum:
@@ -11,7 +11,6 @@ def justifyInfo(info, alphanum=True):
 			else:
 				print '\t    Only alphanumeric or underscore is allowed, please try again.'
 				return False
-		return True
 	return True
 
 def register():
