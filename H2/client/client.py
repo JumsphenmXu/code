@@ -1,7 +1,12 @@
 #!/usr/bin/python
 
-import socket, sys, os
-import conf.conf
+import socket, sys, os, inspect, pickle
+CUR_PATH = inspect.getfile(inspect.currentframe())
+PROJECT_PATH = os.path.dirname(os.path.dirname(CUR_PATH))
+if PROJECT_PATH not in sys.path:
+	sys.path.insert(0, PROJECT_PATH)
+from conf import conf
+
 
 def justifyInfo(info, alphanum=True):
 	if alphanum:
@@ -26,6 +31,13 @@ def register():
 
 		if not justifyInfo(username):
 			continue
+		data = {username: username, password: password}
+		cmdType = conf.CMD_REGISTER
+		cmdData = data
+		serailizedStr = json.dumps({cmdType: cmdType, cmdData: cmdData})
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect(conf.SERVER_ADDR)
+		sock.sendall(serailizedStr)
 		break
 		
 
@@ -39,6 +51,13 @@ def login():
 		if len(username) < 1:
 			print '\t    Password can not be empty, please try again.'
 			continue
+		data = {username: username, password: password}
+		cmdType = conf.CMD_LOGIN
+		cmdData = data
+		serailizedStr = json.dumps({cmdType: cmdType, cmdData: cmdData})
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		sock.connect(conf.SERVER_ADDR)
+		sock.sendall(serailizedStr)
 		break
 
 
@@ -74,8 +93,6 @@ def facade():
 			illegalCmd(cmd)
 
 
-
-
 if __name__ == '__main__':
 	# facade()
 	import pickle
@@ -96,3 +113,5 @@ if __name__ == '__main__':
 
 	print '#2:', dat1
 	print '#2:', dat2
+
+	print PROJECT_PATH
