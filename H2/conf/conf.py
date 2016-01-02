@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ROOT_PATH = './../'
-DB_PATH = ROOT_PATH + 'db.pkl'
+USER_INFO_DATA = ROOT_PATH + '/db/db.pkl'
 
 SERVER_NAME = 'localhost'
 SERVER_IP = '127.0.0.1'

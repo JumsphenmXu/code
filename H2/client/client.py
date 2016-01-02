@@ -1,13 +1,5 @@
 #!/usr/bin/python
 
-import socket, sys, os, inspect, pickle
-CUR_PATH = inspect.getfile(inspect.currentframe())
-PROJECT_PATH = os.path.dirname(os.path.dirname(CUR_PATH))
-if PROJECT_PATH not in sys.path:
-	sys.path.insert(0, PROJECT_PATH)
-from conf import conf
-
-
 def justifyInfo(info, alphanum=True):
 	if alphanum:
 		for i in xrange(len(info)):
