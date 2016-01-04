@@ -1,109 +1,94 @@
 #!/usr/bin/python
 
-def justifyInfo(info, alphanum=True):
-	if alphanum:
-		for i in xrange(len(info)):
-			if 'a' <= info[i] <= 'z' or 'A' <= info[i] <= 'Z' or '0' <= info[i] <= '9' or info[i] == '_':
-				continue
-			else:
-				print '\t    Only alphanumeric or underscore is allowed, please try again.'
-				return False
-	return True
+import socket
+import select
+import os, sys, pickle, json
 
-def register():
-	while True:
+import inspect
+CUR_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
+print 'CUR_PATH =', CUR_PATH
+PROJECT_PATH = os.path.dirname(os.path.dirname(CUR_PATH))
+print 'PROJECT_PATH =', PROJECT_PATH
+if PROJECT_PATH not in sys.path:
+	sys.path.insert(0, PROJECT_PATH)
+
+from conf import conf
+from model import model
+
+
+class Client(object):
+	def __init__(self, user=None, sock=None):
+		self.user = user
+		self.sock = sock
+		if self.sock is None:
+			self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.sock.connect(conf.SERVER_ADDR)
+
+
+	def register_login_helper(self, cmdtype):
 		username = raw_input('\t    Username:')
 		password = raw_input('\t    Password:')
-		if len(username) < 1:
-			print '\t    Username can not be empty, please try again.'
-			continue
-		if len(username) < 1:
-			print '\t    Password can not be empty, please try again.'
-			continue
+		self.user = model.User(username, password)
 
-		if not justifyInfo(username):
-			continue
-		data = {username: username, password: password}
-		cmdType = conf.CMD_REGISTER
-		cmdData = data
-		serailizedStr = json.dumps({cmdType: cmdType, cmdData: cmdData})
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect(conf.SERVER_ADDR)
-		sock.sendall(serailizedStr)
-		break
+		cmddata = {"username": username, "password": password}
+		serailizedStr = json.dumps({"cmdtype": cmdtype, "cmddata": cmddata})
+		self.sock.sendall(serailizedStr)
 		
 
-def login():
-	while True:
-		username = raw_input('\t    Username:')
-		password = raw_input('\t    Password:')
-		if len(username) < 1:
-			print '\t    Username can not be empty, please try again.'
-			continue
-		if len(username) < 1:
-			print '\t    Password can not be empty, please try again.'
-			continue
-		data = {username: username, password: password}
-		cmdType = conf.CMD_LOGIN
-		cmdData = data
-		serailizedStr = json.dumps({cmdType: cmdType, cmdData: cmdData})
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect(conf.SERVER_ADDR)
-		sock.sendall(serailizedStr)
-		break
+	def register(self):
+		self.register_login_helper(conf.CMD_REGISTER)
 
 
-def chat():
-	pass
+	def login(self):
+		self.register_login_helper(conf.CMD_LOGIN)
 
-def logout():
-	pass
 
-def illegalCmd(cmd):
-	print 'No command [%s] found, please check the instruction.' % cmd
+	def chatall(self):
+		info = '\t    ' + self.user.username + '$'
+		msg = raw_input(info)
+		cmddata = {"msg": msg}
+		serailizedStr = json.dumps({"cmdtype": conf.CMD_CHATALL, "cmddata": cmddata})
+		self.sock.sendall(serailizedStr)
 
-def facade():
-	print '\n\n\t\tWelcome to xGameCenter !!!\n'
-	print '\t1. Register your account please press $R'
-	print '\t2. Login please press $L'
-	print '\t3. Chatting please press $C'
-	print '\t4. Logout please press $T'
-	print '\t5. Exit please press $E'
-	while True:
-		cmd = raw_input('\t  $')
-		if cmd == 'R':
-			register()
-		elif cmd == 'L':
-			login()
-		elif cmd == 'C':
-			chat()
-		elif cmd == 'T':
-			logout()
-		elif cmd == 'E':
-			exit()
-		else:
-			illegalCmd(cmd)
+
+	def logout(self):
+		cmddata = {"username": self.user.username, "password": self.user.password}
+		serailizedStr = json.dumps({"cmdtype": conf.CMD_LOGOUT, "cmddata": cmddata})
+		self.sock.sendall(serailizedStr)
+		self.run()
+
+
+	def exit(self):
+		exit(0)
+
+
+	def illegalcmd(self, cmd):
+		print '\n[ERROR] command (%s) is illegal !!!\n' % cmd
+
+
+	def run(self):
+		print '\n\n\t\tWelcome to xGameCenter !!!\n'
+		print '\t1. Register your account please press $R'
+		print '\t2. Login please press $LI'
+		print '\t3. Chatting to all please press $CA'
+		print '\t4. Logout please press $LO'
+		print '\t5. Exit please press $E'
+		while True:
+			cmd = raw_input('\t  $')
+			if cmd == 'R':
+				self.register()
+			elif cmd == 'LI':
+				self.login()
+			elif cmd == 'CA':
+				self.chatall()
+			elif cmd == 'LO':
+				self.logout()
+			elif cmd == 'E':
+				self.exit()
+			else:
+				self.illegalcmd(cmd)
 
 
 if __name__ == '__main__':
-	# facade()
-	import pickle
-	lst = [1, 2, 3]
-	dct = {'hello': 'world', 'nice': 'good'}
-	fp = open('data.pkl', 'wb')
-	pickle.dump(lst, fp, -1)
-	pickle.dump(dct, fp)
-	fp.close()
-
-	print '#1:', lst
-	print '#1:', dct
-
-	fo = open('data.pkl', 'rb')
-	dat1 = pickle.load(fo)
-	dat2 = pickle.load(fo)
-	fo.close()
-
-	print '#2:', dat1
-	print '#2:', dat2
-
-	print PROJECT_PATH
+	client = Client()
+	client.run()

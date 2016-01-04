@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import socket, sys, os, inspect, pickle, json
-CUR_PATH = inspect.getfile(inspect.currentframe())
+CUR_PATH = os.path.abspath(inspect.getfile(inspect.currentframe()))
 PROJECT_PATH = os.path.dirname(os.path.dirname(CUR_PATH))
 if PROJECT_PATH not in sys.path:
 	sys.path.insert(0, PROJECT_PATH)
