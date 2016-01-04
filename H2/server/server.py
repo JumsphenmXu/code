@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from dbmgr import *
+from cache import *
 import socket, select
 import os, sys, pickle, json
 from conf import conf
@@ -13,7 +13,8 @@ class CmdError(Exception):
 
 
 class GameServer(object):
-	def __init__(self, server_addr=conf.SERVER_ADDR, backlog=5):
+	def __init__(self, server_addr=conf.SERVER_ADDR, backlog=5, cache=CacheMgr()):
+		self.cache = cache
 		self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.server.bind(server_addr)
@@ -33,7 +34,7 @@ class GameServer(object):
 		fp = open(conf.USER_INFO_DATA, "rb")
 		db_cursor = pickle.load(fp)
 
-		if not db_cursor:
+		if not db_cursor or "user_info" not in db_cursor:
 			print '\n[ERROR] login in failed, can not find user with username = %s !!!\n' % username
 			return False
 
@@ -59,12 +60,16 @@ class GameServer(object):
 		for s in self.outputs:
 			if s == self.server or s == sock:
 				continue
-			s.send(msg)
+
+			self.cache.append_msg(s, msg)
 
 
 	def exit(self, username, password, sock):
 		user = model.User(username, password)
 		user.save()
+
+		if sock == self.server:
+			return
 
 		if sock in self.inputs:
 			self.inputs.remove(sock)
@@ -76,36 +81,47 @@ class GameServer(object):
 		print error_msg
 
 
-	def cmd_dispatcher(self, cmdtype, data, sock):
+	def cmd_dispatcher(self, data, sock):
 		cmddata = data["cmddata"]
+		cmdtype = data["cmdtype"] 
+		resp = ""
 		if cmdtype == conf.CMD_REGISTER:
 			print '\nRegister command is executing...'
 			self.register(cmddata["username"], cmddata["password"])
 			print 'Register command finished!'
+			resp = json.dumps({"status": "success"})
 		elif cmdtype == conf.CMD_LOGIN:
 			print '\nLogin command is executing...'
 			flag = self.login(cmddata["username"], cmddata["password"])
+			resp = json.dumps({"status": "success"})
 			if flag:
 				print 'Login command successed !!!'
 			else:
+				resp = json.dumps({"status": "failed"})
 				print 'User (username = %s) failed to login !!!' % cmddata["username"]
 		elif cmdtype == conf.CMD_LOGOUT:
 			print '\nLogout command is executing...'
 			self.logout(cmddata["username"], cmddata["password"], sock)
 			print 'Logout command finished'
+			resp = json.dumps({"status": "success"})
 		elif cmdtype == conf.CMD_CHATALL:
 			print '\nChat all command is executing...'
-			self.chatall(cmddata["msg"], sock)
+			self.chatall(json.dumps(cmddata), sock)
 			print 'Chat all command finished !!!'
+			return
+			# resp = json.dumps({"status": "success"})
 		elif cmdtype == conf.CMD_EXIT:
 			print '\nExit command is executing...'
 			self.exit(cmddata["username"], cmddata["password"], sock)
 			print 'Exit command finished !!!'
+			resp = json.dumps({"status": "success"})
 		else:
 			error_msg = '\n[ERROR] command error ocurred, cmd data ='
 			cmddata = data
 			self.error(error_msg)
 			self.error(cmddata)
+			resp = json.dumps({"status": "failed"})
+		sock.sendall(resp)
 
 
 
@@ -125,44 +141,26 @@ class GameServer(object):
 				if sock == self.server:
 					print '\nAccepting connection.....'
 					client, addr = self.server.accept()
-					self.inputs.append(client)
+					if client not in self.inputs:
+						self.inputs.append(client)
+					if client not in self.outputs:
+						self.outputs.append(client)
 				else:
+					# read_fds contains the sockets which have incoming data
 					data = sock.recv(self.bufsize)
 					if data:
 						data = json.loads(data)
-						cmdtype = data["cmdtype"]
-						self.cmd_dispatcher(cmdtype, data, sock)
+						self.cmd_dispatcher(data, sock)
 
+					if sock not in self.outputs:
+						self.outputs.append(sock)
 
-				
-
-# def do(cmd, client_addr):
-# 	if cmd == conf.CMD_REGISTER:
-# 		do_register(client_addr)
-# 	elif cmd == conf.CMD_LOGIN:
-# 		do_login(client_addr)
-# 	elif cmd == conf.CMD_CHAT:
-# 		do_chat(client_addr)
-# 	elif cmd == conf.CMD_LOGOUT:
-# 		do_logout(client_addr)
-# 	elif cmd == conf.CMD_EXIT:
-# 		do_exit(client_addr)
-# 	else:
-# 		error_msg = 'Command [%s] not implemented !!!' % cmd
-# 		raise CmdError(error_msg) 
-
-
-# def run():
-# 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# 	sock.bind(conf.SERVER_ADDR)
-# 	sock.listen(5)
-# 	while True:
-# 		conn, client_addr = sock.accept()
-# 		while True:
-# 			data = conn.recv(8096)
-# 			if data:
-# 				data = json.loads(data)
-# 				print 'data =', data
+			for sock in write_fds:
+				msg = self.cache.next_msg(sock)
+				if msg:
+					sock.sendall(msg)
+				else:
+					self.outputs.remove(sock)
 
 
 if __name__ == '__main__':
