@@ -64,22 +64,6 @@ class User(object):
 
 	def save(self):
 		self.total_online_time += time.time() - self.last_login_time
-		# db_cursor = None
-		# fp = open(conf.USER_INFO_DATA, "rb")
-		# try:
-		# 	db_cursor = pickle.load(fp)
-		# except:
-		# 	pass
-		# fp.close()
-
-		# user_info = None
-		# if db_cursor and "user_info" in db_cursor.keys():
-		# 	user_info = db_cursor["user_info"]
-		# elif not db_cursor:
-		# 	db_cursor = {}
-		# 	db_cursor["user_info"] = {}
-		# elif "user_info" not in db_cursor.keys():
-		# 	db_cursor["user_info"] = {}
 		
 		db_cursor = self.get_user_info_history()
 		user_info = db_cursor["user_info"]

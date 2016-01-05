@@ -13,11 +13,6 @@ if PROJECT_PATH not in sys.path:
 from conf import conf
 from model import model
 
-
-
-# def sigint_handler(signal, frame):
-
-
 class Client(object):
 	def __init__(self, user=None, sock=None, islogin=False):
 		self.user = user
@@ -94,6 +89,7 @@ class Client(object):
 		print '\t  --Use COMMAND [chat] to send messages to all online users'
 		print '\t  --Use COMMAND [chkmsg] to check the incoming message box'
 		print '\t  --Use COMMAND [exit] to close the system\n'
+
 
 	def illegalcmd(self, cmd):
 		print '\n\t  [ERROR] command (%s) is illegal !!!\n' % cmd
