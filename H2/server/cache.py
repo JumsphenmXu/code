@@ -7,7 +7,6 @@ if PROJECT_PATH not in sys.path:
 	sys.path.insert(0, PROJECT_PATH)
 from conf import conf
 
-
 class CacheMgr(object):
 	def __init__(self, buf={}):
 		self.buf = buf
@@ -26,14 +25,14 @@ class CacheMgr(object):
 		if fd not in self.buf.keys() or len(self.buf[fd]) <= idx:
 			return
 
-		del self.buf[sock.fileno()][idx]
+		del self.buf[fd][idx]
 
 
 	def del_msg(self, sock, msg):
 		fd = sock.fileno()
 		if fd not in self.buf.keys() or msg not in self.buf[fd]:
 			return
-		self.buf[sock.fileno()].remove(msg)
+		self.buf[fd].remove(msg)
 
 
 	def get_msg_by_idx(self, sock, idx):
@@ -41,7 +40,7 @@ class CacheMgr(object):
 		if fd not in self.buf.keys() or len(self.buf[fd]) <= idx:
 			return None
 
-		return self.buf[sock.fileno()][idx]
+		return self.buf[fd][idx]
 
 
 	def next_msg(self, sock):
@@ -51,3 +50,4 @@ class CacheMgr(object):
 
 		msg = self.buf[fd][0]
 		self.del_msg_by_idx(sock, 0)
+		return msg

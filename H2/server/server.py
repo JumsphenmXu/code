@@ -53,14 +53,20 @@ class GameServer(object):
 		if sock in self.inputs:
 			self.inputs.remove(sock)
 		if sock in self.outputs:
-			self.outputs(sock)
+			self.outputs.remove(sock)
+
+		sock.sendall(json.dumps({"total_online_time": user.get_total_online_time(), "online_time": user.calc_online_time()}))
 
 
 	def chatall(self, msg, sock):
+		print '\nchating to all ......'
+		print 'chating message:', msg
+		print '#outputs:', len(self.outputs)
 		for s in self.outputs:
 			if s == self.server or s == sock:
 				continue
 
+			print 'put fileno(%d) message(%s)' % (s.fileno(), str(msg))
 			self.cache.append_msg(s, msg)
 
 
@@ -79,6 +85,7 @@ class GameServer(object):
 
 	def error(self, error_msg):
 		print error_msg
+		# raise CmdError("command can not found !!!")
 
 
 	def cmd_dispatcher(self, data, sock):
@@ -106,10 +113,9 @@ class GameServer(object):
 			resp = json.dumps({"status": "success"})
 		elif cmdtype == conf.CMD_CHATALL:
 			print '\nChat all command is executing...'
-			self.chatall(json.dumps(cmddata), sock)
+			self.chatall(cmddata, sock)
 			print 'Chat all command finished !!!'
 			return
-			# resp = json.dumps({"status": "success"})
 		elif cmdtype == conf.CMD_EXIT:
 			print '\nExit command is executing...'
 			self.exit(cmddata["username"], cmddata["password"], sock)
@@ -158,9 +164,10 @@ class GameServer(object):
 			for sock in write_fds:
 				msg = self.cache.next_msg(sock)
 				if msg:
-					sock.sendall(msg)
-				else:
-					self.outputs.remove(sock)
+					print 'fileno(%d) send message(%s)' % (sock.fileno(), str(msg))
+					dat = json.dumps({"msg": msg["msg"], "username": msg["username"]})
+					dat += "#"
+					sock.sendall(dat)
 
 
 if __name__ == '__main__':
