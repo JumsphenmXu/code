@@ -206,6 +206,7 @@ xd3d::BoundingSphere::BoundingSphere() {
 	_radius = 0.0f;
 }
 
+
 bool xd3d::DrawBasicScene(IDirect3DDevice9* device, float scale) {
 	static IDirect3DVertexBuffer9* floor  = 0;
 	static IDirect3DTexture9*      tex    = 0;
@@ -261,9 +262,9 @@ bool xd3d::DrawBasicScene(IDirect3DDevice9* device, float scale) {
 	
 		Vertex *s = NULL;
 		StillSnowman->Lock(0, 0, (void **)&s, 0);
-		const float SXOFFSET = -15.0f;
+		const float SXOFFSET = -20.0f;
 		const float SYOFFSET = 0.0f;
-		const float SZOFFSET = -4.0f;
+		const float SZOFFSET = -10.0f;
 		// the front face
 		s[0] = Vertex(SXOFFSET - 2.0f, SYOFFSET + 2.0f, SZOFFSET + 4.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
 		s[1] = Vertex(SXOFFSET + 2.0f, SYOFFSET + 2.0f, SZOFFSET + 4.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
@@ -330,88 +331,10 @@ bool xd3d::DrawBasicScene(IDirect3DDevice9* device, float scale) {
 		s[41] = Vertex(SXOFFSET + 2.0f, SYOFFSET - 2.0f, SZOFFSET + 4.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f);
 	
 		StillSnowman->Unlock();
-
-		// #2: The snowman which is moving arround
-		device->CreateVertexBuffer(42 * sizeof(xd3d::Vertex), 0,
-			xd3d::Vertex::FVF, D3DPOOL_MANAGED, &MovingSnowman, 0);
-		
-		Vertex *m = NULL;
-		MovingSnowman->Lock(0, 0, (void **)&m, 0);
-		const float MXOFFSET = 15.0f;
-		const float MYOFFSET = 0.0f;
-		const float MZOFFSET = -4.0f;
-
-		// the front face
-		m[0] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-		m[1] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-		m[2] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-
-		m[3] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-		m[4] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-		m[5] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-
-		// the left face
-		m[6] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-		m[7] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-		m[8] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-		m[9] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-		m[10] = Vertex(MXOFFSET -2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-		m[11] = Vertex(MXOFFSET -2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-		
-		// the right face
-		m[12] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		m[13] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		m[14] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-
-		m[15] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		m[16] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-		m[17] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-
-		// the back face
-		m[18] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-		m[19] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-		m[20] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-
-		m[21] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-		m[22] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-		m[23] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f);
-
-		// the down faceMZOFFSET + 
-		m[24] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-		m[25] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-		m[26] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-
-		m[27] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-		m[28] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-		m[29] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
-
-		// the left slope faceMZOFFSET + 
-		m[30] = Vertex(MXOFFSET + 0.0f, MYOFFSET + 0.0f, MZOFFSET + 6.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-		m[31] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-		m[32] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-
-		// the front slope faceMZOFFSET + 
-		m[33] = Vertex(MXOFFSET + 0.0f, MYOFFSET + 0.0f, MZOFFSET + 6.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-		m[34] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-		m[35] = Vertex(MXOFFSET - 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-
-		// the right slope faceMZOFFSET + 
-		m[36] = Vertex(MXOFFSET + 0.0f, MYOFFSET + 0.0f, MZOFFSET + 6.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f);
-		m[37] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f);
-		m[38] = Vertex(MXOFFSET + 2.0f, MYOFFSET + 2.0f, MZOFFSET + 4.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f);
-
-		// the back slope faceMZOFFSET + 
-		m[39] = Vertex(MXOFFSET + 0.0f, MYOFFSET + 0.0f, MZOFFSET + 6.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f);
-		m[40] = Vertex(MXOFFSET - 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f);
-		m[41] = Vertex(MXOFFSET + 2.0f, MYOFFSET - 2.0f, MZOFFSET + 4.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f);
-
-		MovingSnowman->Unlock();
-
 		///////////////////////////////////////////////////////////////
+	
 
 		D3DXCreateCylinder(device, 0.5f, 0.5f, 5.0f, 4, 10, &pillar, 0);
-
 		D3DXCreateTextureFromFile(device, _T("desert.bmp"), &tex);
 	} else {
 		// Pre-Render Setup
@@ -446,10 +369,10 @@ bool xd3d::DrawBasicScene(IDirect3DDevice9* device, float scale) {
 		device->SetFVF(Vertex::FVF);
 		device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 		
-		// draw StillSnowman
 		
+		// draw StillSnowman
 		D3DXMATRIX ssmatrix, ssscale;
-		D3DXMatrixScaling(&ssscale, 0.4f, 0.3f, 0.6f);
+		D3DXMatrixScaling(&ssscale, 0.4f, 0.3f, 0.2f);
 		D3DXMatrixIdentity(&ssmatrix);
 		ssmatrix = ssmatrix * R * ssscale;
 		device->SetTransform(D3DTS_WORLD, &ssmatrix);
@@ -457,46 +380,14 @@ bool xd3d::DrawBasicScene(IDirect3DDevice9* device, float scale) {
 		device->SetStreamSource(0, StillSnowman, 0, sizeof(Vertex));
 		device->SetFVF(Vertex::FVF);
 		device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 14);
-
-		// draw MovingSnowman
-
-		D3DXMATRIX msmatrix, msscale;
-		D3DXMatrixScaling(&msscale, 0.4f, 0.3f, 0.6f);
-		D3DXMatrixIdentity(&msmatrix);
-		msmatrix = msmatrix * R * msscale;
-		device->SetTransform(D3DTS_WORLD, &msmatrix);
-		device->SetMaterial(&xd3d::RED_MTRL);
-		device->SetStreamSource(0, MovingSnowman, 0, sizeof(Vertex));
-		device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 14);
-
+		
 		// draw pillars
-		device->SetMaterial(&xd3d::BLUE_MTRL);
+		device->SetMaterial(&xd3d::GREEN_MTRL);
 		device->SetTexture(0, 0);
-
-		/*
-		for(int i = 0; i < 5; i++) {
-			D3DXMatrixTranslation(&T, -5.0f, 0.0f, -15.0f + (i * 7.5f));
-			P = R * T * S;
-			device->SetTransform(D3DTS_WORLD, &P);
-			pillar->DrawSubset(0);
-
-			D3DXMatrixTranslation(&T, 5.0f, 0.0f, -15.0f + (i * 7.5f));
-			P = R * T * S;
-			device->SetTransform(D3DTS_WORLD, &P);
-			pillar->DrawSubset(0);
-		} */
-
-		D3DXMatrixTranslation(&T, 0.0f, 0.0f, 8.0f);
+		D3DXMatrixTranslation(&T, 20.0f, 0.0f, 8.0f);
 		P = R * T * S;
 		device->SetTransform(D3DTS_WORLD, &P);
 		pillar->DrawSubset(0);
-		/*
-		device->BeginScene();
-		StillSnowman->DrawSubset(0);
-		MovingSnowman->DrawSubset(0);
-		device->EndScene();
-		device->Present(0, 0, 0, 0);
-		*/
 	}
 	return true;
 }

@@ -83,6 +83,10 @@ namespace xd3d {
 		float scale);            // uniform scale 
 
 
+	void PreRender(IDirect3DDevice9* device);
+	// void Render();
+	// void PostRender();
+
 	// Vertex Structures
 	struct Vertex {
 		Vertex() {}
