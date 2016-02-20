@@ -13,18 +13,37 @@ class XCOLOR(object):
 		pass
 
 
-class XVertice(object):
-	def __init__(self, vertice_id, threshold=0.0, mutation_flag=False, mutation_factor=0.0, current_color=XCOLOR.GRAY):
-		self.vertice_id = vertice_id
+class XEdgeStatus(object):
+	def __init__(self, to, weight):
+		self.to = to
+		self.weight = weight
+
+	def get_dest(self):
+		return self.to
+
+	def get_weight(self):
+		return self.weight
+
+	def set_weight(self, weight):
+		self.weight = weight
+
+
+class XVerticeStatus(object):
+	def __init__(self, threshold=0.3, mutation_flag=False, mutation_factor=0.0, current_color=XCOLOR.GRAY):
 		self.threshold = threshold
 		self.mutation_flag = mutation_flag
 		self.mutation_factor = mutation_factor
 		self.current_color = current_color
+		self.edges = []
+
+	def add_edge(self, e):
+		self.edges.push(e)
+
+	def del_edge(self, e):
+		if e in self.edges:
+			self.edges.remove(e)
 
 	# getters for attributes
-	def get_vertice_id(self):
-		return self.vertice_id
-
 	def get_threshold(self):
 		return self.threshold
 
@@ -51,51 +70,20 @@ class XVertice(object):
 		self.current_color = current_color
 
 
-
-class XEdge(object):
-	def __init__(self, start, end, weight=1.0):
-		self.start = start
-		self.end = end
-		self.weight = weight
-
-
-	def get_start(self):
-		return self.start
-
-
-	def set_start(self, start):
-		self.start = start
-
-
-	def get_end(self):
-		return self.end
-
-
-	def set_end(self, end):
-		self.end = end
-
-
-	def get_weight(self):
-		return self.weight
-
-
-	def set_weight(self, weight):
-		self.weight = weight
-
-
 class XGraph(object):
-	def __init__(self, file_name, seperator=" ", directed=False):
-		self.edges = {}
+	def __init__(self):
+		"""
+		@graph is a map which maps vertice id to its status of type XVerticeStatus
+		@directed_graph boolean which flags the graph is directed or not
+		@edge_num is an int indicates how many edges does the graph has
+		@vertice_num is an int which shows the total number of vertices the graph contains
+		"""
+		self.graph = {}
+		self.directed_graph = False
 		self.edge_num = 0
 		self.vertice_num = 0
-		self.default_weight = False
-		self.directed = directed
-		ok = self.load_graph_from_file(file_name, seperator)
-		if not ok:
-			print 'Failed to load the graph from file %s !!!' % file_name
-			exit()
 
-	def load_graph_from_file(self, file_name, seperator):
+	def load_graph_from_file(self, file_name, seperator=" "):
 		fp = open(file_name, "rb")
 		if not fp:
 			print 'Failed to open file %s !!!' % file_name
@@ -110,47 +98,65 @@ class XGraph(object):
 				continue
 
 			if len(units) > 2:
-				self.default_weight = True
 				weight = float(units[2])
 
 			sid = int(units[0])
 			eid = int(units[1])
-			
-			if sid not in self.edges.keys():
-				self.edges[sid] = []
-			
-			if eid not in self.edges.keys():
-				self.edges[eid] = []
+			if sid not in self.graph.keys():
+				self.graph[sid] = XVerticeStatus()
+			if eid not in self.graph.keys():
+				self.graph[eid] = XVerticeStatus()
 
-			self.edges[sid].push(XEdge(XVertice(sid), XVertice(eid), weight))
+			self.graph[sid].add_edge(XEdgeStatus(eid, weight))
 			self.edge_num += 1
-			if not self.directed:	
-				self.edges[eid].push(XEdge(XVertice(eid), XVertice(sid), weight))
+			if not self.directed_graph:
+				self.graph[eid].add_edge(XEdgeStatus(sid, weight))
 				self.edge_num += 1
 
 			line = fp.readline()
 
-		self.vertice_num = len(self.edges.keys())
+		self.vertice_num = len(self.graph.keys())
 		fp.close()
 		return True
 
 	def __threshold_generator(self):
+		"""
+		TODO: place your own threshold generator here
+		"""
 		pass
 
 	def __weight_generator(self):
+		"""
+		TODO: place your own weight generator here
+		"""
 		pass
 
 	def __mutation_factor_generator(self):
+		"""
+		TODO: place your own mutation factor generator here
+		"""
 		pass
 
 	def get_edge_num(self):
-		if self.directed:
+		if self.directed_graph:
 			return self.edge_num
 		return self.edge_num / 2
 
 	def get_vertice_num(self):
 		return self.vertice_num
 
+
+class XStrategies(object):
+	def __init__(self, graph):
+		self.graph = graph
+
+
+	def greedy(self):
+		pass
+
+	def heuristic(self):
+		pass
+		
 
 if __name__ == '__main__':
 	g = XGraph("g.txt")
