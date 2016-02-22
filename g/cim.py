@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
-
 import random
-
 
 class XCOLOR(object):
 	BLACK = 0
@@ -35,6 +33,8 @@ class XVerticeStatus(object):
 		self.mutation_factor = mutation_factor
 		self.current_color = current_color
 		self.edges = []
+		self.red_visit = 0
+		self.black_visit = 0
 
 	def add_edge(self, e):
 		self.edges.push(e)
@@ -43,7 +43,29 @@ class XVerticeStatus(object):
 		if e in self.edges:
 			self.edges.remove(e)
 
+	def red_visit_inc(self):
+		self.red_visit += 1
+
+	def red_visit_dec(self):
+		self.red_visit -= 1
+
+	def black_visit_inc(self):
+		self.black_visit += 1
+
+	def black_visit_dec(self):
+		self.black_visit -= 1
+
 	# getters for attributes
+	# 
+	def get_red_visit(self):
+		return self.red_visit
+
+	def get_black_visit(self):
+		return self.black_visit
+
+	def get_edges(self):
+		return self.edges
+
 	def get_threshold(self):
 		return self.threshold
 
@@ -83,7 +105,8 @@ class XGraph(object):
 		self.edge_num = 0
 		self.vertice_num = 0
 
-	def load_graph_from_file(self, file_name, seperator=" "):
+	def load_graph_from_file(self, file_name, seperator=" ", directed_graph=False):
+		self.directed_graph = directed_graph
 		fp = open(file_name, "rb")
 		if not fp:
 			print 'Failed to open file %s !!!' % file_name
@@ -92,7 +115,7 @@ class XGraph(object):
 		line = fp.readline()
 		while line:
 			units = line.split(seperator)
-			weight = 1.0
+			weight = 0.33 * random.random()
 			if len(units) < 2:
 				line = fp.readline()
 				continue
@@ -119,23 +142,35 @@ class XGraph(object):
 		fp.close()
 		return True
 
-	def __threshold_generator(self):
+	def threshold_generator(self, alpha=0.8):
 		"""
 		TODO: place your own threshold generator here
 		"""
-		pass
+		vertices = self.graph.keys()
+		for vid in vertices:
+			threshold = alpha * random.random()
+			self.graph[vid].set_threshold(threshold)
 
-	def __weight_generator(self):
+	def weight_generator(self, beta=0.25):
 		"""
 		TODO: place your own weight generator here
 		"""
-		pass
+		vertices = self.graph.keys()
+		for vid in vertices:
+			weight = beta * random.random()
+			self.graph[vid].set_weight(weight)
 
-	def __mutation_factor_generator(self):
+	def mutation_factor_generator(self, theta=0.15):
 		"""
 		TODO: place your own mutation factor generator here
 		"""
-		pass
+		vertices = self.graph.keys()
+		for vid in vertices:
+			mfactor = theta * random.random()
+			self.graph[vid].set_mutation_factor(mfactor)
+
+	def set_vertice_status(self, vertice, status):
+		self.graph[vertice] = status
 
 	def get_edge_num(self):
 		if self.directed_graph:
@@ -145,18 +180,127 @@ class XGraph(object):
 	def get_vertice_num(self):
 		return self.vertice_num
 
+	def get_all_vertices(self):
+		return self.graph.keys()
 
-class XStrategies(object):
+	def get_edges_by_vertice(self, vertice):
+		return self.graph[vertice].get_edges()
+
+	def get_vertice_status(self, vertice):
+		return self.graph[vertice]
+
+
+class XDiffuseModel(object):
 	def __init__(self, graph):
 		self.graph = graph
 
+	def calc_influence(self, T, S):
+		"""
+		@T: seed set for company/product/idea A
+		@S: seed set for company/product/idea B
+		Computing influence diffusion for selecting T, S respectively
+		"""
+		resT, resS, resTS = [], [], []
+		for t in T:
+			edges = self.graph.get_edges_by_vertice(t)
+			for e in edges:
+				to = e.get_dest()
+				status = self.graph.get_vertice_status(to)
+				if status.get_current_color() != XCOLOR.GRAY or status.get_red_visit() > 0:
+					continue
 
-	def greedy(self):
-		pass
+				weight = e.get_weight()
+				threshold = status.get_threshold()
+				if threshold > weight * random.random():
+					resT.push(to)
+					status.set_current_color(XCOLOR.RED)
+					status.red_visit_inc()
+					self.graph.set_vertice_status(vertice, status)
 
-	def heuristic(self):
-		pass
-		
+		for s in S:
+			edges = self.graph.get_edges_by_vertice(s)
+			for e in edges:
+				to = e.get_dest()
+				status = self.graph.get_vertice_status(to)
+				if status.get_current_color() != XCOLOR.GRAY or status.get_black_visit() > 0:
+					continue
+
+				weight = e.get_weight()
+				threshold = status.get_threshold()
+				if threshold > weight * random.random():
+					resS.push(to)
+					status.set_current_color(XCOLOR.BLACK)
+					status.black_visit_inc()
+					self.graph.set_vertice_status(vertice, status)
+
+		return 0, 0
+
+
+class XStrategies(object):
+	def __init__(self, graph, model):
+		self.graph = graph
+		self.model = model
+
+	def greedy(self, k):
+		T, S = [], []
+		i = 0
+		while i < 2 * k:
+			TS = list(set(T) | set(S))
+			vertices = self.graph.get_all_vertices()
+			maxinf = -1
+			target = -1
+			for v in vertices:
+				if v in TS:
+					continue
+				Tt, Ss = T, S
+				if i % 2 == 0:
+					Tt.push(v)
+				else:
+					Ss.push(v)
+
+				tcntx, scntx = self.model.calc_influence(Tt, Ss)
+				tcnt, scnt = self.model.calc_influence(T, S)
+				if i % 2 == 0:
+					if tcntx - tcnt > maxinf:
+						maxinf = tcntx - tcnt
+						target = v
+				else:
+					if scntx - scnt > maxinf:
+						maxinf = scntx - scnt
+						target = v
+			if target != -1:
+				if i % 2 == 0:
+					T.push(target)
+				else:
+					S.push(target)
+			i += 1
+
+		return T, S
+
+
+
+	def degree_heuristic(self, k):
+		out_degree = []
+		vertices = self.graph.get_all_vertices()
+		for vid in vertices:
+			out_degree.push((vid, len(self.graph[vid].get_edges())))
+
+		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reversed=True)
+
+		T, S = [], []
+		limit, i = 2 * k, 0
+		if limit > len(out_degree_sorted):
+			limit = len(out_degree_sorted) / 2
+			limit = limit * 2
+
+		while i < limit:
+			T.push(out_degree_sorted[i][0])
+			S.push(out_degree_sorted[i+1][0])
+			i += 2
+
+		return T, S
 
 if __name__ == '__main__':
-	g = XGraph("g.txt")
+	print 'Creating a graph...'
+	g = XGraph()
+	print 'A graph generated successfully !'
