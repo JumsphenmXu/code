@@ -79,6 +79,9 @@ class XVerticeStatus(object):
 		return self.current_color
 
 	# setters for attributes
+	def set_edges(self, edges):
+		self.edges = edges
+
 	def set_threshold(self, threshold):
 		self.threshold = threshold
 
@@ -157,8 +160,12 @@ class XGraph(object):
 		"""
 		vertices = self.graph.keys()
 		for vid in vertices:
-			weight = beta * random.random()
-			self.graph[vid].set_weight(weight)
+			edges = self.graph[vid].get_edges()
+			for i in xrange(len(edges)):
+				weight = beta * random.random()
+				edges[i].set_weight(weight)
+
+			self.graph[vid].set_edges(edges)
 
 	def mutation_factor_generator(self, theta=0.15):
 		"""
@@ -190,7 +197,7 @@ class XGraph(object):
 		return self.graph[vertice]
 
 
-class XDiffuseModel(object):
+class XDiffusionModel(object):
 	def __init__(self):
 		pass
 
@@ -229,7 +236,7 @@ class XDiffuseModel(object):
 					status.set_current_color(XCOLOR.RED)
 
 				status.red_visit_inc()
-				graph.set_vertice_status(vertice, status)
+				graph.set_vertice_status(to, status)
 
 		for s in S:
 			edges = graph.get_edges_by_vertice(s)
@@ -258,7 +265,7 @@ class XDiffuseModel(object):
 					status.set_current_color(XCOLOR.BLACK)
 
 				status.black_visit_inc()
-				graph.set_vertice_status(vertice, status)
+				graph.set_vertice_status(to, status)
 
 		if len(T) == len(resT) and len(S) == len(resS):
 			return len(T), len(S)
@@ -315,7 +322,7 @@ class XStrategies(object):
 		out_degree = []
 		vertices = self.graph.get_all_vertices()
 		for vid in vertices:
-			out_degree.append((vid, len(self.graph[vid].get_edges())))
+			out_degree.append((vid, len(self.graph.get_edges_by_vertice(vid))))
 
 		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reversed=True)
 
@@ -352,3 +359,13 @@ if __name__ == '__main__':
 	print '#edge =', g.get_edge_num()
 	print '#vertice =', g.get_vertice_num()
 	print 'A graph generated successfully !'
+
+	g.threshold_generator()
+	g.weight_generator()
+	g.mutation_factor_generator()
+
+	m = XDiffusionModel()
+	s = XStrategies(g, m)
+
+	print 'Run the strategies...'
+	s.infmax(10)
