@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import random
+import copy
 
 class XCOLOR(object):
 	BLACK = 0
@@ -209,6 +210,14 @@ class XDiffusionModel(object):
 		"""
 		resT, resS = [], []
 		for t in T:
+			resT.append(t)
+			graph.get_vertice_status(t).set_current_color(XCOLOR.RED)
+
+		for s in S:
+			resS.append(s)
+			graph.get_vertice_status(s).set_current_color(XCOLOR.BLACK)
+
+		for t in T:
 			edges = graph.get_edges_by_vertice(t)
 			for e in edges:
 				to = e.get_dest()
@@ -219,7 +228,7 @@ class XDiffusionModel(object):
 				current_color = status.get_current_color()
 				if current_color == XCOLOR.BLACK and not status.get_mutation_flag():
 					r = random.random()
-					if r < status.get_mutation_factor() and threshold < r * weight:
+					if r < status.get_mutation_factor() and threshold < weight:
 						resT.append(to)
 						status.set_current_color(XCOLOR.RED)
 						status.set_mutation_flag(True)
@@ -231,7 +240,7 @@ class XDiffusionModel(object):
 					continue
 
 				
-				if threshold < weight * random.random():
+				if threshold < weight:
 					resT.append(to)
 					status.set_current_color(XCOLOR.RED)
 
@@ -249,7 +258,7 @@ class XDiffusionModel(object):
 				current_color = status.get_current_color()
 				if current_color == XCOLOR.RED and not status.get_mutation_flag():
 					r = random.random()
-					if r < status.get_mutation_factor() and threshold < r * weight:
+					if r < status.get_mutation_factor() and threshold < weight:
 						resS.append(to)
 						status.set_current_color(XCOLOR.BLACK)
 						status.set_mutation_flag(True)
@@ -260,7 +269,7 @@ class XDiffusionModel(object):
 				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
 					continue
 
-				if threshold > weight * random.random():
+				if threshold > weight:
 					resS.append(to)
 					status.set_current_color(XCOLOR.BLACK)
 
@@ -289,15 +298,16 @@ class XStrategies(object):
 			for v in vertices:
 				if v in TS:
 					continue
-				Tt, Ss = T, S
+
+				Tt, Ss = copy.deepcopy(T), copy.deepcopy(S)
 				if i % 2 == 0:
 					Tt.append(v)
 				else:
 					Ss.append(v)
 
-				g = self.graph
+				g = copy.deepcopy(self.graph)
 				tcntx, scntx = self.model.calc_influence(g, Tt, Ss)
-				g = self.graph
+				g = copy.deepcopy(self.graph)
 				tcnt, scnt = self.model.calc_influence(g, T, S)
 				if i % 2 == 0:
 					if tcntx - tcnt > maxinf:
@@ -307,13 +317,16 @@ class XStrategies(object):
 					if scntx - scnt > maxinf:
 						maxinf = scntx - scnt
 						target = v
+
 			if target != -1:
 				if i % 2 == 0:
 					T.append(target)
 				else:
 					S.append(target)
-			i += 1
-
+				i += 1
+			else:
+				break
+		print 'i = %d, k = %d' % (i, k)
 		return T, S
 
 
@@ -341,14 +354,22 @@ class XStrategies(object):
 
 	def infmax(self, k):
 		T, S = self.greedy(k)
-		g = self.graph
+		g = copy.deepcopy(self.graph)
 		t, s = self.model.calc_influence(g, T, S)
 		print 'greedy: t = %d, s = %d' % (t, s)
+		print 'len(T) =', len(T)
+		#print 'T =', T
+		print 'len(S) =', len(S)
+		print 'S =', S
 
 		T, S = self.degree_heuristic(k)
-		g = self.graph
+		g = copy.deepcopy(self.graph)
 		t, s = self.model.calc_influence(g, T, S)
 		print 'degree_heuristic: t = %d, s = %d' % (t, s)
+		print 'len(T) =', len(T)
+		print 'T =', T
+		print 'len(S) =', len(S)
+		print 'S =', S
 
 
 if __name__ == '__main__':
