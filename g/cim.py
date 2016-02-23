@@ -206,10 +206,13 @@ class XDiffuseModel(object):
 			for e in edges:
 				to = e.get_dest()
 				status = graph.get_vertice_status(to)
+				weight = e.get_weight()
+				threshold = status.get_threshold()
 
 				current_color = status.get_current_color()
 				if current_color == XCOLOR.BLACK and not status.get_mutation_flag():
-					if random.random() < status.get_mutation_factor():
+					r = random.random()
+					if r < status.get_mutation_factor() and threshold < r * weight:
 						resT.push(to)
 						status.set_current_color(XCOLOR.RED)
 						status.set_mutation_flag(True)
@@ -220,9 +223,8 @@ class XDiffuseModel(object):
 				if current_color != XCOLOR.GRAY or status.get_red_visit() > 0:
 					continue
 
-				weight = e.get_weight()
-				threshold = status.get_threshold()
-				if threshold > weight * random.random():
+				
+				if threshold < weight * random.random():
 					resT.push(to)
 					status.set_current_color(XCOLOR.RED)
 
@@ -234,12 +236,15 @@ class XDiffuseModel(object):
 			for e in edges:
 				to = e.get_dest()
 				status = graph.get_vertice_status(to)
+				weight = e.get_weight()
+				threshold = status.get_threshold()
 
 				current_color = status.get_current_color()
 				if current_color == XCOLOR.RED and not status.get_mutation_flag():
-					if random.random() < status.get_mutation_factor():
+					r = random.random()
+					if r < status.get_mutation_factor() and threshold < r * weight:
 						resS.push(to)
-						status.set_current_color(XCOLOR.RED)
+						status.set_current_color(XCOLOR.BLACK)
 						status.set_mutation_flag(True)
 						status.black_visit_inc()
 						graph.set_vertice_status(status)
@@ -248,8 +253,6 @@ class XDiffuseModel(object):
 				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
 					continue
 
-				weight = e.get_weight()
-				threshold = status.get_threshold()
 				if threshold > weight * random.random():
 					resS.push(to)
 					status.set_current_color(XCOLOR.BLACK)
