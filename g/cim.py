@@ -200,7 +200,7 @@ class XDiffuseModel(object):
 		@S: seed set for company/product/idea B
 		Computing influence diffusion for selecting T, S respectively
 		"""
-		resT, resS, = [], []
+		resT, resS = [], []
 		for t in T:
 			edges = graph.get_edges_by_vertice(t)
 			for e in edges:
