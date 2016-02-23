@@ -191,22 +191,33 @@ class XGraph(object):
 
 
 class XDiffuseModel(object):
-	def __init__(self, graph):
-		self.graph = graph
+	def __init__(self):
+		pass
 
-	def calc_influence(self, T, S):
+	def calc_influence(self, graph, T, S):
 		"""
 		@T: seed set for company/product/idea A
 		@S: seed set for company/product/idea B
 		Computing influence diffusion for selecting T, S respectively
 		"""
-		resT, resS, resTS = [], [], []
+		resT, resS, = [], []
 		for t in T:
-			edges = self.graph.get_edges_by_vertice(t)
+			edges = graph.get_edges_by_vertice(t)
 			for e in edges:
 				to = e.get_dest()
-				status = self.graph.get_vertice_status(to)
-				if status.get_current_color() != XCOLOR.GRAY or status.get_red_visit() > 0:
+				status = graph.get_vertice_status(to)
+
+				current_color = status.get_current_color()
+				if current_color == XCOLOR.BLACK and not status.get_mutation_flag():
+					if random.random() < status.get_mutation_factor():
+						resT.push(to)
+						status.set_current_color(XCOLOR.RED)
+						status.set_mutation_flag(True)
+						status.red_visit_inc()
+						graph.set_vertice_status(status)
+						continue
+
+				if current_color != XCOLOR.GRAY or status.get_red_visit() > 0:
 					continue
 
 				weight = e.get_weight()
@@ -214,15 +225,27 @@ class XDiffuseModel(object):
 				if threshold > weight * random.random():
 					resT.push(to)
 					status.set_current_color(XCOLOR.RED)
-					status.red_visit_inc()
-					self.graph.set_vertice_status(vertice, status)
+
+				status.red_visit_inc()
+				graph.set_vertice_status(vertice, status)
 
 		for s in S:
-			edges = self.graph.get_edges_by_vertice(s)
+			edges = graph.get_edges_by_vertice(s)
 			for e in edges:
 				to = e.get_dest()
-				status = self.graph.get_vertice_status(to)
-				if status.get_current_color() != XCOLOR.GRAY or status.get_black_visit() > 0:
+				status = graph.get_vertice_status(to)
+
+				current_color = status.get_current_color()
+				if current_color == XCOLOR.RED and not status.get_mutation_flag():
+					if random.random() < status.get_mutation_factor():
+						resS.push(to)
+						status.set_current_color(XCOLOR.RED)
+						status.set_mutation_flag(True)
+						status.black_visit_inc()
+						graph.set_vertice_status(status)
+						continue
+
+				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
 					continue
 
 				weight = e.get_weight()
@@ -230,10 +253,14 @@ class XDiffuseModel(object):
 				if threshold > weight * random.random():
 					resS.push(to)
 					status.set_current_color(XCOLOR.BLACK)
-					status.black_visit_inc()
-					self.graph.set_vertice_status(vertice, status)
 
-		return 0, 0
+				status.black_visit_inc()
+				graph.set_vertice_status(vertice, status)
+
+		if len(T) == len(resT) and len(S) == len(resS):
+			return len(T), len(S)
+
+		return self.calc_influence(graph, resT, resS)
 
 
 class XStrategies(object):
@@ -258,8 +285,10 @@ class XStrategies(object):
 				else:
 					Ss.push(v)
 
-				tcntx, scntx = self.model.calc_influence(Tt, Ss)
-				tcnt, scnt = self.model.calc_influence(T, S)
+				g = self.graph
+				tcntx, scntx = self.model.calc_influence(g, Tt, Ss)
+				g = self.graph
+				tcnt, scnt = self.model.calc_influence(g, T, S)
 				if i % 2 == 0:
 					if tcntx - tcnt > maxinf:
 						maxinf = tcntx - tcnt
@@ -291,7 +320,7 @@ class XStrategies(object):
 		limit, i = 2 * k, 0
 		if limit > len(out_degree_sorted):
 			limit = len(out_degree_sorted) / 2
-			limit = limit * 2
+			limit *= 2
 
 		while i < limit:
 			T.push(out_degree_sorted[i][0])
