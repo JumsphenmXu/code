@@ -224,7 +224,7 @@ class XDiffusionModel(object):
 						status.set_current_color(XCOLOR.RED)
 						status.set_mutation_flag(True)
 						status.red_visit_inc()
-						graph.set_vertice_status(status)
+						graph.set_vertice_status(to, status)
 						continue
 
 				if current_color != XCOLOR.GRAY or status.get_red_visit() > 0:
@@ -254,7 +254,7 @@ class XDiffusionModel(object):
 						status.set_current_color(XCOLOR.BLACK)
 						status.set_mutation_flag(True)
 						status.black_visit_inc()
-						graph.set_vertice_status(status)
+						graph.set_vertice_status(to, status)
 						continue
 
 				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
@@ -324,7 +324,7 @@ class XStrategies(object):
 		for vid in vertices:
 			out_degree.append((vid, len(self.graph.get_edges_by_vertice(vid))))
 
-		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reversed=True)
+		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reverse=True)
 
 		T, S = [], []
 		limit, i = 2 * k, 0
