@@ -37,7 +37,7 @@ class XVerticeStatus(object):
 		self.black_visit = 0
 
 	def add_edge(self, e):
-		self.edges.push(e)
+		self.edges.append(e)
 
 	def del_edge(self, e):
 		if e in self.edges:
@@ -213,7 +213,7 @@ class XDiffuseModel(object):
 				if current_color == XCOLOR.BLACK and not status.get_mutation_flag():
 					r = random.random()
 					if r < status.get_mutation_factor() and threshold < r * weight:
-						resT.push(to)
+						resT.append(to)
 						status.set_current_color(XCOLOR.RED)
 						status.set_mutation_flag(True)
 						status.red_visit_inc()
@@ -225,7 +225,7 @@ class XDiffuseModel(object):
 
 				
 				if threshold < weight * random.random():
-					resT.push(to)
+					resT.append(to)
 					status.set_current_color(XCOLOR.RED)
 
 				status.red_visit_inc()
@@ -243,7 +243,7 @@ class XDiffuseModel(object):
 				if current_color == XCOLOR.RED and not status.get_mutation_flag():
 					r = random.random()
 					if r < status.get_mutation_factor() and threshold < r * weight:
-						resS.push(to)
+						resS.append(to)
 						status.set_current_color(XCOLOR.BLACK)
 						status.set_mutation_flag(True)
 						status.black_visit_inc()
@@ -254,7 +254,7 @@ class XDiffuseModel(object):
 					continue
 
 				if threshold > weight * random.random():
-					resS.push(to)
+					resS.append(to)
 					status.set_current_color(XCOLOR.BLACK)
 
 				status.black_visit_inc()
@@ -284,9 +284,9 @@ class XStrategies(object):
 					continue
 				Tt, Ss = T, S
 				if i % 2 == 0:
-					Tt.push(v)
+					Tt.append(v)
 				else:
-					Ss.push(v)
+					Ss.append(v)
 
 				g = self.graph
 				tcntx, scntx = self.model.calc_influence(g, Tt, Ss)
@@ -302,9 +302,9 @@ class XStrategies(object):
 						target = v
 			if target != -1:
 				if i % 2 == 0:
-					T.push(target)
+					T.append(target)
 				else:
-					S.push(target)
+					S.append(target)
 			i += 1
 
 		return T, S
@@ -315,7 +315,7 @@ class XStrategies(object):
 		out_degree = []
 		vertices = self.graph.get_all_vertices()
 		for vid in vertices:
-			out_degree.push((vid, len(self.graph[vid].get_edges())))
+			out_degree.append((vid, len(self.graph[vid].get_edges())))
 
 		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reversed=True)
 
@@ -326,13 +326,29 @@ class XStrategies(object):
 			limit *= 2
 
 		while i < limit:
-			T.push(out_degree_sorted[i][0])
-			S.push(out_degree_sorted[i+1][0])
+			T.append(out_degree_sorted[i][0])
+			S.append(out_degree_sorted[i+1][0])
 			i += 2
 
 		return T, S
 
+	def infmax(self, k):
+		T, S = self.greedy(k)
+		g = self.graph
+		t, s = self.model.calc_influence(g, T, S)
+		print 'greedy: t = %d, s = %d' % (t, s)
+
+		T, S = self.degree_heuristic(k)
+		g = self.graph
+		t, s = self.model.calc_influence(g, T, S)
+		print 'degree_heuristic: t = %d, s = %d' % (t, s)
+
+
 if __name__ == '__main__':
 	print 'Creating a graph...'
+	graph_file = '../../graphdata/blogs.txt'
 	g = XGraph()
+	g.load_graph_from_file(graph_file, '\t')
+	print '#edge =', g.get_edge_num()
+	print '#vertice =', g.get_vertice_num()
 	print 'A graph generated successfully !'
