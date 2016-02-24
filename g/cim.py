@@ -380,6 +380,9 @@ class XStrategies(object):
 			for e in edges:
 				to = e.get_dest()
 				if target == -1:
+					if to in S or to in T:
+						continue
+
 					target = to
 					g = copy.deepcopy(self.graph)
 					maxinf, _ = self.model.calc_influence(g, [target], T)
