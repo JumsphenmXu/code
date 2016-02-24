@@ -2,6 +2,7 @@
 
 import random
 import copy
+import time
 
 class XCOLOR(object):
 	BLACK = 0
@@ -119,6 +120,8 @@ class XGraph(object):
 		line = fp.readline()
 		while line:
 			units = line.split(seperator)
+			if seperator == '\t' or seperator == ' ':
+				units = line.split()
 			weight = 0.33 * random.random()
 			if len(units) < 2:
 				line = fp.readline()
@@ -210,12 +213,18 @@ class XDiffusionModel(object):
 		"""
 		resT, resS = [], []
 		for t in T:
-			resT.append(t)
-			graph.get_vertice_status(t).set_current_color(XCOLOR.RED)
+			# resT.append(t)
+			status = graph.get_vertice_status(t)
+			status.set_current_color(XCOLOR.RED)
+			status.set_mutation_flag(True)
+			status.red_visit_inc()
 
 		for s in S:
-			resS.append(s)
-			graph.get_vertice_status(s).set_current_color(XCOLOR.BLACK)
+			# resS.append(s)
+			status = graph.get_vertice_status(s)
+			status.set_current_color(XCOLOR.BLACK)
+			status.set_mutation_flag(True)
+			status.black_visit_inc()
 
 		for t in T:
 			edges = graph.get_edges_by_vertice(t)
@@ -233,7 +242,7 @@ class XDiffusionModel(object):
 						status.set_current_color(XCOLOR.RED)
 						status.set_mutation_flag(True)
 						status.red_visit_inc()
-						graph.set_vertice_status(to, status)
+						# graph.set_vertice_status(to, status)
 						continue
 
 				if current_color != XCOLOR.GRAY or status.get_red_visit() > 0:
@@ -245,7 +254,7 @@ class XDiffusionModel(object):
 					status.set_current_color(XCOLOR.RED)
 
 				status.red_visit_inc()
-				graph.set_vertice_status(to, status)
+				# graph.set_vertice_status(to, status)
 
 		for s in S:
 			edges = graph.get_edges_by_vertice(s)
@@ -263,7 +272,7 @@ class XDiffusionModel(object):
 						status.set_current_color(XCOLOR.BLACK)
 						status.set_mutation_flag(True)
 						status.black_visit_inc()
-						graph.set_vertice_status(to, status)
+						# graph.set_vertice_status(to, status)
 						continue
 
 				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
@@ -274,12 +283,13 @@ class XDiffusionModel(object):
 					status.set_current_color(XCOLOR.BLACK)
 
 				status.black_visit_inc()
-				graph.set_vertice_status(to, status)
+				# graph.set_vertice_status(to, status)
 
-		if len(T) == len(resT) and len(S) == len(resS):
+		if len(resT) == 0 and len(resS) == 0:
 			return len(T), len(S)
 
-		return self.calc_influence(graph, resT, resS)
+		t, s = self.calc_influence(graph, resT, resS)
+		return t + len(T), s + len(S)
 
 
 class XStrategies(object):
@@ -288,6 +298,7 @@ class XStrategies(object):
 		self.model = model
 
 	def greedy(self, k):
+		ft = time.time()
 		T, S = [], []
 		i = 0
 		while i < 2 * k:
@@ -326,12 +337,14 @@ class XStrategies(object):
 				i += 1
 			else:
 				break
-		print 'i = %d, k = %d' % (i, k)
+
+		print '#Greedy Time consumed: %d secs' % (time.time() - ft)
 		return T, S
 
 
 
 	def degree_heuristic(self, k):
+		ft = time.time()
 		out_degree = []
 		vertices = self.graph.get_all_vertices()
 		for vid in vertices:
@@ -350,21 +363,24 @@ class XStrategies(object):
 			S.append(out_degree_sorted[i+1][0])
 			i += 2
 
+		print '#Degree Heuristic Time consumed: %d secs' % (time.time() - ft)
 		return T, S
 
 	def infmax(self, k):
 		T, S = self.greedy(k)
 		g = copy.deepcopy(self.graph)
-		t, s = self.model.calc_influence(g, T, S)
+		# t, s = self.model.calc_influence(g, T, S)
+		s, t = self.model.calc_influence(g, S, T)
 		print 'greedy: t = %d, s = %d' % (t, s)
 		print 'len(T) =', len(T)
-		#print 'T =', T
+		print 'T =', T
 		print 'len(S) =', len(S)
 		print 'S =', S
 
 		T, S = self.degree_heuristic(k)
 		g = copy.deepcopy(self.graph)
-		t, s = self.model.calc_influence(g, T, S)
+		# t, s = self.model.calc_influence(g, T, S)
+		s, t = self.model.calc_influence(g, S, T)
 		print 'degree_heuristic: t = %d, s = %d' % (t, s)
 		print 'len(T) =', len(T)
 		print 'T =', T
@@ -374,7 +390,7 @@ class XStrategies(object):
 
 if __name__ == '__main__':
 	print 'Creating a graph...'
-	graph_file = '../../graphdata/blogs.txt'
+	graph_file = '../../graphdata/USAir_unweight.txt'
 	g = XGraph()
 	g.load_graph_from_file(graph_file, '\t')
 	print '#edge =', g.get_edge_num()
