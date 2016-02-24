@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+__author__ = 'XU Xinhui'
+
 import random
 import copy
 import time
@@ -337,9 +339,8 @@ class XStrategies(object):
 			else:
 				break
 
-		print '#Greedy Time consumed: %d secs' % (time.time() - ft)
+		print '#Greedy Time consumed: %.2f secs' % (time.time() - ft)
 		return T, S
-
 
 
 	def degree_heuristic(self, k):
@@ -362,25 +363,71 @@ class XStrategies(object):
 			S.append(out_degree_sorted[i+1][0])
 			i += 2
 
-		print '#Degree Heuristic Time consumed: %d secs' % (time.time() - ft)
+		print '#Degree Heuristic Time consumed: %.2f secs' % (time.time() - ft)
 		return T, S
 
+	def comparable_heuristic(self, T):
+		"""
+		Given the set T, we should return a set S which under the specified diffusion
+		model can have comparable influece spread as T by using this strategy.
+		"""
+		ft = time.time()
+		S = []
+		for v in T:
+			edges = self.graph.get_edges_by_vertice(v)
+			maxinf = -1
+			target = -1
+			for e in edges:
+				to = e.get_dest()
+				if target == -1:
+					target = to
+					g = copy.deepcopy(self.graph)
+					maxinf, _ = self.model.calc_influence(g, [target], T)
+					continue
+
+				if to in T or to in S:
+					continue
+
+				g = copy.deepcopy(self.graph)
+				Ss = copy.deepcopy(S)
+				prevS, _ = self.model.calc_influence(g, S, T)
+				Ss.append(to)
+				g = copy.deepcopy(self.graph)
+				curS, _ = self.model.calc_influence(g, Ss, T)
+				if maxinf < curS - prevS:
+					maxinf = curS - prevS
+					target = to
+
+			S.append(target)
+		print '#Comparable Heuristic Time consumed: %.2f secs' % (time.time() - ft)
+		return S
+
 	def infmax(self, k):
-		T, S = self.greedy(k)
-		g = copy.deepcopy(self.graph)
-		# t, s = self.model.calc_influence(g, T, S)
-		s, t = self.model.calc_influence(g, S, T)
-		print 'greedy: t = %d, s = %d' % (t, s)
-		print 'len(T) =', len(T)
-		print 'T =', T
-		print 'len(S) =', len(S)
-		print 'S =', S
+		# T, S = self.greedy(k)
+		# g = copy.deepcopy(self.graph)
+		# # t, s = self.model.calc_influence(g, T, S)
+		# s, t = self.model.calc_influence(g, S, T)
+		# print 'greedy: t = %d, s = %d' % (t, s)
+		# print 'len(T) =', len(T)
+		# print 'T =', T
+		# print 'len(S) =', len(S)
+		# print 'S =', S
 
 		T, S = self.degree_heuristic(k)
 		g = copy.deepcopy(self.graph)
 		# t, s = self.model.calc_influence(g, T, S)
 		s, t = self.model.calc_influence(g, S, T)
 		print 'degree_heuristic: t = %d, s = %d' % (t, s)
+		print 'len(T) =', len(T)
+		print 'T =', T
+		print 'len(S) =', len(S)
+		print 'S =', S
+
+		g = copy.deepcopy(self.graph)
+		S = self.comparable_heuristic(T)
+		g = copy.deepcopy(self.graph)
+		s, t = self.model.calc_influence(g, S, T)
+		print 'comparable_heuristic: t = %d, s = %d' % (t, s)
 		print 'len(T) =', len(T)
 		print 'T =', T
 		print 'len(S) =', len(S)
