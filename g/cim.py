@@ -248,7 +248,6 @@ class XDiffusionModel(object):
 				if current_color != XCOLOR.GRAY or status.get_red_visit() > 0:
 					continue
 
-				
 				if threshold < weight:
 					resT.append(to)
 					status.set_current_color(XCOLOR.RED)
@@ -278,7 +277,7 @@ class XDiffusionModel(object):
 				if current_color != XCOLOR.GRAY or status.get_black_visit() > 0:
 					continue
 
-				if threshold > weight:
+				if threshold < weight:
 					resS.append(to)
 					status.set_current_color(XCOLOR.BLACK)
 
