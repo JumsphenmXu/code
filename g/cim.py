@@ -379,16 +379,13 @@ class XStrategies(object):
 			target = -1
 			for e in edges:
 				to = e.get_dest()
+				if to in T or to in S:
+					continue
+					
 				if target == -1:
-					if to in S or to in T:
-						continue
-
 					target = to
 					g = copy.deepcopy(self.graph)
 					maxinf, _ = self.model.calc_influence(g, [target], T)
-					continue
-
-				if to in T or to in S:
 					continue
 
 				g = copy.deepcopy(self.graph)
@@ -445,11 +442,11 @@ class XStrategies(object):
 
 		T, S = self.degree_heuristic(k)
 		ts.append((T, S))
-		res.append(('Degree Heuristic', 0, 0))
+		res.append(('DegreeHeuristic', 0, 0))
 
 		S = self.comparable_heuristic(T)
 		ts.append((T, S))
-		res.append(('Comparable Heuristic', 0, 0))
+		res.append(('ComparableHeuristic', 0, 0))
 
 		for i in xrange(R):
 			print 'Round %d starts...' % (i + 1)
@@ -498,4 +495,4 @@ if __name__ == '__main__':
 	for k in xrange(5):
 		num = (k + 2) * 5
 		result_file = "./result/usa" + str(num) + ".txt"
-		s.infmax_ext(num, 1, result_file)
+		s.infmax_ext(num, 100, result_file)
