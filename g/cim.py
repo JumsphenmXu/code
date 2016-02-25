@@ -406,15 +406,15 @@ class XStrategies(object):
 		return S
 
 	def infmax(self, k):
-		# T, S = self.greedy(k)
-		# g = copy.deepcopy(self.graph)
-		# # t, s = self.model.calc_influence(g, T, S)
-		# s, t = self.model.calc_influence(g, S, T)
-		# print 'greedy: t = %d, s = %d' % (t, s)
-		# print 'len(T) =', len(T)
-		# print 'T =', T
-		# print 'len(S) =', len(S)
-		# print 'S =', S
+		T, S = self.greedy(k)
+		g = copy.deepcopy(self.graph)
+		# t, s = self.model.calc_influence(g, T, S)
+		s, t = self.model.calc_influence(g, S, T)
+		print 'greedy: t = %d, s = %d' % (t, s)
+		print 'len(T) =', len(T)
+		print 'T =', T
+		print 'len(S) =', len(S)
+		print 'S =', S
 
 		T, S = self.degree_heuristic(k)
 		g = copy.deepcopy(self.graph)
@@ -436,6 +436,44 @@ class XStrategies(object):
 		print 'len(S) =', len(S)
 		print 'S =', S
 
+	def infmax_ext(self, k, R, result_file):
+		ts = []
+		res = []
+		T, S = self.greedy(k)
+		ts.append((T, S))
+		res.append(('Greedy', 0, 0))
+
+		T, S = self.degree_heuristic(k)
+		ts.append((T, S))
+		res.append(('Degree Heuristic', 0, 0))
+
+		S = self.comparable_heuristic(T)
+		ts.append((T, S))
+		res.append(('Comparable Heuristic', 0, 0))
+
+		for i in xrange(R):
+			print 'Round %d starts...' % (i + 1)
+			for j in xrange(len(ts)):
+				g = copy.deepcopy(self.graph)
+				t, s = self.model.calc_influence(g, ts[j][0], ts[j][1])
+				print 'Round %d: %s-> #t = %d, #s = %d' % (i+1, res[j][0], t, s)
+				res[j][1] += t
+				res[j][2] += s
+
+		fp = open(result_file, 'wb')
+		if not fp:
+			print 'Failed to open file %s !' % result_file
+			return
+
+		for i in xrange(len(res)):
+			rt = float(res[i][1]) / R
+			rs = float(res[i][2]) / R
+			line = res[i][0] + '\t' + str(rt) + '\t' + str(rs) + '\t'
+			line += str(100*abs(rt-rs)/max(rt, rs)) + '%\n'
+			fp.write(line)
+
+		fp.close()
+
 
 if __name__ == '__main__':
 	print 'Creating a graph...'
@@ -454,4 +492,8 @@ if __name__ == '__main__':
 	s = XStrategies(g, m)
 
 	print 'Run the strategies...'
-	s.infmax(10)
+	# s.infmax(10)
+	for k in xrange(5):
+		num = (k + 2) * 5
+		result_file = "./result/usa" + str(num) + ".txt"
+		s.infmax_ext(num, 1, result_file)
