@@ -457,8 +457,10 @@ class XStrategies(object):
 				g = copy.deepcopy(self.graph)
 				t, s = self.model.calc_influence(g, ts[j][0], ts[j][1])
 				print 'Round %d: %s-> #t = %d, #s = %d' % (i+1, res[j][0], t, s)
-				res[j][1] += t
-				res[j][2] += s
+				lres = list(res[j])
+				lres[1] += t
+				lres[2] += s
+				res[j] = tuple(lres)
 
 		fp = open(result_file, 'wb')
 		if not fp:
