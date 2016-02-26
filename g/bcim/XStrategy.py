@@ -8,53 +8,40 @@ class XStrategies(object):
 		self.graph = graph
 		self.model = model
 
-	def greedy(self, k):
+	def greedy(self, T):
 		ft = time.time()
-		T, S = [], []
-		i = 0
-		while i < 2 * k:
-			TS = list(set(T) | set(S))
+		S = []
+		i, k = 0, len(T)
+		while i < k:
 			vertices = self.graph.get_all_vertices()
 			maxinf = -1
 			target = -1
 			for v in vertices:
-				if v in TS:
+				if v in T or v in S:
 					continue
 
 				Tt, Ss = copy.deepcopy(T), copy.deepcopy(S)
-				if i % 2 == 0:
-					Tt.append(v)
-				else:
-					Ss.append(v)
-
+				Ss.append(v)
 				g = copy.deepcopy(self.graph)
-				tcntx, scntx = self.model.calc_influence(g, Tt, Ss)
+				_, scntx = self.model.calc_influence(g, Tt, Ss)
 				g = copy.deepcopy(self.graph)
-				tcnt, scnt = self.model.calc_influence(g, T, S)
-				if i % 2 == 0:
-					if tcntx - tcnt > maxinf:
-						maxinf = tcntx - tcnt
-						target = v
-				else:
-					if scntx - scnt > maxinf:
-						maxinf = scntx - scnt
-						target = v
+				_, scnt = self.model.calc_influence(g, T, S)
+				if scntx - scnt > maxinf:
+					maxinf = scntx - scnt
+					target = v
 
 			if target != -1:
-				if i % 2 == 0:
-					T.append(target)
-				else:
-					S.append(target)
+				S.append(target)
 				i += 1
 			else:
 				break
 
 		print '#Greedy Time consumed: %.2f secs' % (time.time() - ft)
-		return T, S
+		return S
 
-
-	def degree_heuristic(self, k):
+	def degree_heuristic(self, T):
 		ft = time.time()
+		k = len(T)
 		out_degree = []
 		vertices = self.graph.get_all_vertices()
 		for vid in vertices:
@@ -62,19 +49,20 @@ class XStrategies(object):
 
 		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reverse=True)
 
-		T, S = [], []
+		S = []
 		limit, i = 2 * k, 0
 		if limit > len(out_degree_sorted):
 			limit = len(out_degree_sorted) / 2
 			limit *= 2
 
-		while i < limit:
-			T.append(out_degree_sorted[i][0])
-			S.append(out_degree_sorted[i+1][0])
-			i += 2
+		while len(S) < limit:
+			vid = out_degree_sorted[i][0]
+			if vid not in T and vid not in S:
+				S.append(vid)
+			i += 1
 
 		print '#Degree Heuristic Time consumed: %.2f secs' % (time.time() - ft)
-		return T, S
+		return S
 
 	def comparable_heuristic(self, T):
 		"""
@@ -91,7 +79,7 @@ class XStrategies(object):
 				to = e.get_dest()
 				if to in T or to in S:
 					continue
-					
+
 				if target == -1:
 					target = to
 					g = copy.deepcopy(self.graph)
@@ -112,21 +100,36 @@ class XStrategies(object):
 		print '#Comparable Heuristic Time consumed: %.2f secs' % (time.time() - ft)
 		return S
 
+	def get_sample(self, k):
+		nodes = self.graph.get_all_vertices()
+		T = []
+		i = 0
+		# The get sample method is similar to the method we used in
+		# 'A Budgeted Method for Influence Maximization' (XU Xinhui et al SEKE2015)
+		while i < k:
+			u = random.choice(nodes)
+			maxnode = self.graph.max_degree_neighbor(u, T)
+			T.append(maxnode)
+			i += 1
+
+		return T
+
 	def infmax(self, k):
-		T, S = self.greedy(k)
+		T = self.get_sample(k)
+		S = self.greedy(T)
 		g = copy.deepcopy(self.graph)
-		# t, s = self.model.calc_influence(g, T, S)
-		s, t = self.model.calc_influence(g, S, T)
+		t, s = self.model.calc_influence(g, T, S)
+		# s, t = self.model.calc_influence(g, S, T)
 		print 'greedy: t = %d, s = %d' % (t, s)
 		print 'len(T) =', len(T)
 		print 'T =', T
 		print 'len(S) =', len(S)
 		print 'S =', S
 
-		T, S = self.degree_heuristic(k)
+		S = self.degree_heuristic(T)
 		g = copy.deepcopy(self.graph)
-		# t, s = self.model.calc_influence(g, T, S)
-		s, t = self.model.calc_influence(g, S, T)
+		t, s = self.model.calc_influence(g, T, S)
+		# s, t = self.model.calc_influence(g, S, T)
 		print 'degree_heuristic: t = %d, s = %d' % (t, s)
 		print 'len(T) =', len(T)
 		print 'T =', T
@@ -146,11 +149,11 @@ class XStrategies(object):
 	def infmax_ext(self, k, R, result_file):
 		ts = []
 		res = []
-		T, S = self.greedy(k)
+		T = self.get_sample(k)
 		ts.append((T, S))
 		res.append(('Greedy', 0, 0))
 
-		T, S = self.degree_heuristic(k)
+		S = self.degree_heuristic(T)
 		ts.append((T, S))
 		res.append(('DegreeHeuristic', 0, 0))
 

@@ -182,6 +182,25 @@ class XGraph(object):
 			mfactor = theta * random.random()
 			self.graph[vid].set_mutation_factor(mfactor)
 
+	def max_degree_neighbor(self, vertice, exclusive_set):
+		edges = self.get_edges_by_vertice(vertice)
+		nbrs = []
+		for e in edges:
+			nbrs.append(e.get_dest())
+		nbrs.append(vertice)
+		maximal, maxnode = -1, -1
+
+		for u in nbrs:
+			if u in exclusive_set:
+				continue
+
+			deg = len(self.get_edges_by_vertice(u))
+			if maximal < deg:
+				maximal = deg
+				maxnode = u
+				
+		return maxnode
+
 	def set_vertice_status(self, vertice, status):
 		self.graph[vertice] = status
 
