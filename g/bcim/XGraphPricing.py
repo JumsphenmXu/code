@@ -13,7 +13,7 @@ class XGraphPricing(object):
 	def __init__(self):
 		pass
 
-	def load_graph(self, graph_file):
+	def __load_graph(self, graph_file):
 		graph = nx.Graph()
 
 		with open(graph_file, "rb") as fp:
@@ -28,10 +28,10 @@ class XGraphPricing(object):
 
 		return graph
 
-	def get_pagerank_value(self, graph):
+	def __get_pagerank_value(self, graph):
 		return nx.pagerank(graph)
 
-	def max_degree_neighbor(self, graph, node, exclusive_set):
+	def __max_degree_neighbor(self, graph, node, exclusive_set):
 		nbrs = graph.neighbors(node)
 		nbrs.append(node)
 		maximal = -1
@@ -48,21 +48,21 @@ class XGraphPricing(object):
 
 		return maximal, max_node
 
-	def cost_mapping(self, graph, rank_value):
+	def __cost_mapping(self, graph, rank_value):
 		def cost_eval(item):
-			maximal, max_node = self.max_degree_neighbor(graph, item[0], [])
+			maximal, max_node = self.__max_degree_neighbor(graph, item[0], [])
 			return item[0], int((100*item[1]+50) * len(graph.neighbors(item[0])) / maximal)
 
 		return map(cost_eval, rank_value)
 
 	def pricing_graph(self, graph_file):
-		graph = self.load_graph(graph_file)
-		rank_value = self.get_pagerank_value(graph)
+		graph = self.__load_graph(graph_file)
+		rank_value = self.__get_pagerank_value(graph)
 		rv = []
 		for key, val in rank_value.items():
 			rv.append((key, val))
 
-		return self.cost_mapping(graph, rv)
+		return self.__cost_mapping(graph, rv)
 
 
 if __name__ == '__main__':

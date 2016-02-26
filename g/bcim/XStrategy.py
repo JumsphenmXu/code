@@ -3,7 +3,7 @@
 
 __author__ = 'XU Xinhui'
 
-class XStrategies(object):
+class XStrategy(object):
 	def __init__(self, graph, model):
 		self.graph = graph
 		self.model = model
@@ -50,10 +50,9 @@ class XStrategies(object):
 		out_degree_sorted = sorted(out_degree, key=lambda x: x[1], reverse=True)
 
 		S = []
-		limit, i = 2 * k, 0
-		if limit > len(out_degree_sorted):
-			limit = len(out_degree_sorted) / 2
-			limit *= 2
+		limit, i = k, 0
+		if len(out_degree_sorted) < 2 * k:
+			limit = len(out_degree_sorted) - k
 
 		while len(S) < limit:
 			vid = out_degree_sorted[i][0]
@@ -96,7 +95,8 @@ class XStrategies(object):
 					maxinf = curS - prevS
 					target = to
 
-			S.append(target)
+			if target != -1:
+				S.append(target)
 		print '#Comparable Heuristic Time consumed: %.2f secs' % (time.time() - ft)
 		return S
 
@@ -150,6 +150,7 @@ class XStrategies(object):
 		ts = []
 		res = []
 		T = self.get_sample(k)
+		S = self.greedy(T)
 		ts.append((T, S))
 		res.append(('Greedy', 0, 0))
 
