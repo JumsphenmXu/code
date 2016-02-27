@@ -62,7 +62,12 @@ class XGraphPricing(object):
 		for key, val in rank_value.items():
 			rv.append((key, val))
 
-		return self.__cost_mapping(graph, rv)
+		cost_list = self.__cost_mapping(graph, rv)
+		graph_price = {}
+		for e in cost_list:
+			graph_price[e[0]] = e[1]
+
+		return graph_price
 
 
 if __name__ == '__main__':
