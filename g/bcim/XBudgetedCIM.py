@@ -121,12 +121,12 @@ class XBudgetedCIM(object):
 		S = self.degree_heuristic(T, budget, epsilon)
 		g = copy.deepcopy(self.graph)
 		t, s = self.model.calc_influence(g, T, S)
-		print 'DegreeHeuristic t = %d, s = %d' % (t, s)
+		print 'DegreeHeuristic k = %d, budget = %d, t = %d, s = %d' % (k, budget, t, s)
 
 		S = self.comparable_heuristic(T, budget, epsilon)
 		g = copy.deepcopy(self.graph)
 		t, s = self.model.calc_influence(g, T, S)
-		print 'DegreeHeuristic t = %d, s = %d' % (t, s)
+		print 'ComparableHeuristic k = %d, budget = %d, t = %d, s = %d' % (k, budget, t, s)
 
 
 if __name__ == '__main__':
@@ -137,4 +137,7 @@ if __name__ == '__main__':
 	model = XDiffusionModel()
 
 	bcim = XBudgetedCIM(graph_file, model)
-	bcim.infmax(k, budget, epsilon)
+	for i in xrange(3):
+		k = (i + 2) * 5
+		budget += 50 * i
+		bcim.infmax(k, budget, epsilon)
