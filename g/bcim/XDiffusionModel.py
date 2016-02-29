@@ -4,6 +4,7 @@
 __author__ = 'XU Xinhui'
 
 import random
+from XGraph import XCOLOR
 
 class XDiffusionModel(object):
 	def __init__(self):
