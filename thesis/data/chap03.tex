@@ -1,0 +1,282 @@
+% 下面这句用以支持中文
+% !Mode:: "TeX:UTF-8"
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+
+\chapter{KSC最有影响力节点发现方法}
+\label{cha:3thChap03}
+
+在复杂网络的传播模型研究中，如何发现最具影响力的传播节点在理论和现实应用中都有重大的意义。目前的研究一般使用节点的度数、紧密度、介数和K-shell等中心化指标来评价影响力，这种方法虽然简单，但是由于它们仅利用了节点自身的内部属性，因而在评价影响力时精确度并不高，普遍性适用性较弱。为了解决这个问题，我们提出了KSC(K-shell and Community Centrality)指标模型。此模型不但考虑了节点的内部属性，而且还综合考虑了节点的外部属性，例如节点所属的社区等。然后我们利用SIR模型对传播过程进行仿真，实验证明我们提出的方法可以更好的发现最具有影响力的节点，且可适用于各种复杂网络。本文为这项具有挑战性研究提供了新的思想和方法。
+
+
+\section{引言}
+现实世界中的诸多系统都以复杂网络形式存在，比如互联网、社会系统、计算网络、生物网络和社交网络等。理解复杂网络的拓扑结构和功能是目前国际研究的热点。在很多科学领域中，都使用网络来表示系统中成员之间的关系，如在社交网络中用节点代表人，边代表人与人之间的联系。由于这些网络具有很高的复杂性，因此被称为”复杂网络（Complex Network）”\cite{watts1998collective,barabasi1999emergence,adamic2000power}，它已成为当前最重要的多学科交叉研究领域之一。在复杂网络中，找出最具影响力的节点\cite{pastor2002immunization,kempe2003maximizing,gomez2010inferring,budak2011limiting,mislove2007measurement,yuanweiguo2013}或意见领袖\cite{weng2010twitterrank}在理论和现实应用中都有重大的意义，例如有效的控制疾病传播\cite{xudan2007fuzai,pastor2001epidemic,pastor2002immunization,goltsev2012localization}、流言散布\cite{naveed2011bad,yi61zaixiansocial}、计算机病毒扩散\cite{yuan2008network}，还可以传播新产品\cite{swamynathan2008social}、新思想\cite{mislove2007measurement}以推进社会化进程。
+在社会网络分析中，常用”中心性（Centrality）”来测量最有影响力的节点。文献\cite{everett1999centrality,albert2000error,pastor2001dynamical}利用度中心性(Degree centrality)来测量最有影响力的节点，在符合幂律的非均匀网络中，度数较大的Hubs节点的传播影响力应该相对较大，这也是目标免疫和熟人免疫策略的基本依据。文献\cite{freeman1979centrality,newman2005measure}利用了介数中心性（Betweenness centrality）来评价影响力，介数中心性是以经过某个节点的最短路径的数目来刻画节点的重要性。文献\cite{brin1998anatomy}提出PageRank算法来评价网页的重要性，它认为一个网页(节点)的重要性取决于其前向链接的数量与质量。文献\cite{opsahl2010node,sabidussi1966centrality}利用紧密度指标（Closeness Centrality）刻画某个节点到其它节点的难易程度。文献\cite{kitsak2010identification}在《Nature Physics》中提出通过K-shell（简称ks）\cite{carmi2007model}分解来确定最具有影响力的单源节点。
+我们认为节点的影响力不只是由节点内部属性决定，而且其外部属性紧密相关，这与哲学范畴的内因和外因思想一致。内部属性如度数、紧密性、介数等中心化指标，外部属性如所属社区的大小、社区内关系紧密度等。社区\cite{girvan2002community,newman2006modularity,newman2012communities}是一个有共同爱好的，或者位于一个共同地方的、或者同在某个工作场所的、或者具有家庭联系的群体\cite{newman2013finding}。社区内的节点联系紧密，社区间的节点联系松散。
+我们提出了KSC（K-shell and Community Centrality）指标模型。此模型不但考虑了节点的内部属性，而且还综合考虑了节点的外部属性，例如节点所属的社区特性等。然后我们利用SIR（Susceptible–Infected–Recovered）模型对传播过程进行仿真，实验证明我们提出的方法可以更好的发现最具有影响力的节点。本文为这项具有挑战性研究提供了新的思想和方法。
+
+\section{相关工作介绍}
+在社会网络中，发现最具有影响力的节点可以帮助我们有效地控制疾病传播、流言散布、计算机病毒扩散，还可以传播新产品、新思想以推进社会化进程。
+\subsection{度中心化}
+度中心化\cite{freeman1979centrality,sabidussi1966centrality}是一种最简单的方法，用于描述在静态网络中节点所产生的直接影响力。设网络$G=(V,E)$具有$n=|V|$个节点和$m=|E|$条边，节点$v$的度数是指与节点$v$连接的节点个数，用$C_d(v)=d(v)$表示:
+\begin{equation} 
+\label{equ:chap3:degreeCentral}
+C_d(v)=d(v)
+\end{equation}
+其中$d(v)$表示，称为该节点的度。如图~\ref{fig:chap03Example}所示，尽管节点14度数最大为7，但作为初始节点，它最终的传播范围并不一定是最广泛的，因为它的邻居节点的度数都很小。
+
+
+\subsection{介数中心化}
+介数中心化刻画了网络中节点对于信息流动的影响力。节点$v$的介数\cite{freeman1979centrality}定义为:
+\begin{equation} 
+\label{equ:chap3:betweenness}
+C_b(v)= \sum _{s\neq v\neq t \in V} \frac{\sigma _{st}(v)}{\sigma (v)}
+\end{equation}
+$\sigma _{st}$表示源节点$s$到目标节点$t$的最短路径数，$\sigma _{st}(v)$表示节点$s$经过节点$v$到目标节点$t$的最短路径数。
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[scale=0.4]{./chap3/chap03Example}
+	\caption{网络结构分析样例图}
+	\label{fig:chap03Example}
+\end{figure}
+
+\subsection{紧密度}
+紧密度\cite{opsahl2010node,sabidussi1966centrality}用于刻画节点到达其它节点的难易程度：
+\begin{equation} 
+\label{equ:chap3:closeness}
+C_c(v)= \sum _{t\in V \setminus s} \frac{1}{d_G(s,t)}
+\end{equation}
+$d_G(s,t)$表示源节点$s$到节点$t$的最短距离。
+
+\subsection{K-shell分解方法}
+K-shell给出了网络中节点重要性的一种粗粒化的划分，用$C_{ks}(v)$ 表示。网络边缘节点的K-shell为1，然后往内像剥洋葱一样一层层进入网络的核心。首先去除网络中度数小于 的所有节点及其连边;如果在剩下的节点中仍有度值小于$k$的节点，那么就继续去除这些节点，直至网络中剩下的节点的度值不小于$k$。依次取$k=(1,2,3,\cdots)$，就得到了该网络的K-shell分解。具体过程可参考图~\ref{fig:chap03Example}。Kitsak\cite{kitsak2010identification}实验研究表明，对于单个传播源，感染率低的情形，度数大或者高介数的节点不一定是最有影响力的节点，而通过K-shell分解分析确定的网络核心节点(即K-shell值大的节点)才是最有影响力的节点；其研究表明，K-shell分解方法是一种比较好的影响力节点识别方法，可以更好地预测疾病等的传播。当传染病在网络的K-shell大的节点爆发时，病毒总是可以在网络核心通过许多种路径开始感染其它部分，无论该节点度数的大与小，这个结论都是有效的。这些通路的存在反过来也意味着，如果以一个随机节点为源爆发疫情，有高 K-shell值的节点更有可能早于其他节点被感染(疾病预测)。
+\subsection{社区划分算法}
+社区划分方法，可以参阅第~\ref{cha:secondChap02}章节相关内容。我们本章使用了FN算法\cite{newman2004finding}。FN算法是Newman提出的基于局部搜索的快速社区划分算法。其优化目标是极大化网络模块性(modularity)评价函数$Q$。FN算法属于聚合算法。它初始假定所有节点各自成为一个社区，然后每一步根据原有连接合并两个社区，计算$Q$值并记录下来，直到所有社区都被合并成为一个社区。最后根据记录下的$Q$值，找到最优的划分结果。
+
+\section{模型与算法}
+我们认为节点的传播力不但与节点的内部自身属性有关，如度数、紧密度、介数、K-shell等，还与它的外部环境属性相关，如节点所处外部环境：社区大小，社区关联紧密度等。我们提出节点的影响力是由内因与外因同时决定的这一新颖思想和方法，即KSC中心化指标模型。模型符合哲学内因与外因对事物同样具有决定作用这一思想理念。
+复杂网络$G=(v_0)$中，节点$v_0$的KSC值定义如下：
+\begin{equation} 
+\label{equ:chap3:KSCModel}
+KSC(v_0)=\alpha f_{internal}(v_0) + \beta f_{external}(v_0), \alpha + \beta =1
+\end{equation}
+其中$f_{internal}(v_0)$为节点的内部影响力，$f_{external}(v_0)$为节点的外部影响力，$\alpha$为内部影响因子，$\beta$为外部影响因子，且满足$\alpha + \beta =1$，$\alpha$和$\beta$可以根据实际网络结构与功能设定。 
+$f_{internal}(v_0)$定义如下：
+\begin{equation} 
+\label{equ:chap3:KSCinternal}
+f_{internal}(v_0) = \frac{K(v_0)}{max_{v\in V}K(v)}
+\end{equation}
+其中，$K(v)$为节点内部属性值，可取度数，介数，紧密度和K-Shell等节点自身属性，$max_{v\in V}K(v)$为归一化因子。
+
+$f_{external}(v_0)$定义如下：
+\begin{equation} 
+\label{equ:chap3:KSCexternal}
+f_{external}(v_0) = \frac{\sum _{c\in C}d(v_0,c)|c|}{max_{v\in V}(\sum _{c\in C}d(v,c)|c|)}
+\end{equation}
+其中$C$为FN算法划分的社区集合，$d(v_0,c)$为节点$v_0$在社区$c$中的邻居节点的总个数，$|c|$为社区$c$的大小， $max_{v\in V}(\sum _{c\in C}d(v,c)|c|)$是归一化因子。
+
+我们实验中$\alpha$与$\beta$可以根据网络的拓扑结构设定；其中$f_{internal}(v_0)$选取K-shell为内部属性，也可以为度数、紧密度和介数等，$f_{external}(v_0)$选取为社区属性，俗语“物以类聚，人以群分”说明社区内部节点之间有共同的兴趣爱好等，相似性更大。
+表 给出了图~\ref{fig:chap03Example}各节点的各种指标，如节点14度数最大，但是由于处在网络的边缘，所以最终影响力为2，而节点7虽然度数为6，但是它是其它几个社区连通的枢纽，结构洞\cite{burt2004structural,granovetter1973strength}概念中重要节点。节点1-5虽然K-shell相同，但是节点1是2-5连接其它节点的桥接关系。从表~\ref{tab:chap3:exmapleTable}中我们可以看出各种方法得到的最具影响力节点排名各不相同。
+\begin{table}[htbp]
+%\centering
+\begin{minipage}[t]{0.8\linewidth}
+\caption{计算网络结构分析样例图中节点的传播力}
+\label{tab:chap3:exmapleTable}
+%\begin{tabular}{*{7}{p{.14\textwidth}}}
+\begin{tabular}{*{7}{p{.13\textwidth}}}
+	\toprule[1.5pt]
+	{$v$} & {$C_d(v)$} & {$C_{ks}(v)$} & {$C_c(v)$} & {$C_b(v)$} & {$KSC(v)$} & {$F(t)$} \\ 
+	\midrule[1pt]
+	1 & 5 & 4 & 0.4615385 & 0.3660131 & 0.85 & 3 \\
+	2 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
+	3 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
+	4 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
+	5 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
+	6 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
+	7 & 6 & 3 & 0.6 & 0.7581699 & 0.6579545 & 3 \\
+	8 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
+	9 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
+	10 & 2 & 2 & 0.3050847 & 0 & 0.3909091 & 1 \\
+	11 & 3 & 2 & 0.4186047 & 0.2091503 & 0.4045455 & 2 \\
+	12 & 2 & 2 & 0.3050847 & 0 & 0.3909091 & 1 \\
+	13 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	14 & 7 & 1 & 0.5142857 & 0.5686275 & 0.475 & 2 \\
+	15 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	16 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	17 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	18 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	19 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
+	\bottomrule[1.5pt]
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\section{实验结果与分析}
+\subsection{实验仿真模型}
+我们采用SIR模型\cite{kermack1927contribution,diekmann1990definition,hethcote2000mathematics,bernoulli2004attempt}来模拟仿真传播过程，并将其结果与我们的模型实验结果作比较。
+SIR模型中有三种状态，易感染状态S，感染状态I，免疫状态R。当个体处于感染状态时，以$\delta$的概率感染处于易感染状态邻居个体，感染状态的节点以$\gamma$的概率恢复为免疫状态。具体内容可以参照~\ref{cha:secondChap02}章节介绍。
+如果$\delta$值较大，节点传播能力很强，节点将很快感染整个网络，从而很难区分单个个体的重要性;较小的$\delta$能在有限时间内更好的显示出感染范围。我们中我们设定较小的$\delta =0.04$。
+\subsection{实验数据及环境}
+考虑到不同的社会网络类型所代表不同的网络拓扑结构特性，我们选取了4个真实社会网络数据集进行分析比较，表~\ref{tab:chap3:datsetTable}给出各个网络的属性特征。我们的模型也可应用于其他类型的复杂网络。
+
+本文所有实验运行的硬件环境是：处理器Intel® Core™ i5 CPU M430 @2。27GHz，内存（RAM）3GB。
+
+\begin{table}[htbp]
+%	\centering
+	\begin{minipage}[t]{0.8\linewidth}
+		\caption{现实社会网络的属性统计情况}
+		\label{tab:chap3:datsetTable}
+		%\begin{tabular}{*{7}{p{.14\textwidth}}}
+		\begin{tabular}{*{8}{p{.11\textwidth}}}
+			\toprule[1.5pt]
+			Networks & {$n$} & {$m$} & {$<k>$} & {$max(k)$} & {$d$} & {$max(C_{ks})$} & {$C$} \\ 
+			\midrule[1pt]
+			Blogs & 3982 & 6803 & 3.42 & 189 & 6.227 & 7 & 47 \\
+			Netscience & 379 & 914 & 4.82 & 34 & 6.061 & 8 & 19 \\
+			Router & 5022 & 6258 & 2.49 & 106 & 6.393 & 7 & 75 \\
+			Email & 1133 & 5451 & 9.62 & 71 & 3.716 & 11 & 10 \\
+			\bottomrule[1.5pt]
+		\end{tabular}
+	\end{minipage}
+\end{table}
+其中$n$是节点数，$m$为边数，$<k>$表示网络中平均度数据，$max(k)$为节点中最大度数，$d$为节点之间最短路径的平均数，$max(C_{ks})$ 为网络中最大的K-shell，$C$为整个复杂网络被划分的社区数。
+\subsection{实验效果}
+我们应用SIR模型，对我们所提出的KSC指标与度、紧密性、介数和K-shell中心化指标进行了分析比较。实验模拟传播过程中，每次只选取网络中的一个节点作为初始传播节点，设定较短传播时间($t=10$)，对每个节点进行1000次重复实验取均值，最终感染与恢复的节点总数定义为影响力$F(t)$。
+\begin{figure}[H] 
+	\centering
+	\includegraphics[scale=1]{./chap3/chap03alphabeta}
+	\caption{KSC模型中内部影响因子$\alpha$与外部影响因子$\beta$取不同对传播影响力指标的影响分析}
+	\label{fig:chap03alphabeta}
+\end{figure}
+图~\ref{fig:chap03alphabeta}表示了在KSC模型中选取不同的内部影响因子$\alpha$与外部影响因子$\beta (\alpha +\beta =1)$对结果的影响程度。哲学范畴中事物的运动和变化，是由它本身固有的内部矛盾引起的，又是同它所处的一定的外在条件相联系的，内因和外因在事物发展中的地位和作用是不同的。这与模型中内部影响因子$\alpha$与外部影响因子$\beta$对传播影响假设完全一致。如在图~\ref{fig:chap03alphabeta}-c中局部放大了最具影响力的前10位，当$0\le \alpha \le 0.2$，$1\geq \beta \geq 0.8$，或$1\geq \alpha \geq 0.8$，$0\le \beta \le 0.2$，时可以看到，影响力曲线波动较大，影响力排名靠后的节点影响反而大。即只是单纯的考虑内部属性或外部属性对发现最具有影响的节点来说准确性，适用性较差。
+经实验分析得出四种不同拓扑结构网络的内、外影响因子经验取值情况，如表~\ref{tab:chap3alphabeta}所示。可以看出在不同类型的网络结构中，内、外因所起的权重是不同的，我们实验中的$\alpha$、$\beta$根据表~\ref{tab:chap3alphabeta}中取较好的经验值，这从另一方面证明了所提出模型的合理性及普遍性。
+\begin{table}[htbp]
+%		\centering
+	\begin{minipage}[t]{0.8\linewidth}		
+		\caption{内、外影响因子取值情况}
+		\label{tab:chap3alphabeta}
+		%\begin{tabular}{*{7}{p{.14\textwidth}}}
+		\begin{tabular}{*{4}{p{.26\textwidth}}}
+			\toprule[1.5pt]
+			网络名称 & \multicolumn{1}{c}{内部影响因子} & \multicolumn{1}{c}{外部影响因子} & \multicolumn{1}{c}{较好的经验取值}   \\
+			& \quad 取值范围$(\alpha)$ & \quad 取值范围$(\beta)$ & \qquad $\alpha $ \qquad $\beta$  \\ 
+			
+			\midrule[1pt]
+			Blogs & \qquad 0.1-0.4 & \qquad 0.9-0.6 & \quad 0.2 \qquad  0.8 \\
+			Netscience & \qquad 0.3-0.7 & \qquad 0.7-0.3 & \quad 0.4 \qquad  0.6 \\
+			Router & \qquad 0.3-0.8 & \qquad 0.7-0.2 & \quad 0.7 \qquad  0.3 \\
+			Email & \qquad 0.1-0.8 & \qquad 0.9-0.2 & \quad 0.5 \qquad  0.5 \\
+			\bottomrule[1.5pt]
+		\end{tabular}
+	\end{minipage}
+\end{table}
+图3所表示的是在不同的网络中，中心度指标与实际影响力之间的关系图。
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{\label{fig:chap03graphTblogs1}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs1}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTblogs2}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs2}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTblogs3}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs3}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTblogs4}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs4}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTblogs5}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs5}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTemail1}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail1}}
+		
+\end{figure}
+
+\addtocounter{figure}{-1}       %先欺骗LaTeX图形计数器
+\begin{figure}[H]
+	\addtocounter{figure}{1}
+	\centering%
+	\subcaptionbox{\label{fig:chap03graphTemail2}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail2}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTemail3}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail3}}
+	\subcaptionbox{\label{fig:chap03graphTemail4}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail4}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTemail5}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail5}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTnetscience1}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience1}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTnetscience2}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience2}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTnetscience3}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience3}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTnetscience4}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience4}}	
+	%\hspace{3em}%
+\end{figure}
+
+\addtocounter{figure}{-1}       %先欺骗LaTeX图形计数器
+\begin{figure}[H]
+	\addtocounter{figure}{1}
+	\centering%
+	\subcaptionbox{\label{fig:chap03graphTnetscience5}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience5}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTrouter1}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter1}}	
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTrouter2}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter2}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTrouter3}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter3}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTrouter4}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter4}}
+	%\hspace{3em}%
+	\subcaptionbox{\label{fig:chap03graphTrouter5}}
+	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter5}}
+	\caption{节点影响力分析比对，5种不同中心化指标，4种不同的复杂网络环境。传播影响力$F(t)(t=10)$,每个初始节点重复运行1000次取均值。}
+	\label{fig:chap03ftall}
+\end{figure}
+在Blogs网络中，度、K-shell、介数指标与影响力$F(t)$关系都不是很明显，例如在介数指标结果中，一些介数大的节点$F(t)$比一些介数很小的节点影响力还要低，但KSC指标可以较好地区分出最具影响力的节点。Email网络中，所有指标表现都较好，紧密度与KSC更为理想，这与网络的拓扑结构有关系。在Netscience网络中，介数衡量结果最差，紧密度、K-shell与节点$F(t)$影响力关系也不明显，KSC的效果要优于度数。在路由网络(Router)中K-shell与KSC结果接近，其它指标结果很难得到传播力较大的节点。总之，在不同的网络中传统的中心度指标各有优缺点，但是我们提出的KSC整体效果最好，都能有效的区分出最具有影响力的节点，通用性较强。
+对于单个传播源的情形，最具有影响力的节点并非度数最大的节点或者介数最大的节点，而是K-shell最大的节点，这一结论在Kitsak\cite{kitsak2010identification}在《Nature Physics》指出。图~\ref{fig:chap03KSCKshell}比较了KSC与K-shell的实验效果，KSC比K-shell增加了外部属性的影响因素。例如在Email网络中，当K-shell为10时，传播影响力$F(t)(t=10)$并不稳定，而且变化范围较大，并且影响力随着KSC值的增大呈现增大趋势。在4种复杂网络中明显可以看出当KSC一定时$F(t)$相对稳定，颜色变化范围较小。
+\begin{figure}[H] 
+	\centering
+	\includegraphics[scale=0.8]{./chap3/chap03KSCKshell}
+	\caption{KSC与K-shell指标在4种不同复杂网络中的分析比较，横轴表示KSC的指标值，纵轴表示K-shell的指标值，颜色坐标代表SIR模型仿真出的实际影响力大小$F(t)$。}
+	\label{fig:chap03KSCKshell}
+\end{figure}
+图~\ref{fig:chap03KSCKbetweenness}比较了KSC与介数的实验效果。可出看出在Email网络中，KSC与介数表现正向同步较好，都能较好地发出最具影响力的节点，但在其它三个网络环境中KSC表现明显优于介数指标。KSC与其它度数、紧密度指标比较省略。实验结果表明KSC方法明显优于已有4种典型方法。由此可见，考虑节点的外部属性对于找出最有影响力的节点意义重大，且具有较强的通用性，说明验证了我们所提出模型的合理性与普遍性。
+\begin{figure}[H] 
+	\centering
+	\includegraphics[scale=0.8]{./chap3/chap03KSCKbetweenness}
+	\caption{KSC与介数指标在4种不同复杂网络中的分析比较，横轴表示KSC的指标值，纵轴表示K-shell的指标值，颜色坐标代表SIR模型仿真出的实际影响力大小$F(t)$。}
+	\label{fig:chap03KSCKbetweenness}
+\end{figure}
+如图~\ref{fig:chap03Finalresult}所示，在Blogs图中，KSC曲线的某一点$(x,y)$，横坐标表示此点用KSC指标值得出的排名为$x$，纵坐标表示此点在SIR仿真的实际影响力为$y$。理论上，一个好的指标方法应该表现为向右倾斜单调下降的曲线。因为对于一个好的指标方法，如果某个节点按该指标得出的排名越靠后，其实际影响力 应该随之减小。
+\begin{figure}[H] 
+	\centering
+	\includegraphics[scale=1.0]{./chap3/chap03Finalresult}
+	\caption{5种指标的影响力$F(t)(t=10)$前Top-K的均值结果，横轴代表按各种指标值的排序，纵轴表示影响力$F(t)$，不同颜色的曲线代表不同的方法。}
+	\label{fig:chap03Finalresult}
+\end{figure}
+从图~\ref{fig:chap03Finalresult}结果中分析，我们可以看到已有的4种典型方法在不同网络中影响力均有所波动，这些方法在不同网络中各有优劣，通用性不强，特别是在影响力前10中波动范围最为明显。指标值小的传播影响力反而比指标值大的传播影响力要大，特别是在Blogs网络中，已有的4种指标方法结果都不太精确，而我们提出的KSC指标几乎在所有的网络中都符合向右倾斜单调下降的理论曲线。
+本实验充分论证了节点影响力不但由内部属性决定，而且还与其外部属性密切相关，说明我们提出的KSC模型的合理性及普遍适用性。
+
+\section{本章小结}
+在复杂网络中发现最具影响力的节点，可以帮助我们提高新知识、新产品的传播效率，同时可以有效地制定相应的策略来阻止疾病及谣言传播。复杂网络中鉴别最具影响力的节点一直以来是研究的热点与难点，我们提出了KSC中心化指标模型。实验选取现实生活中常见的四种复杂网络，博客网、邮件网、路由网和科学合著网，通过SIR模型模拟节点传播过程，并对各种中心化指标得出的影响力进行排序分析，验证了方法的高效性和正确性。
+
+与传统的度、紧密度、介数和K-shell方法相比，传统方法在不同网络中各有优劣，通用性不强。而我们提出的KSC模型综合考虑了节点的内部属性与外部属性，实验证明用此方法鉴别节点的影响力要精确得多，适用范围更大。我们所提出的模型为这项具有挑战性研究提供了新的思想和方法，希望对以后的研究者给予启发。
+
