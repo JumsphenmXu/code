@@ -19,7 +19,7 @@
 大量的社会媒体平台产生的各种各样的联系以及丰富的数据，很多研究者就开始利用这些资源平台抓取数据开始进行分析研究。人们发现在Facebook，Twitter等社交平台上，消息的传播有着很好的效果，所以加以营销的策略就可以实现特定目的产品、信息、理念在人群中广泛地进行推广\cite{he2012influence}。这种信息的传递的现象被称为信息传播(Influence Diffusion)。随着电子商务的大力发展，商家为了在电子商务平台上出售自己的产品，必须通过投放各种广告来引导消费者到该产品的买卖平台。通过对社会媒体信息的研究和分析，我们可以得知人们在日常生活中所关注的信息，以及这些信息是如何扩散的，并且哪些人能对信息产生更好的传播效应。这样我们就可以有目标地进行广告投放。除此之外，我们还可以利用社会媒体网络去做政策宣传，新理念推广，对不法消息进行辟谣等生活的方方面面。
 
 
-在信息传播过程中如何使得受众或者接纳该信息的人数最多，此类问题被定义为基于社会媒体网络的影响力最大化，并且该问题在近年来得到了大量研究\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalable}。
+在信息传播过程中如何使得受众或者接纳该信息的人数最多，此类问题被定义为基于社会媒体网络的影响力最大化，并且该问题在近年来得到了大量研究\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}。
 
 
 \section{研究现状}
@@ -28,7 +28,7 @@
 
 
 \subsection{顶点估值模型}
-在图$G(V, E)$中，顶点估值函数(Cost Function)为$\mathcal{CF}(\boldmath\cdot)$，那么对于$\forall v \in V$，$v$的价格数值则为$\mathcal{CF}(v)$。目前的研究主要将每个顶点的价值定为常数，最常见的为单位化价格，比如\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalable}\cite{chen2009efficient}将图$G(V, E)$中每个顶点的价格数值都赋值为1，也即$\forall v \in V$，$\mathcal{CF}(v) = 1$。在\cite{leskovec2007cost}中的研究例子1中，J. Leskovec等人用帖子的数量来表示文档的价格；在例子2中，他们只是说明了给每个结点赋了一个非负数值，而并没有详细提到如何给这个值，同样在\cite{han2014balanced}中也没有给出具体的估值函数。然而在\cite{nguyen2013budgeted}中，他们给每个顶点赋一个随机值来表示其价格数值。
+在图$G(V, E)$中，顶点估值函数(Cost Function)为$\mathcal{CF}(\boldmath\cdot)$，那么对于$\forall v \in V$，$v$的价格数值则为$\mathcal{CF}(v)$。目前的研究主要将每个顶点的价值定为常数，最常见的为单位化价格，比如\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}\cite{chen2009efficient}将图$G(V, E)$中每个顶点的价格数值都赋值为1，也即$\forall v \in V$，$\mathcal{CF}(v) = 1$。在\cite{leskovec2007cost}中的研究例子1中，J. Leskovec等人用帖子的数量来表示文档的价格；在例子2中，他们只是说明了给每个结点赋了一个非负数值，而并没有详细提到如何给这个值，同样在\cite{han2014balanced}中也没有给出具体的估值函数。然而在\cite{nguyen2013budgeted}中，他们给每个顶点赋一个随机值来表示其价格数值。
 
 
 \subsection{信息传播模型}
@@ -44,7 +44,7 @@ Domingos\cite{domingos2001mining}和Richardson\cite{richardson2002mining}首先�
 
 
 \subsubsection{无竞争的影响力最大化}
-无竞争环境下的影响力最大化一直以来是信息传播领域的一个研究热点。在Kempe\cite{kempe2003maximizing}等人对影响力最大化进行了定义，并得到了一些初步结果之后，大量研究开始出现，旨在解决一方面需要影响传播的效果能得到保证，另一方面则需要尽可能提高算法的效率。正如\cite{kempe2003maximizing}中所得出的结果，得到完全最优解是不能在多项式时间内得到的。那么很多人将注意力集中在改进Kempe提出的贪心算法，这方面做的比较好的有J. Leskovec\cite{leskovec2007cost}发掘并利用了影响力最大化函数具有的子模(Submodularity)特性而提出的CELF，他能在效率上比Kempe提出的Greedy算法快700多倍，后面还有继续在J. Leskovec的研究上继续改进的CELF++\cite{goyal2011celf++}， UBLF\cite{zhou2013ublf}，还有Chen\cite{chen2009efficient}等人提出的NewGreedy和MixGreedy算法。还有很多研究者提出了很多启发式的算法来提高效率，如随机性的算法Random\cite{kempe2003maximizing}\cite{chen2009efficient}。中心度在社交网络中也是一个研究热点，OSN中若是一个顶点有很多其他顶点连向他，那么一定程度上说明他的重要性，也即很可能是比较有影响力的人，由此Bonacich\cite{bonacich1972factoring}等人就提出了根据顶点度数选取网络图中度数排名前$k$的顶点的启发式算法，Chen\cite{chen2009efficient}等人也根据度数提出了改进的DegreeDiscount，SingleDiscount算法。
+无竞争环境下的影响力最大化一直以来是信息传播领域的一个研究热点。在Kempe\cite{kempe2003maximizing}等人对影响力最大化进行了定义，并得到了一些初步结果之后，大量研究开始出现，旨在解决一方面需要影响传播的效果能得到保证，另一方面则需要尽可能提高算法的效率。正如\cite{kempe2003maximizing}中所得出的结果，得到完全最优解是不能在多项式时间内得到的。那么很多人将注意力集中在改进Kempe提出的贪心算法，这方面做的比较好的有J. Leskovec\cite{leskovec2007cost}发掘并利用了影响力最大化函数具有的子模(Submodularity)特性而提出的CELF，他能在效率上比Kempe提出的Greedy算法快700多倍，后面还有继续在J. Leskovec的研究上继续改进的CELF++\cite{goyal2011celf++}， UBLF\cite{zhou2013ublf}，还有Chen\cite{chen2009efficient}等人提出的NewGreedy算法。还有很多研究者提出了很多启发式的算法来提高效率，如随机性的算法Random\cite{kempe2003maximizing}\cite{chen2009efficient}。中心度在社交网络中也是一个研究热点，OSN中若是一个顶点有很多其他顶点连向他，那么一定程度上说明他的重要性，也即很可能是比较有影响力的人，由此Bonacich\cite{bonacich1972factoring}等人就提出了根据顶点度数选取网络图中度数排名前$k$的顶点的启发式算法，Chen\cite{chen2009efficient}等人也根据度数提出了改进的DegreeDiscount，SingleDiscount算法。
 
 
 \subsubsection{存在竞争的影响力最大化}

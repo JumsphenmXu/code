@@ -53,10 +53,10 @@
 
 \subsection{独立级联模型}
 \label{sec:IC-model-desc}
-给定图$G=(V, E)$，以及给定$p(u, v), \forall u, v \in V$表示顶点$u$对顶点$v$的影响权重，还有一个初始选择的结点集合$S$。那么IC模型的传播过程如下：用$S_{t}$表示在传播过程中处于时间$t$时被影响(激活)的结点集合，那么就有$t=0, S_{t}=S$，在$t+1$时刻$\forall w \in S_{t}$，结点$w$依次独立以权重$p(w, z)$去传播给它的邻居结点$z, z \in \mathcal{N}(w) \bigcap (V \setminus \bigcup_{0 \leq i \leq t}S_{i})$，其中$\mathcal{N}(w)$表示$w$的邻居结点集合，而需要注意的是，任何结点只能接受一次激活过程。当某个时刻$t_{end}$，有$S_{t_{end}} = \Phi$，那么我们称时刻$t_{end}$为终止时刻，而整个影响力传播的结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{IC}(S)$。
+给定图$G=(V, E)$，以及给定$p(u, v), \forall u, v \in V$表示顶点$u$对顶点$v$的影响权重，还有一个初始选择的结点集合$S$。那么IC模型的传播过程如下：用$S_{t}$表示在传播过程中处于时间$t$时被影响(激活)的结点集合，那么就有$t=0, S_{t}=S$，在$t+1$时刻$\forall w \in S_{t}$，结点$w$依次独立以权重$p(w, z)$去传播给它的邻居结点$z, z \in \mathcal{N}(w) \bigcap (V \setminus \bigcup_{0 \leq i \leq t}S_{i})$，其中$\mathcal{N}(w)$表示$w$的邻居结点集合，而需要注意的是，任何结点只能接受一次激活过程。当某个时刻$t_{end}$，有$S_{t_{end}} = \emptyset$，那么我们称时刻$t_{end}$为终止时刻，而整个影响力传播的结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{IC}(S)$。
 
 
-如图\ref{fig:IC-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{A\}$，在时刻$t=1$时结点$A$向其邻居结点$(\mathcal{N}(A)=\{B, C, G, F\})$传播，而此刻结点$C$被影响$(S_{1}=\{C\})$，其他结点$B, G, F$因为已经被激活过一次，则颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$结点$C$影响到了它的邻居结点$D(S_{2}=\{D\})$，而下一步$t=3$则没有结点被影响，即$S_{3}=\Phi$，整个传播过程终止。最后的结果为$\sigma_{IC}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, C, D\}$。
+如图\ref{fig:IC-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{A\}$，在时刻$t=1$时结点$A$向其邻居结点$(\mathcal{N}(A)=\{B, C, G, F\})$传播，而此刻结点$C$被影响$(S_{1}=\{C\})$，其他结点$B, G, F$因为已经被激活过一次，则颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$结点$C$影响到了它的邻居结点$D(S_{2}=\{D\})$，而下一步$t=3$则没有结点被影响，即$S_{3}=\emptyset$，整个传播过程终止。最后的结果为$\sigma_{IC}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, C, D\}$。
 
 
 \begin{figure}[H]
@@ -80,10 +80,10 @@
 \begin{displaymath} 
 	{\sum_{u \in \bigcup_{0 \leq i \leq t}S_{i}}p(u,v) \geq \theta_{v}} 
 \end{displaymath}
-那么结点$v$就被影响了，以上过程不断重复直到某个时刻$t_{end}$，$S_{t_{end}}=\Phi$，和IC模型一样，LT模型传播过程中每个结点只能接受一次传播过程的影响。最后我们得到的影响传播结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{LT}(S)$。
+那么结点$v$就被影响了，以上过程不断重复直到某个时刻$t_{end}$，$S_{t_{end}}=\emptyset$，和IC模型一样，LT模型传播过程中每个结点只能接受一次传播过程的影响。最后我们得到的影响传播结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{LT}(S)$。
 
 
-如图\ref{fig:LT-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{B\}$，在时刻$t=1$时结点$B$向其邻居结点$(\mathcal{N}(B)=\{A, C, E\})$传播，因为$p(B,A) \geq \theta_{A}, p(B,E) \geq \theta_{E}$，所以结点$A, E$被影响$(S_{1}=\{A, E\})$，其他结点$C$，因为$p(B,C) \leq \theta_{C}$，所以结点$C$没有被影响，而由于$C$已经被传播过一次，所以使其颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$，因为$p(A,D) \geq \theta_{D}$，所以结点$A$影响到了它的邻居结点$D(S_{2}=\{D\})$，同理，$p(A, F) \leq \theta_{F}$，所以$F$颜色也变成灰色。再下一步当$t=3$时则没有结点被影响，即$S_{3}=\Phi$，整个传播过程终止。最后的结果为$\sigma_{LT}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, B, D, E\}$。
+如图\ref{fig:LT-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{B\}$，在时刻$t=1$时结点$B$向其邻居结点$(\mathcal{N}(B)=\{A, C, E\})$传播，因为$p(B,A) \geq \theta_{A}, p(B,E) \geq \theta_{E}$，所以结点$A, E$被影响$(S_{1}=\{A, E\})$，其他结点$C$，因为$p(B,C) \leq \theta_{C}$，所以结点$C$没有被影响，而由于$C$已经被传播过一次，所以使其颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$，因为$p(A,D) \geq \theta_{D}$，所以结点$A$影响到了它的邻居结点$D(S_{2}=\{D\})$，同理，$p(A, F) \leq \theta_{F}$，所以$F$颜色也变成灰色。再下一步当$t=3$时则没有结点被影响，即$S_{3}=\emptyset$，整个传播过程终止。最后的结果为$\sigma_{LT}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, B, D, E\}$。
 
 
 \begin{figure}[H]
@@ -103,7 +103,7 @@
 
 \subsection{竞争的线性阈值模型}
 \label{sec:CLT-model-desc}
-Xinran He\cite{he2012influence}在LT的基础上提出了CLT的模型，该模型模拟了两种信源在OSN上的传播，这两种信源的状态标识为$\emph{+activated}$，$\emph{-activated}$。那么对于网络图$G=(V,E)$，对于任意边$e=(u, v) \in E$，都给予两个影响权重$p(u,v)^{+} \in (0, 1)$，$p(u,v)^{-} \in (0, 1)$，同样对于任意边$e=(u,v) \notin E$，那么有$p(u,v)^{+}=0$，$p(u,v)^{-}=0$；而对于图中的任意结点$w \in V$也都给予两个影响阈值$\theta_{w}^{+} \in (0, 1)$，$\theta_{w}^{-} \in (0, 1)$。而对于初始状态有两个集合$P \subset V, N \subset V$，并且$P \bigcap N = \Phi$，分别标识$\emph{+activated}$，$\emph{-activated}$的信源的初始选择的结点集合。在选择好初始结点集合后，对于任意一个结点$w \in V \setminus (P \bigcup N)$都可以接受两种消息的影响，即每个结点可能成为$+activated$，也可能成为$-activated$，两个集合独立进行传播，其过程类似LT(详见\ref{sec:LT-model-desc})。在时刻$t$的传播情况，下面分三类进行讨论：
+Xinran He\cite{he2012influence}在LT的基础上提出了CLT的模型，该模型模拟了两种信源在OSN上的传播，这两种信源的状态标识为$\emph{+activated}$，$\emph{-activated}$。那么对于网络图$G=(V,E)$，对于任意边$e=(u, v) \in E$，都给予两个影响权重$p(u,v)^{+} \in (0, 1)$，$p(u,v)^{-} \in (0, 1)$，同样对于任意边$e=(u,v) \notin E$，那么有$p(u,v)^{+}=0$，$p(u,v)^{-}=0$；而对于图中的任意结点$w \in V$也都给予两个影响阈值$\theta_{w}^{+} \in (0, 1)$，$\theta_{w}^{-} \in (0, 1)$。而对于初始状态有两个集合$P \subset V, N \subset V$，并且$P \bigcap N = \emptyset$，分别标识$\emph{+activated}$，$\emph{-activated}$的信源的初始选择的结点集合。在选择好初始结点集合后，对于任意一个结点$w \in V \setminus (P \bigcup N)$都可以接受两种消息的影响，即每个结点可能成为$+activated$，也可能成为$-activated$，两个集合独立进行传播，其过程类似LT(详见\ref{sec:LT-model-desc})。在时刻$t$的传播情况，下面分三类进行讨论：
 
 
 \begin{equation}
@@ -149,9 +149,9 @@ Xinran He\cite{he2012influence}在LT的基础上提出了CLT的模型，该模�
 	\begin{enumerate}
 	\item 结点$B, E$，都已经被传播过了，所以不再受到传播过程影响。
 	\item 结点$C$，此时式子\ref{eq:positive-activated}不成立，但式子\ref{eq:negative-activated}成立，所以被影响为$-activated$，颜色变为绿色。
-	\item 所有$P_{1}$，$N_{1}$的邻居结点传播完成，所以$P_{2}=\Phi$，$N_{2}=\{C\}$。
+	\item 所有$P_{1}$，$N_{1}$的邻居结点传播完成，所以$P_{2}=\emptyset$，$N_{2}=\{C\}$。
 	\end{enumerate}
-\item 时刻$t=3$(图\ref{fig:CLT-inf-diffusion}未有给出，但是其状态和$t=2$状态相同)，所有结点都已经接受过一次影响，传播过程终止，即$P_{3}=\Phi$，$N_{3}=\Phi$。所以$\sigma_{CLT}(P)=\bigcup_{0 \leq i \leq 3}P_{i}=\{E, F\}$，$\sigma_{CLT}(N)=\bigcup_{0 \leq i \leq 3}N_{i}=\{A, B, C\}$。
+\item 时刻$t=3$(图\ref{fig:CLT-inf-diffusion}未有给出，但是其状态和$t=2$状态相同)，所有结点都已经接受过一次影响，传播过程终止，即$P_{3}=\emptyset$，$N_{3}=\emptyset$。所以$\sigma_{CLT}(P)=\bigcup_{0 \leq i \leq 3}P_{i}=\{E, F\}$，$\sigma_{CLT}(N)=\bigcup_{0 \leq i \leq 3}N_{i}=\{A, B, C\}$。
 \end{enumerate}
 
 
@@ -291,8 +291,6 @@ Domingos和Richardson\cite{domingos2001mining}提出了可以利用社会媒体�
 其定义中的$Inf(\boldmath\cdot)$表示影响力传播函数(算法)，$\mathcal{CF}(\boldmath\cdot)$结点估值函数。并且本文只考虑两种信源的传播，所以只给出了两种信源竞争的影响力最大化定义\ref{def:competitive-infmax}。若是对多方博弈感兴趣，可以参考\cite{bharathi2007competitive}。
 
 
-\section{影响力最大化算法}
-根据问题定义\ref{def:noncompetitive-infmax}和定义\ref{def:competitive-infmax}，在不同的模型下，目前已经提出了很多的相关算法去解决不同的问题，下面给出其中一些算法的概况，
 \begin{table}[htbp]
 \centering
 \begin{minipage}[t]{0.8\linewidth}
@@ -303,24 +301,83 @@ Domingos和Richardson\cite{domingos2001mining}提出了可以利用社会媒体�
 		\toprule[1.5pt]
 		算法 & 复杂度 & 描述  \\ 
 		\midrule[1pt]
-		$GenericGreedy$\cite{he2012influence}\cite{kempe2003maximizing}\cite{carnes2007maximizing} & $O(KRmn\mathcal{T}_{M})$ & 可推广性好，理论能作用于任何传播模型，传播效果好，但是时间复杂度高，目前已经被用在了章节\ref{sec:inf-xtran-models}中的所有模型\\
-		$CELF$\cite{leskovec2007cost}/CELF++\cite{goyal2011celf++} UBLF\cite{zhou2013ublf}/NewGreedy\cite{chen2009efficient} MixGreedy\cite{chen2009efficient} & -- & 传播效果比较好，虽然是$GenericGreedy$的改进，但是计算复杂度还是很高，具体参考各文献\\
+		$GenericGreedy$\cite{he2012influence}\cite{kempe2003maximizing}\cite{carnes2007maximizing} & $O(KRmn\tau_{M})$ & 可推广性好，理论能作用于任何传播模型，传播效果好，但是时间复杂度高，目前已经被用在了章节\ref{sec:inf-xtran-models}中的所有模型\\
+		$CELF$\cite{leskovec2007cost}/CELF++\cite{goyal2011celf++} UBLF\cite{zhou2013ublf}/NewGreedy\cite{chen2009efficient} & -- & 传播效果比较好，虽然是$GenericGreedy$的改进，但是计算复杂度还是很高，具体参考各文献\\
 		$Random$\cite{kempe2003maximizing}\cite{chen2009efficient}  &  $O(K)$ &  速度较快，可以用于任意模型，但是传播效果极差\\
+		$MIA$\cite{chen2010scalableKDD} & -- & 利用结点局部树状结构，对其进行阈值剪枝，提高了算法运行效率，运行时间复杂度参考\cite{chen2010scalableKDD} \\
+		$LDAG$\cite{chen2010scalableICDM} & -- & 在LT模型下对结点进行剪枝，构建局部子图，进行计算，效果较好，降低运行时间复杂度，具体复杂度去分析参考\cite{chen2010scalableICDM} \\
 		$DH$\cite{hu2015rmdn} & $O(nlog(n))$ &  效果没有$Greedy$好，但是时间较好，也可以用于任意传播模型，目前主要用于$IC/LT$\\
 		$SD$\cite{chen2009efficient}/$DD$\cite{chen2009efficient} &  $O(Klog(n) + m)$ &  $DH$的改进版本\\
 		$RMDN$\cite{hu2015rmdn} & $O(Klog(n))$ &  在运行时间和传播效率上进行一个折中得到的算法\\
-		$CLDAG$\cite{he2012influence} & $O(n\tau + Klog(n) + K\tau$ &  为了研究消息阻塞(可以认为一种竞争的影响力最大化算法)，用在了$CLT$模型里\\
+		$CLDAG$\cite{he2012influence} & $O(n\tau_{CLDAG} + Klog(n) + K\tau_{CLDAG}$ &  为了研究消息阻塞(可以认为一种竞争的影响力最大化算法)，用在了$CLT$模型里\\
 		\bottomrule[1.5pt]
 	\end{tabular}
 \end{minipage}
 \end{table}
 
-其中上面的$R$为迭代次数，$n$为图结点个数，$m$为图边的数量，$K$为要选择的集合的大小，$\mathcal{T}_{M}$为在模型$M$中执行的时间，$\tau$为构建$LDAG^{+}(v)$，$LDAG^{-}(v)$的需要的总时间\cite{he2012influence}。
+
+\section{影响力最大化算法}
+根据问题定义\ref{def:noncompetitive-infmax}和定义\ref{def:competitive-infmax}，在不同的模型下，目前已经提出了很多的相关算法去解决不同的问题，表\ref{tab:chap2:infmax-alg}给出其中一些算法的概况。
+
+
+其中上面表\ref{tab:chap2:infmax-alg}中的$R$为迭代次数，$n$为图结点个数，$m$为图边的数量，$K$为要选择的集合的大小，$\tau_{M}$为在模型$M$中执行的时间，$\tau_{CLDAG}$为构建$LDAG^{+}(v)$，$LDAG^{-}(v)$的需要的总时间\cite{he2012influence}。表\ref{tab:chap2:infmax-alg}中MIA、LDAG复杂度没有给出，是因为其构成比较复杂，由于表格篇幅有限且文中有详细描述，所以只给出引文。而
+表\ref{tab:chap2:diffusion-model}中CELF、CELF++、UBLF，NewGreedy的复杂度将在章节\ref{sec:chap2-greedy-alg}中给予描述。
+
+
+根据传播效果以及选择初始结点的策略不同，本文将现有的所有算法分为如下三类，
+\begin{enumerate}
+\item 贪心算法，详见\ref{sec:chap2-greedy-alg}节。
+\item 随机算法，详见\ref{sec:chap2-random-alg}节。
+\item 启发式算法，详见\ref{sec:chap2-heuristic-alg}节。
+\end{enumerate}
+
 
 
 \subsection{基于贪心选择的算法}
+\label{sec:chap2-greedy-alg}
+D. Kempe\cite{kempe2003maximizing}在提出IC，LT模型的同时，给出了影响力最大化是NP问题，所以必须其转向其他策略来求解，他们在研究中发现影响力最大化算法具有子模(Submodularity)的性质，那么贪心算法得到的结果可以以常数$1-1/e$接近最优解。
+\begin{definition}
+\emph{(子模性质)}
+对于影响力传播函数$f(\boldmath\cdot)$，给定初始结点集$S$，$T$，且$S \subset T \subset V$，那么对于任意结点$v \in V\setminus T$，则有
+\begin{enumerate}
+\item 函数$f(\boldmath\cdot) \geq 0$，并且函数$f(\boldmath\cdot)$是非递减函数。
+\item $f(S \bigcup \{v\}) -  f(S) \geq f(T \bigcup \{v\}) -  f(T)$。
+\end{enumerate}
+\end{definition}
+
+
+由于最优解不可计算，而贪心算法能获得很好的效果，所以D. Kempe在文献\cite{kempe2003maximizing}中给出了通用的贪心算法，之后J. Leskovec发现D. Kempe的算法计算复杂度还是很高，所以他利用计算的局部性原理在文献\cite{leskovec2007cost}中提出了CELF算法，使得算法运行效率提高了700多倍。Goyal\cite{goyal2011celf++}利用数据结构堆(Queue)维护当前选择点的边际效益，之前计算的结果最优质，之前最优质情况下的传播效果值，还有当前选择点边际效益更新时的迭代次数四种信息来优化CELF，提出了CELF++算法，并获得了比CELF高35\%-55\%的效率。Zhou\cite{zhou2013ublf}等人发现了贪心选择算法的上界值(Upper Bound)，并利用这个值在迭代中改善CELF算法， 提出了UBLF算法，获得了比CELF更好的效率。Chen\cite{chen2009efficient}在对传播过程进行分析之后，将传播过程逐步化，每一步过程中，删除一些不可能被影响的边，进行构建一个新的子图$G^{'}$，然后选择一个新的结点加入初始结点集，这样就可以很快计算出增加的影响力数值。据此他们在基于IC模型上提出了NewGreedy算法
+。该算法将原先的复杂度$O(KRmn\mathcal{T}_{M})$提升为$O(KRm\mathcal{T}_{M})$。
+
+
+Greedy算法由于传播效果比较好，所以后面很多工作在提高算法的运行效率的同时都需用它作为比较的基准，防止由于关注减少时间复杂度而造成传播效果的急剧损失。并且上面提到的这些算法都在IC、LT模型下使用，CLDAG算法开始将贪心选择策略运用到了竞争环境下的影响力最大化问题中。
+
+
 \subsection{基于随机选择的算法}
+\label{sec:chap2-random-alg}
+随机选择算法在研究工作中常作为比较的对象，如在\cite{kempe2003maximizing}\cite{chen2009efficient}\cite{hu2015rmdn}都进行了比较。随机选择算法就是在给定图$G=(V, E)$，初始结点集的大小$K$，还有预算$\mathcal{B}$，随机选择$K$个结点$v_{i} \in V, i \in \{0, 1, 2 \dots K-1\}$，使得其满足
+\begin{displaymath}
+\sum_{0 \leq i \leq K-1}^{i} \mathcal{CF}(v_{i}) \leq \mathcal{B}
+\end{displaymath}
+这样的算法时间复杂度极低，但是选择的初始结点的影响力传播效果是不确定的，一般情况下十分不理想。不同于贪心选择算法，随机算法不依赖于信息传播模型，而只依赖于图中的结点，所以其通用性是最好的。
+
+
 \subsection{启发式算法}
+\label{sec:chap2-heuristic-alg}
+“计算机科学的两大基础目标，就是发现可证明其执行效率良好且可得最佳解或次佳解的算法”\footnote{https://zh.wikipedia.org/wiki/\%E5\%90\%AF\%E5\%8F\%91\%E5\%BC\%8F\%E6\%90\%9C\%E7\%B4\%A2}。启发式算法则是分析求解问题的特点，辅之以平时得到的经验法则，在合理的条件下去给出需要求解问题的一个或者多个解，这个解可能是最优的，也有可能不是最优的，并且算法在平时的使用过程中，常常不可以被确定地证明解的好坏。通常需要采用启发式算法解决的问题一般在确定性算法下是不可多项式时间计算的，也即NP-Hard问题。
+
+
+影响力最大化问题求最优解已经在文献\cite{kempe2003maximizing}中被证明是NP-Hard的问题了，所以很多人提出了Greedy算法(见章节\ref{sec:chap2-greedy-alg})去获得渐进最优解。同时很多研究\cite{chen2010scalableKDD}\cite{chen2010scalableICDM}\cite{chen2009efficient}\cite{hu2015rmdn}另辟蹊径采用启发式算法。由于影响力最大化问题以图建模，故而目前很多启发式算法都是根据图中结点的度中心性\cite{bonacich1972factoring}，结点的距离属性\cite{kimura2006tractable}或者对图进行解构、剪枝获得局部解构，甚至引入随机过程\cite{hu2015rmdn}，然后进行计算。
+
+
+根据不同的启发式策略对表\ref{tab:chap2:infmax-alg}中启发式算法分成以下三类，
+\begin{enumerate}
+\item 以度中心性为启发式原则的算法，如SD\cite{chen2009efficient}，DD\cite{chen2009efficient}，DH\cite{hu2015rmdn}。
+\item 以解构图或者剪枝边得到子图为启发式原则的算法，如$MIA$\cite{chen2010scalableKDD}，$LDAG$\cite{chen2010scalableICDM}。
+\item 以随机过程加上度中心性为启发式原则的算法，如RMDN\cite{hu2015rmdn}。
+\end{enumerate}
+
+
 
 
 \section{本章小结}
