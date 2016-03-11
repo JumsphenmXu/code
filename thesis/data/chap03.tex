@@ -6,114 +6,211 @@
 %%% TeX-master: t
 %%% End:
 
-\chapter{KSC最有影响力节点发现方法}
+\chapter{有预算限制的影响力最大化算法}
 \label{cha:3thChap03}
 
-在复杂网络的传播模型研究中，如何发现最具影响力的传播节点在理论和现实应用中都有重大的意义。目前的研究一般使用节点的度数、紧密度、介数和K-shell等中心化指标来评价影响力，这种方法虽然简单，但是由于它们仅利用了节点自身的内部属性，因而在评价影响力时精确度并不高，普遍性适用性较弱。为了解决这个问题，我们提出了KSC(K-shell and Community Centrality)指标模型。此模型不但考虑了节点的内部属性，而且还综合考虑了节点的外部属性，例如节点所属的社区等。然后我们利用SIR模型对传播过程进行仿真，实验证明我们提出的方法可以更好的发现最具有影响力的节点，且可适用于各种复杂网络。本文为这项具有挑战性研究提供了新的思想和方法。
-
-
 \section{引言}
-现实世界中的诸多系统都以复杂网络形式存在，比如互联网、社会系统、计算网络、生物网络和社交网络等。理解复杂网络的拓扑结构和功能是目前国际研究的热点。在很多科学领域中，都使用网络来表示系统中成员之间的关系，如在社交网络中用节点代表人，边代表人与人之间的联系。由于这些网络具有很高的复杂性，因此被称为”复杂网络（Complex Network）”\cite{watts1998collective,barabasi1999emergence,adamic2000power}，它已成为当前最重要的多学科交叉研究领域之一。在复杂网络中，找出最具影响力的节点\cite{pastor2002immunization,kempe2003maximizing,gomez2010inferring,budak2011limiting,mislove2007measurement,yuanweiguo2013}或意见领袖\cite{weng2010twitterrank}在理论和现实应用中都有重大的意义，例如有效的控制疾病传播\cite{xudan2007fuzai,pastor2001epidemic,pastor2002immunization,goltsev2012localization}、流言散布\cite{naveed2011bad,yi61zaixiansocial}、计算机病毒扩散\cite{yuan2008network}，还可以传播新产品\cite{swamynathan2008social}、新思想\cite{mislove2007measurement}以推进社会化进程。
-在社会网络分析中，常用”中心性（Centrality）”来测量最有影响力的节点。文献\cite{everett1999centrality,albert2000error,pastor2001dynamical}利用度中心性(Degree centrality)来测量最有影响力的节点，在符合幂律的非均匀网络中，度数较大的Hubs节点的传播影响力应该相对较大，这也是目标免疫和熟人免疫策略的基本依据。文献\cite{freeman1979centrality,newman2005measure}利用了介数中心性（Betweenness centrality）来评价影响力，介数中心性是以经过某个节点的最短路径的数目来刻画节点的重要性。文献\cite{brin1998anatomy}提出PageRank算法来评价网页的重要性，它认为一个网页(节点)的重要性取决于其前向链接的数量与质量。文献\cite{opsahl2010node,sabidussi1966centrality}利用紧密度指标（Closeness Centrality）刻画某个节点到其它节点的难易程度。文献\cite{kitsak2010identification}在《Nature Physics》中提出通过K-shell（简称ks）\cite{carmi2007model}分解来确定最具有影响力的单源节点。
-我们认为节点的影响力不只是由节点内部属性决定，而且其外部属性紧密相关，这与哲学范畴的内因和外因思想一致。内部属性如度数、紧密性、介数等中心化指标，外部属性如所属社区的大小、社区内关系紧密度等。社区\cite{girvan2002community,newman2006modularity,newman2012communities}是一个有共同爱好的，或者位于一个共同地方的、或者同在某个工作场所的、或者具有家庭联系的群体\cite{newman2013finding}。社区内的节点联系紧密，社区间的节点联系松散。
-我们提出了KSC（K-shell and Community Centrality）指标模型。此模型不但考虑了节点的内部属性，而且还综合考虑了节点的外部属性，例如节点所属的社区特性等。然后我们利用SIR（Susceptible–Infected–Recovered）模型对传播过程进行仿真，实验证明我们提出的方法可以更好的发现最具有影响力的节点。本文为这项具有挑战性研究提供了新的思想和方法。
+基于web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。目前有很多研究者在做这方面的研究，但是他们的方法存在下面两方面的问题，
+\begin{enumerate}
+\item 需要全局了解整个网络的拓扑结构进行计算，这在用户越来越多，关系越来越复杂的现代社交网络中也越来越不容易，同时在运行时间以及传播效果上没有进行很好的平衡。
+\item 对于选取网络中结点的代价，没有提出很好的顶点估值模型，一般都是赋予任何结点都是同样的值，这并不符合现实生活中不同影响力的人有不同身价的现象。
+\end{enumerate}
+本节基于以上两点，首先基于PageRank值并融合顶点度中心性性质，提出了PRBC(PageRank Based Cost)顶点估值模型，然后利用复杂网络中无标度网络的特点提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法。实验结果表明我们的算法能在时间性能和传播效果上达到比较好的平衡。
+
 
 \section{相关工作介绍}
-在社会网络中，发现最具有影响力的节点可以帮助我们有效地控制疾病传播、流言散布、计算机病毒扩散，还可以传播新产品、新思想以推进社会化进程。
-\subsection{度中心化}
-度中心化\cite{freeman1979centrality,sabidussi1966centrality}是一种最简单的方法，用于描述在静态网络中节点所产生的直接影响力。设网络$G=(V,E)$具有$n=|V|$个节点和$m=|E|$条边，节点$v$的度数是指与节点$v$连接的节点个数，用$C_d(v)=d(v)$表示:
-\begin{equation} 
-\label{equ:chap3:degreeCentral}
-C_d(v)=d(v)
+\subsection{传播模型}
+本章节主要基于Kempe\cite{kempe2003maximizing}的IC、LT模型，具体传播过程可以参考\ref{sec:IC-model-desc}节IC模型示例和\ref{sec:LT-model-desc}节LT模型示例。
+
+
+\subsection{顶点估值模型}
+\label{sec:chap3:cost-model}
+给定社交网络$G=(V, E)$，需要给每个顶点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个顶点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个顶点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的顶点进行排名，然后进行一定的映射得出顶点的价值。
+
+
+具体来说，利用PageRank算法计算结点的PageRank值，然后再利用增长因子和调和系数对原有的PageRank值进一步进行调整，考虑到PageRank算法中一个不太重要的点连接到一个非常重要的点也会被认为是重要的，从而提高了其PageRank值，所以再利用结点度数以及周围邻居中最大度数进行适当的缩放。下面对本文的顶点估值模型PRBC(PageRank Based Cost Model)进行形式化定义。
+\begin{definition}
+\emph{顶点估值模型}
+给定社交网络$G=(V, E)$，一个预先定义好的增长因子$\delta$以及调和系数$\lambda$，那么对于任意结点$u \in V$，定义其在$PRBC$模型下价格数值为$PRBC(u)$，可以形式化表示为，
+
+\begin{equation}
+\label{eq:prbc}
+PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_{max} = \argmax_{v \in \mathcal{N}(u) \cup \{u\}}\mathcal{D}(v)
 \end{equation}
-其中$d(v)$表示，称为该节点的度。如图~\ref{fig:chap03Example}所示，尽管节点14度数最大为7，但作为初始节点，它最终的传播范围并不一定是最广泛的，因为它的邻居节点的度数都很小。
+
+其中$PR(u)$为对整个图利用PageRank算法计算得到的结点$u$的PageRank数值，其物理意义代表了结点的重要度，而$\mathcal{D}(\cdot)$表示为结点度数的函数，式子\ref{eq:prbc}中$\mathcal{D}(u), \mathcal{D}(v)$表示结点$u, v$的度数，$\mathcal{N}(\cdot)$为邻居结点集函数，即$\mathcal{N}(u)$表示结点$u$的邻居结点集。
+\end{definition}
 
 
-\subsection{介数中心化}
-介数中心化刻画了网络中节点对于信息流动的影响力。节点$v$的介数\cite{freeman1979centrality}定义为:
-\begin{equation} 
-\label{equ:chap3:betweenness}
-C_b(v)= \sum _{s\neq v\neq t \in V} \frac{\sigma _{st}(v)}{\sigma (v)}
+\subsection{非常值估值函数下的影响力最大化}
+\subsubsection{问题定义}
+由于价值估值函数要反映现实生活中的情况，故而采取\ref{sec:chap3:cost-model}节的估值模型，这种情况下的影响力最大化问题可以称之为非常值估值函数下的影响力最大化$NCC-IM$(Non-Constant Cost Influence Maximization)，这种比单位化估值函数情况下的问题要复杂一些，因为在预算$\mathcal{B}$的约束下，要找到一个集合$S$，使其满足以下式子\ref{eq:chap3:ncc-im-cond}是非常困难的。
+\begin{equation}
+\label{eq:chap3:ncc-im-cond}
+|S|=K, \sum_{v \in S} \mathcal{CF}(v) = \mathcal{B}
 \end{equation}
-$\sigma _{st}$表示源节点$s$到目标节点$t$的最短路径数，$\sigma _{st}(v)$表示节点$s$经过节点$v$到目标节点$t$的最短路径数。
 
-\begin{figure}[H] 
-	\centering
-	\includegraphics[scale=0.4]{./chap3/chap03Example}
-	\caption{网络结构分析样例图}
-	\label{fig:chap03Example}
-\end{figure}
 
-\subsection{紧密度}
-紧密度\cite{opsahl2010node,sabidussi1966centrality}用于刻画节点到达其它节点的难易程度：
-\begin{equation} 
-\label{equ:chap3:closeness}
-C_c(v)= \sum _{t\in V \setminus s} \frac{1}{d_G(s,t)}
-\end{equation}
-$d_G(s,t)$表示源节点$s$到节点$t$的最短距离。
+由于在$NCC-IM$问题中满足式子\ref{eq:chap3:ncc-im-cond}比较难，而且容易陷入无限循环中。所以需要采取一些策略对条件\ref{eq:chap3:ncc-im-cond}进行改造或者对式子\ref{eq:chap3:ncc-im-cond}进行松弛，使得算法容易达到终止条件，而不会因为不满足上述式子而陷入无限循环，下面给出$NCC-IM$问题改造后的定义。
 
-\subsection{K-shell分解方法}
-K-shell给出了网络中节点重要性的一种粗粒化的划分，用$C_{ks}(v)$ 表示。网络边缘节点的K-shell为1，然后往内像剥洋葱一样一层层进入网络的核心。首先去除网络中度数小于 的所有节点及其连边;如果在剩下的节点中仍有度值小于$k$的节点，那么就继续去除这些节点，直至网络中剩下的节点的度值不小于$k$。依次取$k=(1,2,3,\cdots)$，就得到了该网络的K-shell分解。具体过程可参考图~\ref{fig:chap03Example}。Kitsak\cite{kitsak2010identification}实验研究表明，对于单个传播源，感染率低的情形，度数大或者高介数的节点不一定是最有影响力的节点，而通过K-shell分解分析确定的网络核心节点(即K-shell值大的节点)才是最有影响力的节点；其研究表明，K-shell分解方法是一种比较好的影响力节点识别方法，可以更好地预测疾病等的传播。当传染病在网络的K-shell大的节点爆发时，病毒总是可以在网络核心通过许多种路径开始感染其它部分，无论该节点度数的大与小，这个结论都是有效的。这些通路的存在反过来也意味着，如果以一个随机节点为源爆发疫情，有高 K-shell值的节点更有可能早于其他节点被感染(疾病预测)。
-\subsection{社区划分算法}
-社区划分方法，可以参阅第~\ref{cha:secondChap02}章节相关内容。我们本章使用了FN算法\cite{newman2004finding}。FN算法是Newman提出的基于局部搜索的快速社区划分算法。其优化目标是极大化网络模块性(modularity)评价函数$Q$。FN算法属于聚合算法。它初始假定所有节点各自成为一个社区，然后每一步根据原有连接合并两个社区，计算$Q$值并记录下来，直到所有社区都被合并成为一个社区。最后根据记录下的$Q$值，找到最优的划分结果。
 
-\section{模型与算法}
-我们认为节点的传播力不但与节点的内部自身属性有关，如度数、紧密度、介数、K-shell等，还与它的外部环境属性相关，如节点所处外部环境：社区大小，社区关联紧密度等。我们提出节点的影响力是由内因与外因同时决定的这一新颖思想和方法，即KSC中心化指标模型。模型符合哲学内因与外因对事物同样具有决定作用这一思想理念。
-复杂网络$G=(v_0)$中，节点$v_0$的KSC值定义如下：
-\begin{equation} 
-\label{equ:chap3:KSCModel}
-KSC(v_0)=\alpha f_{internal}(v_0) + \beta f_{external}(v_0), \alpha + \beta =1
-\end{equation}
-其中$f_{internal}(v_0)$为节点的内部影响力，$f_{external}(v_0)$为节点的外部影响力，$\alpha$为内部影响因子，$\beta$为外部影响因子，且满足$\alpha + \beta =1$，$\alpha$和$\beta$可以根据实际网络结构与功能设定。 
-$f_{internal}(v_0)$定义如下：
-\begin{equation} 
-\label{equ:chap3:KSCinternal}
-f_{internal}(v_0) = \frac{K(v_0)}{max_{v\in V}K(v)}
-\end{equation}
-其中，$K(v)$为节点内部属性值，可取度数，介数，紧密度和K-Shell等节点自身属性，$max_{v\in V}K(v)$为归一化因子。
+\begin{definition}
+\label{def:chap3:ncc-im}
+\emph{(NCC-IM)}
+给定社交网路图$G=(V, E)$，常数$K$，价值估值函数$\mathcal{CF}(\cdot)$，一定的资源预算$\mathcal{B}$，可接受预算的误差值$\varepsilon$，需要找出一个初始结点集合$S$使其满足如下条件
+\begin{displaymath}
+\sigma(S) = \argmax_{|S| \leq K \wedge S \subset V} Inf(S), \mathcal{B} - \varepsilon \leq \sum_{v \in S} \mathcal{CF}(v) \leq \mathcal{B} + \varepsilon
+\end{displaymath}
+其中$\sigma(S)$表示初始集合$S$最终获得影响力的结果，$Inf(\cdot)$是影响力传播函数。
+\end{definition}
 
-$f_{external}(v_0)$定义如下：
-\begin{equation} 
-\label{equ:chap3:KSCexternal}
-f_{external}(v_0) = \frac{\sum _{c\in C}d(v_0,c)|c|}{max_{v\in V}(\sum _{c\in C}d(v,c)|c|)}
-\end{equation}
-其中$C$为FN算法划分的社区集合，$d(v_0,c)$为节点$v_0$在社区$c$中的邻居节点的总个数，$|c|$为社区$c$的大小， $max_{v\in V}(\sum _{c\in C}d(v,c)|c|)$是归一化因子。
 
-我们实验中$\alpha$与$\beta$可以根据网络的拓扑结构设定；其中$f_{internal}(v_0)$选取K-shell为内部属性，也可以为度数、紧密度和介数等，$f_{external}(v_0)$选取为社区属性，俗语“物以类聚，人以群分”说明社区内部节点之间有共同的兴趣爱好等，相似性更大。
-表 给出了图~\ref{fig:chap03Example}各节点的各种指标，如节点14度数最大，但是由于处在网络的边缘，所以最终影响力为2，而节点7虽然度数为6，但是它是其它几个社区连通的枢纽，结构洞\cite{burt2004structural,granovetter1973strength}概念中重要节点。节点1-5虽然K-shell相同，但是节点1是2-5连接其它节点的桥接关系。从表~\ref{tab:chap3:exmapleTable}中我们可以看出各种方法得到的最具影响力节点排名各不相同。
+注意在定义\ref{def:chap3:ncc-im}中将条件松弛为$|S| \leq K$，所以在我们所采用的算法中，都在原来单位化估值函数模型下进行了条件松弛，当满足$\sum_{v \in S}\mathcal{CF}(v) \geq \mathcal{B} - \varepsilon$时，我们会终止初始结点的寻找过程。
+
+
+\subsubsection{相关算法}
+目前的工作主要是在单位化价值估值函数下的影响力最大化，故而对于所有现有的算法，我们都对其进行的相关的调整，在满足原有方法的策略时使其满足定义\ref{def:chap3:ncc-im}中的相关条件限制，主要的算法详细参见下表，
+
 \begin{table}[htbp]
-%\centering
+\centering
 \begin{minipage}[t]{0.8\linewidth}
-\caption{计算网络结构分析样例图中节点的传播力}
-\label{tab:chap3:exmapleTable}
-%\begin{tabular}{*{7}{p{.14\textwidth}}}
-\begin{tabular}{*{7}{p{.13\textwidth}}}
-	\toprule[1.5pt]
-	{$v$} & {$C_d(v)$} & {$C_{ks}(v)$} & {$C_c(v)$} & {$C_b(v)$} & {$KSC(v)$} & {$F(t)$} \\ 
-	\midrule[1pt]
-	1 & 5 & 4 & 0.4615385 & 0.3660131 & 0.85 & 3 \\
-	2 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
-	3 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
-	4 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
-	5 & 4 & 4 & 0.3396226 & 0 & 0.8363636 & 2 \\
-	6 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
-	7 & 6 & 3 & 0.6 & 0.7581699 & 0.6579545 & 3 \\
-	8 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
-	9 & 3 & 3 & 0.4 & 0 & 0.6068182 & 2 \\
-	10 & 2 & 2 & 0.3050847 & 0 & 0.3909091 & 1 \\
-	11 & 3 & 2 & 0.4186047 & 0.2091503 & 0.4045455 & 2 \\
-	12 & 2 & 2 & 0.3050847 & 0 & 0.3909091 & 1 \\
-	13 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	14 & 7 & 1 & 0.5142857 & 0.5686275 & 0.475 & 2 \\
-	15 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	16 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	17 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	18 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	19 & 1 & 1 & 0.3461538 & 0 & 0.2227273 & 1 \\
-	\bottomrule[1.5pt]
-\end{tabular}
+	\caption{相关影响力最大化算法}
+	\label{tab:chap3:ncc-im-algs}
+	\begin{tabular}{*{3}{p{.33\textwidth}}}
+		\toprule[1.5pt]
+		算法 & 复杂度 & 描述  \\ 
+		\midrule[1pt]
+		$Greedy$ & $O(KnRm)$ & 详见\ref{sec:chap2-greedy-alg}节 \\
+		$Random$ & $O(K)$ & 详见\ref{sec:chap2-random-alg}节 \\
+		$DegreeHeuristic$ & $O(nlog(n))$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		$DegreeDiscount$ & $O(Klog(n) + m)$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		$SingleDiscount$ & $O(Klog(n) + m)$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		\bottomrule[1.5pt]
+	\end{tabular}
 \end{minipage}
 \end{table}
+
+
+注意以上表\ref{tab:chap3:ncc-im-algs}中所有算法都在其原有的基础上进行了改动，使其满足$NCC-IM$的定义。
+
+
+\section{算法设计与分析}
+解决影响力最大化问题是NP-Hard的，所有基于General Greedy算法(见算法\ref{alg:chap3:general-greedy})改进的贪心算法虽然在效率有所提高，但是还是有很高的复杂度。然而拥有极低复杂度的随机算法在效果上没有保证。在文章\cite{barabasi1999emergence}\cite{adamic2000power}\cite{watts1998collective}中，研究者发现很多网络符合无标度网络的特点，也就是大量的网络结点是很稀疏地被连接，而有少部分的结点有则着很稠密的连接关系网。据此，我们无标度网络、小世界网络的特点，设计了我们的算法。
+
+\begin{algorithm}
+\caption{贪心算法：计算初始结点集$S$}
+\label{alg:chap3:general-greedy}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 初始结点集大小$K$, 算法迭代次数$R$
+\ENSURE 得到的初始结点集$S$，并且$S$的元素个数为$K$
+\STATE $S \leftarrow \emptyset; i \leftarrow 0;$
+\WHILE {$i < K$}
+	\FORALL {$v \in V \setminus S$}
+		\STATE $s_{v} \leftarrow 0;$
+		\FOR {$j = 0 \to R$}
+			\STATE $s_{v} \leftarrow s_{v} + \sigma(S \cup \{v\})$
+		\ENDFOR
+		\STATE $s_{v} \leftarrow s_{v}/R$
+	\ENDFOR
+	\STATE $S \leftarrow S \cup \argmax_{v \in V \setminus S}(s_{v})$
+	\STATE $i \leftarrow i + 1$
+\ENDWHILE
+\RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{BRMDN算法}
+受到随机算法以及网络的连接特点，以及新提出的价值估值模型PRBC，我们提出了预算范围内随机最大度邻居算法BRMDN(Budgeted Random Maximal Degree Neighbor)。在算法执行过程中，首先随机选择一个结点，然后根据这个结点的邻居结点集合，对这个局部结合中每个结点按照度数排序，选择满足预算$\mathcal{B}$的限制条件顶点加入初始结点集$S$，直到满足定义\ref{def:chap3:ncc-im}中的限制。
+
+
+\begin{algorithm}
+\caption{MDN：计算结点$u$最大度数的邻居结点}
+\label{alg:chap3:mdn-alg}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 结点$u$, 互斥集合$\mathcal{ES}$(Exclusive Set)
+\ENSURE 要加入初始结点集的候选结点结点$v_{max}$
+\STATE $v_{max} \leftarrow u; v_{degree} \leftarrow \mathcal{D}(u);$
+\FORALL {$nbr < \mathcal{N}(u)$}
+	\IF {$nbr \notin \mathcal{ES} \wedge v_{degree} < \mathcal{D}(nbr)$}
+		\STATE $v_{degree} \leftarrow \mathcal{D}(nbr);$
+		\STATE $v_{max} \leftarrow nbr;$
+	\ENDIF
+\ENDFOR
+\RETURN $v_{max}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{BRMDN：计算初始结点集$S$}
+\label{alg:chap3:brmnd-alg}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 初始结点集大小$K$, 预算$\mathcal{B}$;预算可接受误差值$\varepsilon$;价值估值函数$\mathcal{CF}(\cdot)$;
+\ENSURE 得到的初始结点集$S$;且满足$|S| \leq K \wedge \mathcal{B} - \varepsilon \leq \sum_{v \in S}\mathcal{CF}(v) \leq \mathcal{B} + \varepsilon$;
+\STATE $S \leftarrow \emptyset; i \leftarrow 0; totalcost \leftarrow 0;$
+\WHILE {$i < K$}
+	\STATE 随机选择一个结点 $u \in V \setminus S;$
+	\STATE 选择$u_{max} \leftarrow MDN(G, u, S);$
+	\IF {$\mathcal{CF}(u_{max}) + totalcost \leq \mathcal{B} + \varepsilon$}
+		\STATE $S \leftarrow S \cup \{u_{max}\};$
+		\STATE $totalcost \leftarrow \mathcal{CF}(u_{max}) + totalcost;$
+		\STATE $i \leftarrow i + 1;$
+		\IF {$totalcost \geq \mathcal{B} - \varepsilon$}
+			\STATE $ i \leftarrow K + 1;$
+		\ENDIF
+	\ENDIF
+\ENDWHILE
+\RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+
+注意在算法\ref{alg:chap3:brmnd-alg}中利用到算法\ref{alg:chap3:mdn-alg}，而在算法\ref{alg:chap3:mdn-alg}中我们可以发现，对于随机选择的一个节点，我们只需要了解其邻居结点的连接状态就可以，而不需要获得整个图的连接状态进行计算，这样就可以很大地降低算法的复杂性，从而提升算法的效率。
+
+
+\subsection{算法可行性分析}
+\label{sec:chap3:feasibility-analysis}
+在现实生活中无标度网络是很常见的一种网络状态，所以本文在无标度网络下分析算法\ref{alg:chap3:brmnd-alg}的可行性。在无标度网络中，结点度数为$k$的概率为$p(k)=ck^{-\gamma}$，定义$k_{max}$为网络中结点的最大度数，同理定义$k_{min}$为网络中结点的最小度数，那么根据概率的意义，可以有如下式子\ref{eq:chap3:max-infty}和式子\ref{eq:chap3:min-infty}成立，
+\begin{equation}
+\label{eq:chap3:max-infty}
+\int_{k_{max}}^{+\infty}p(k) dk = \frac{1}{n}
+\end{equation}
+
+\begin{equation}
+\label{eq:chap3:min-infty}
+\int_{k_{min}}^{+\infty}p(k) dk = 1
+\end{equation}
+
+求解等式\ref{eq:chap3:max-infty}和等式\ref{eq:chap3:min-infty}可以得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。对于任意结点$u$，由它连接出去的任意边$e=(u, \cdot) \in E$，那么$u$能以多大的概率连接到一个网络图的中心结点(称为图的hub结点，例如该结点的度数属于整个网络中结点的$Top-K$)。定义$p_{Top-K}$为结点$u$能连接到中心结点的概率，那么可以得到式子\ref{eq:chap3:p-top-k}，
+\begin{equation}
+\label{eq:chap3:p-top-k}
+p_{Top-K} = \int_{k_{Top-K}}^{k_{max}}p(k)dk = \frac{k_{max}^{2-\gamma} - k_{Top-K}^{2-\gamma}}{k_{max}^{2-\gamma} - k_{min}^{2-\gamma}}
+\end{equation}
+如果初始结点结合$S$的大小为$K$，那么算法\ref{alg:chap3:brmnd-alg}至少能获得一个中心结点(hub结点)的概率$p_{hub}$可以表示为
+\begin{equation}
+\label{eq:chap3:p-hub}
+p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
+\end{equation}
+
+
+上面式子\ref{eq:chap3:p-hub}中的$\epsilon$是在预算$\mathcal{B}$控制下的误差，可能使得初始结点的大小没有到$K$从而影响到概率$p_{hub}$。进一步说，假设$\zeta$是图中估值最大的结点的价格数值，也即$\zeta = max \{\mathcal{CF}(u) | u \in V\}$，那么当预算满足条件$\mathcal{B} \geq K\zeta$时，则概率误差$\epsilon = 0$。针对式子\ref{eq:chap3:p-hub}中的参数$K$，如果我们选择的初始集合的大小足够大(例如$K=30$)，那么就可以使得$(1-p_{Top-K})^{K} \leftarrow 0$，从而有$p_{hub} \approx 1 - \epsilon$。对于算法BRMDN中的概率误差，我们可以进行多次迭代从而让$\epsilon$进一步降低，也就是使得$p_{hub}$接近于1，这就说明算法能以很大概率选择到比较好的结点，同时不会陷入一种局部最优的情况，即富人俱乐部现象\cite{zhou2004rich}，该现象是指结点度数大的结点通常互联在一起，出现度数大的结点扎堆现象。而算法\ref{alg:chap3:brmnd-alg}中的随机选择过程能很好的避免这一情况。
+
+
+\subsection{时间复杂度分析}
+根据算法\ref{alg:chap3:brmnd-alg}，在随机选择一个结点后，我们需要遍历其邻居结点从而找到度数最大并且价格数值合适的那个结点，所以我们首先计算图中任意结点的邻居结点数的平均值$\bar{k}$，由于已知无标度网络中的度数与概率的关系，那么可得，
+\begin{equation}
+\bar{k} = \sum_{1}^{n} kp(k) = \sum_{1}^{n}kck^{-\gamma} = c\sum_{1}^{n}\frac{1}{k^{\gamma-1}},p(k)=ck^{-\gamma}
+\end{equation}
+
+
+\begin{lemma}
+\label{lemma:noexist-gamma-le2}
+给定网络图$G=(V, E)$，并且该网络满足无标度网络的性质，那么如果图$G$中没有自环，或者两个顶点之间不存在多条边，那么不存在这样的一个图$G$，使得其满足$1 < \gamma < 2$。
+\end{lemma}
+\begin{proof}
+在章节\ref{sec:chap3:feasibility-analysis}中，我们已经得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。现在假设存在图$G$满足无标度网络性质，并且有$1 < \gamma < 2$， 那么可以得到$0 < \gamma-1 < 1$，从而$n^{\frac{1}{\gamma-1}} > n$，进一步可以知道$k_{max} = k_{min}n^{\frac{1}{\gamma-1}} > n$，这就意味着一个结点的度数比图中结点的数量还要多，由于引理条件中已知图没有自环，并且两点顶点中不存在多条边，那么可以知道该假设与已知矛盾。证毕。
+\end{proof}
 
 \section{实验结果与分析}
 \subsection{实验仿真模型}

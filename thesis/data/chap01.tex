@@ -28,7 +28,7 @@
 
 
 \subsection{顶点估值模型}
-在图$G(V, E)$中，顶点估值函数(Cost Function)为$\mathcal{CF}(\boldmath\cdot)$，那么对于$\forall v \in V$，$v$的价格数值则为$\mathcal{CF}(v)$。目前的研究主要将每个顶点的价值定为常数，最常见的为单位化价格，比如\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}\cite{chen2009efficient}将图$G(V, E)$中每个顶点的价格数值都赋值为1，也即$\forall v \in V$，$\mathcal{CF}(v) = 1$。在\cite{leskovec2007cost}中的研究例子1中，J. Leskovec等人用帖子的数量来表示文档的价格；在例子2中，他们只是说明了给每个结点赋了一个非负数值，而并没有详细提到如何给这个值，同样在\cite{han2014balanced}中也没有给出具体的估值函数。然而在\cite{nguyen2013budgeted}中，他们给每个顶点赋一个随机值来表示其价格数值。
+在图$G(V, E)$中，顶点估值函数(Cost Function)为$\mathcal{CF}(\cdot)$，那么对于$\forall v \in V$，$v$的价格数值则为$\mathcal{CF}(v)$。目前的研究主要将每个顶点的价值定为常数，最常见的为单位化价格，比如\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}\cite{chen2009efficient}将图$G(V, E)$中每个顶点的价格数值都赋值为1，也即$\forall v \in V$，$\mathcal{CF}(v) = 1$。在\cite{leskovec2007cost}中的研究例子1中，J. Leskovec等人用帖子的数量来表示文档的价格；在例子2中，他们只是说明了给每个结点赋了一个非负数值，而并没有详细提到如何给这个值，同样在\cite{han2014balanced}中也没有给出具体的估值函数。然而在\cite{nguyen2013budgeted}中，他们给每个顶点赋一个随机值来表示其价格数值。
 
 
 \subsection{信息传播模型}
@@ -48,7 +48,7 @@ Domingos\cite{domingos2001mining}和Richardson\cite{richardson2002mining}首先�
 
 
 \subsubsection{存在竞争的影响力最大化}
-Bharathi等人在\cite{bharathi2007competitive}竞争性影响力分析做了初步的分析，并给出了一些结论，贪心算法仍然可以获得很好($(1-\frac{1}{e}) S_{optimal}$)的结果，并将博弈论的知识引入到该问题中进行讨论。Alon\cite{alon2010note}分析了对于网络图在满足什么条件下影响力最大化可以达到纳什均衡(Nash Equilibrium)，他给出的结论是当整个网络图$G(V, E)$满足$\mathcal{D}(G) \le 2$时，那么在该网络中进行竞争性影响力最大化过程可以达到纳什均衡状态，其中函数$\mathcal{D}(u, v)$表示图中顶点$u$和顶点$v$的最短距离，$\mathcal{D}(G) \le 2$表示整个图任意两个顶点的距离都小于等于$2$，即$\forall u, v \in V$，$\mathcal{D}(u,v) \le 2$。而Takehara\cite{takehara2012comment}提出了在文献\cite{alon2010note}中的结论条件的不严谨，从而给出了一个更加严格的限制，即在图$G(V, E)$中，$\forall u, v \in V, z \in V\setminus (\mathcal{N}(u)\cup\mathcal{N}(v))$，如果$\mathcal{D}(u,z)=\mathcal{D}(v,z)$，那么竞争条件下的影响力最大化可以达到纳什均衡，其中$\mathcal{N}(\boldmath\cdot)$为邻居结点集合函数，$\mathcal{N}(u)$为结点$u$的邻居结点集合(包括顶点$u$)。Tzoumas\cite{tzoumas2012game}等人在社交网络中对竞争环境下博弈的分析得出了计算纯纳什均衡(PNE, Pure Nash Equilibrium)策略的复杂度是指数级的。
+Bharathi等人在\cite{bharathi2007competitive}竞争性影响力分析做了初步的分析，并给出了一些结论，贪心算法仍然可以获得很好($(1-\frac{1}{e}) S_{optimal}$)的结果，并将博弈论的知识引入到该问题中进行讨论。Alon\cite{alon2010note}分析了对于网络图在满足什么条件下影响力最大化可以达到纳什均衡(Nash Equilibrium)，他给出的结论是当整个网络图$G(V, E)$满足$\mathcal{D}(G) \le 2$时，那么在该网络中进行竞争性影响力最大化过程可以达到纳什均衡状态，其中函数$\mathcal{D}(u, v)$表示图中顶点$u$和顶点$v$的最短距离，$\mathcal{D}(G) \le 2$表示整个图任意两个顶点的距离都小于等于$2$，即$\forall u, v \in V$，$\mathcal{D}(u,v) \le 2$。而Takehara\cite{takehara2012comment}提出了在文献\cite{alon2010note}中的结论条件的不严谨，从而给出了一个更加严格的限制，即在图$G(V, E)$中，$\forall u, v \in V, z \in V\setminus (\mathcal{N}(u)\cup\mathcal{N}(v))$，如果$\mathcal{D}(u,z)=\mathcal{D}(v,z)$，那么竞争条件下的影响力最大化可以达到纳什均衡，其中$\mathcal{N}(\cdot)$为邻居结点集合函数，$\mathcal{N}(u)$为结点$u$的邻居结点集合(包括顶点$u$)。Tzoumas\cite{tzoumas2012game}等人在社交网络中对竞争环境下博弈的分析得出了计算纯纳什均衡(PNE, Pure Nash Equilibrium)策略的复杂度是指数级的。
 
 
 \section{论文贡献}

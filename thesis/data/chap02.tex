@@ -288,7 +288,7 @@ Domingos和Richardson\cite{domingos2001mining}提出了可以利用社会媒体�
 \end{displaymath}
 \end{definition}
 
-其定义中的$Inf(\boldmath\cdot)$表示影响力传播函数(算法)，$\mathcal{CF}(\boldmath\cdot)$结点估值函数。并且本文只考虑两种信源的传播，所以只给出了两种信源竞争的影响力最大化定义\ref{def:competitive-infmax}。若是对多方博弈感兴趣，可以参考\cite{bharathi2007competitive}。
+其定义中的$Inf(\cdot)$表示影响力传播函数(算法)，$\mathcal{CF}(\cdot)$结点估值函数。并且本文只考虑两种信源的传播，所以只给出了两种信源竞争的影响力最大化定义\ref{def:competitive-infmax}。若是对多方博弈感兴趣，可以参考\cite{bharathi2007competitive}。
 
 
 \begin{table}[htbp]
@@ -338,9 +338,9 @@ Domingos和Richardson\cite{domingos2001mining}提出了可以利用社会媒体�
 D. Kempe\cite{kempe2003maximizing}在提出IC，LT模型的同时，给出了影响力最大化是NP问题，所以必须其转向其他策略来求解，他们在研究中发现影响力最大化算法具有子模(Submodularity)的性质，那么贪心算法得到的结果可以以常数$1-1/e$接近最优解。
 \begin{definition}
 \emph{(子模性质)}
-对于影响力传播函数$f(\boldmath\cdot)$，给定初始结点集$S$，$T$，且$S \subset T \subset V$，那么对于任意结点$v \in V\setminus T$，则有
+对于影响力传播函数$f(\cdot)$，给定初始结点集$S$，$T$，且$S \subset T \subset V$，那么对于任意结点$v \in V\setminus T$，则有
 \begin{enumerate}
-\item 函数$f(\boldmath\cdot) \geq 0$，并且函数$f(\boldmath\cdot)$是非递减函数。
+\item 函数$f(\cdot) \geq 0$，并且函数$f(\cdot)$是非递减函数。
 \item $f(S \bigcup \{v\}) -  f(S) \geq f(T \bigcup \{v\}) -  f(T)$。
 \end{enumerate}
 \end{definition}
@@ -372,13 +372,31 @@ Greedy算法由于传播效果比较好，所以后面很多工作在提高算�
 
 根据不同的启发式策略对表\ref{tab:chap2:infmax-alg}中启发式算法分成以下三类，
 \begin{enumerate}
-\item 以度中心性为启发式原则的算法，如SD\cite{chen2009efficient}，DD\cite{chen2009efficient}，DH\cite{hu2015rmdn}。
-\item 以解构图或者剪枝边得到子图为启发式原则的算法，如$MIA$\cite{chen2010scalableKDD}，$LDAG$\cite{chen2010scalableICDM}。
-\item 以随机过程加上度中心性为启发式原则的算法，如RMDN\cite{hu2015rmdn}。
+\item 以度中心性为启发式原则的算法
+\begin{enumerate}
+\item DH\cite{hu2015rmdn}，该算法对所有结点求出度数，然后对所有结点按度数排名，选出$Top_{K}$个作为初始结点集合。时间复杂度为$O(nlog(n))$。
+\item SD\cite{chen2009efficient}，不同于DH，未被选择的结点的度数会因为已经被选择的结点而发生改变。如果当前我们选择结点$u$，且有$v \in \mathcal{N}(u)$，那么下次考虑结点$v$时需要对其的度数减1，即Single Discount。并且对于任意结点$w \in S, w \in \mathcal{N}(v)$，那么$v$的度数都要减1。其中$S$表示已经选中的初始结点集。
+\item DD\cite{chen2009efficient}，相对于SD算法，DD算法更为精确地估算每个结点度数应该减多少。其主要思想如下：假设已经选中了结点$u$，而且$v \in \mathcal{N}(u)$，并且IC的传播概率$p \geq 0$，那么$v$结点会议概率$p$被$u$所影响，此时就不需要将$v$选入初始结点集，正因如此，可以选择更为精确的折扣去降低$v$的度数。当$p \to 0$，那么距离$v$大于1的结点对其的影响就可以忽略了，所以这使得只需考虑邻居结点就可以。根据\cite{chen2009efficient}中推算，那么$v$度数减少$2t_{v} + (d_{v}-t_{v})t_{v}p$，其中$d_{v}=O(1/p), t_{v}=o(1/p)$。利用斐波那契堆可以使得DD复杂度为$O(Knm)$。
+\end{enumerate}
+\item 以解构图或者剪枝边得到子图为启发式原则的算法
+\begin{enumerate}
+\item $MIA$\cite{chen2010scalableKDD}，首先定义图中路径传播概率，设有路径$P=<u=p_{1},p_{2},\dots,p_{m}=v>$，那么路径传播概率pp(Propagation Probability)可由如下等式表示，
+\begin{displaymath}pp(u,v)=\prod_{i=1}^{m-1}pp(p_{i}, p_{i+1})\end{displaymath}同理定义图中最大传播路径概率$MIP_{G}(u,v)$为
+\begin{displaymath}MIP_{G}(u,v)=\argmax_{P}\{pp(P)|P \in \mathcal{P}(G, u, v)\}\end{displaymath}如果对概率$pp(u,v)$取对数，然后求反，即$-logpp(u,v)$，那么$MIP_{G}(u,v)$即为在加权图中$u$到$v$的最短距离，这样就可以用Dijkstra算法求解。继续对结点$v$构建两个树形数据结构MIIA，MIOA并加以阈值$\theta$进行剪枝，然后进行计算就可以提高算法的运行效率，实验证明也能获得很好的传播效果。其中$MIIA(v, \theta),MIOA(v, \theta)$可表示如下，
+\begin{displaymath}
+MIIA(v, \theta)=\cup_{u \in V,pp(MIP_{G}(u, v)) \geq \theta}MIP_{G}(u,v)
+\end{displaymath}
+\begin{displaymath}
+MIOA(v, \theta)=\cup_{u \in V,pp(MIP_{G}(v, u)) \geq \theta}MIP_{G}(v,u)
+\end{displaymath}
+\item $LDAG$\cite{chen2010scalableICDM}，利用有向图的特征，加上阈值剪枝，得到每一个结点的有向子图，对子图采用高效的算法进行计算，可以获得很好的效果。由于网络图不总是有向的，所以有时需要进行LDAG(Local Directed Acyclic Graph)构建算法。
+\end{enumerate}
+\item 以随机过程加上度中心性为启发式原则的算法
+\begin{enumerate}
+\item RMDN\cite{hu2015rmdn}，该算法不同DH算法，在于利用随机算法找到一个结点，然后对这个结点的邻居找最大的度数的结点，在满足幂律分布情况下的理论分析表明，该算法时间复杂度比DH更低，并且实验结果显示在IC、LT模型下传播效果也很好。
+\end{enumerate}
 \end{enumerate}
 
 
-
-
 \section{本章小结}
-本章介绍了复杂网络的相关研究背景工作，特别是随机网络模型、小世界网络模型和无标度网络模型等；并给出复杂网络的基本数学定义及形式化描述。接下来列出了基于中观层次分析的社区划分研究工作，并给出了目前相关研究的总结。最后，我们简单介绍了整个论文所需要的传播模型，包括传染病传播模型、独立级联模型、线性阈值模型及实验分析的实际社会网络数据集。
+本章介绍了影响力传播的相关研究背景工作，主要可以分为以下几个部分:(a)针对复杂网络中的无标度网络；(b) 给出影响力最大化问题的定义，这包括非竞争环境和竞争环境下两个方面；(c)进一步还介绍了目前主要的传播模型，特别是非竞争环境下的IC、LT模型，还有用于竞争环境中的CLT模型；(d)接着介绍了目前基于不同模型的影响力传播算法，并对其作出了简要分析。
