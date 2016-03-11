@@ -194,12 +194,13 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 \end{equation}
 
 
-上面式子\ref{eq:chap3:p-hub}中的$\epsilon$是在预算$\mathcal{B}$控制下的误差，可能使得初始结点的大小没有到$K$从而影响到概率$p_{hub}$。进一步说，假设$\zeta$是图中估值最大的结点的价格数值，也即$\zeta = max \{\mathcal{CF}(u) | u \in V\}$，那么当预算满足条件$\mathcal{B} \geq K\zeta$时，则概率误差$\epsilon = 0$。针对式子\ref{eq:chap3:p-hub}中的参数$K$，如果我们选择的初始集合的大小足够大(例如$K=30$)，那么就可以使得$(1-p_{Top-K})^{K} \leftarrow 0$，从而有$p_{hub} \approx 1 - \epsilon$。对于算法BRMDN中的概率误差，我们可以进行多次迭代从而让$\epsilon$进一步降低，也就是使得$p_{hub}$接近于1，这就说明算法能以很大概率选择到比较好的结点，同时不会陷入一种局部最优的情况，即富人俱乐部现象\cite{zhou2004rich}，该现象是指结点度数大的结点通常互联在一起，出现度数大的结点扎堆现象。而算法\ref{alg:chap3:brmnd-alg}中的随机选择过程能很好的避免这一情况。
+上面式子\ref{eq:chap3:p-hub}中的$\epsilon$是在预算$\mathcal{B}$控制下的误差，可能使得初始结点的大小没有到$K$从而影响到概率$p_{hub}$。进一步说，假设$\zeta$是图中估值最大的结点的价格数值，也即$\zeta = max \{\mathcal{CF}(u) | u \in V\}$，那么当预算满足条件$\mathcal{B} \geq K\zeta$时，则概率误差$\epsilon = 0$。针对式子\ref{eq:chap3:p-hub}中的参数$K$，如果我们选择的初始集合的大小足够大(例如$K=30$)，那么就可以使得$(1-p_{Top-K})^{K} \rightarrow 0$，从而有$p_{hub} \approx 1 - \epsilon$。对于算法BRMDN中的概率误差，我们可以进行多次迭代从而让$\epsilon$进一步降低，也就是使得$p_{hub}$接近于1，这就说明算法能以很大概率选择到比较好的结点，同时不会陷入一种局部最优的情况，即富人俱乐部现象\cite{zhou2004rich}，该现象是指结点度数大的结点通常互联在一起，出现度数大的结点扎堆现象。而算法\ref{alg:chap3:brmnd-alg}中的随机选择过程能很好的避免这一情况。
 
 
 \subsection{时间复杂度分析}
 根据算法\ref{alg:chap3:brmnd-alg}，在随机选择一个结点后，我们需要遍历其邻居结点从而找到度数最大并且价格数值合适的那个结点，所以我们首先计算图中任意结点的邻居结点数的平均值$\bar{k}$，由于已知无标度网络中的度数与概率的关系，那么可得，
 \begin{equation}
+\label{eq:chap3:avg-degree-k}
 \bar{k} = \sum_{1}^{n} kp(k) = \sum_{1}^{n}kck^{-\gamma} = c\sum_{1}^{n}\frac{1}{k^{\gamma-1}},p(k)=ck^{-\gamma}
 \end{equation}
 
@@ -212,168 +213,167 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 在章节\ref{sec:chap3:feasibility-analysis}中，我们已经得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。现在假设存在图$G$满足无标度网络性质，并且有$1 < \gamma < 2$， 那么可以得到$0 < \gamma-1 < 1$，从而$n^{\frac{1}{\gamma-1}} > n$，进一步可以知道$k_{max} = k_{min}n^{\frac{1}{\gamma-1}} > n$，这就意味着一个结点的度数比图中结点的数量还要多，由于引理条件中已知图没有自环，并且两点顶点中不存在多条边，那么可以知道该假设与已知矛盾。证毕。
 \end{proof}
 
-\section{实验结果与分析}
-\subsection{实验仿真模型}
-我们采用SIR模型\cite{kermack1927contribution,diekmann1990definition,hethcote2000mathematics,bernoulli2004attempt}来模拟仿真传播过程，并将其结果与我们的模型实验结果作比较。
-SIR模型中有三种状态，易感染状态S，感染状态I，免疫状态R。当个体处于感染状态时，以$\delta$的概率感染处于易感染状态邻居个体，感染状态的节点以$\gamma$的概率恢复为免疫状态。具体内容可以参照~\ref{cha:secondChap02}章节介绍。
-如果$\delta$值较大，节点传播能力很强，节点将很快感染整个网络，从而很难区分单个个体的重要性;较小的$\delta$能在有限时间内更好的显示出感染范围。我们中我们设定较小的$\delta =0.04$。
-\subsection{实验数据及环境}
-考虑到不同的社会网络类型所代表不同的网络拓扑结构特性，我们选取了4个真实社会网络数据集进行分析比较，表~\ref{tab:chap3:datsetTable}给出各个网络的属性特征。我们的模型也可应用于其他类型的复杂网络。
 
-本文所有实验运行的硬件环境是：处理器Intel® Core™ i5 CPU M430 @2。27GHz，内存（RAM）3GB。
+根据引理\ref{lemma:noexist-gamma-le2}可知，$\gamma > 2$，那么对于式子\ref{eq:chap3:avg-degree-k}，可以作如下变换，
+\begin{equation}
+\label{eq:chap3:approximate-k}
+\bar{k} = c\sum_{1}^{n}\frac{1}{k^{\gamma-1}} \leq c\sum_{1}^{n}\frac{1}{k}=cln(n),n \rightarrow +\infty
+\end{equation}
+
+
+如果初始集的大小表示为$K$，那么算法\ref{alg:chap3:brmnd-alg}的复杂度可以由$K\bar{k}$计算，用式子\ref{eq:chap3:approximate-k}替代$\bar{k}$，可以得到算法的时间复杂度为$O(Klog(n))$。
+
+
+\section{实验结果与分析}
+在现实生活中，考虑到不同的社会媒体网络会有不同的结构，这里我们选择两个不同的数据集，这两个数据集都符合无标度网络的性质，且服从幂律分布，但是拥有不同的$\gamma$值，我们的实验表明算法\ref{alg:chap3:brmnd-alg}在这两个数据集上有着很好的效果，在时间上和传播效果上得到很好的平衡。
+
+\subsection{实验设置}
+对两个数据集的性质可以参考如下表格\ref{tab:chap3:datsetTable}，
 
 \begin{table}[htbp]
-%	\centering
+	\centering
 	\begin{minipage}[t]{0.8\linewidth}
-		\caption{现实社会网络的属性统计情况}
+		\caption{数据集相关参数}
 		\label{tab:chap3:datsetTable}
 		%\begin{tabular}{*{7}{p{.14\textwidth}}}
-		\begin{tabular}{*{8}{p{.11\textwidth}}}
+		\begin{tabular}{*{6}{p{.16\textwidth}}}
 			\toprule[1.5pt]
-			Networks & {$n$} & {$m$} & {$<k>$} & {$max(k)$} & {$d$} & {$max(C_{ks})$} & {$C$} \\ 
+			Networks & {$n$} & {$m$} & {$\bar{k}$} & {$k_{max}$} & {$\gamma$} \\ 
 			\midrule[1pt]
-			Blogs & 3982 & 6803 & 3.42 & 189 & 6.227 & 7 & 47 \\
-			Netscience & 379 & 914 & 4.82 & 34 & 6.061 & 8 & 19 \\
-			Router & 5022 & 6258 & 2.49 & 106 & 6.393 & 7 & 75 \\
-			Email & 1133 & 5451 & 9.62 & 71 & 3.716 & 11 & 10 \\
+			Blogs & 3982 & 6803 & 3.42 & 189 & 2.453 \\
+			Facebook & 4039 & 88234 & 43.69 & 1045 & 2.509 \\
 			\bottomrule[1.5pt]
 		\end{tabular}
 	\end{minipage}
 \end{table}
-其中$n$是节点数，$m$为边数，$<k>$表示网络中平均度数据，$max(k)$为节点中最大度数，$d$为节点之间最短路径的平均数，$max(C_{ks})$ 为网络中最大的K-shell，$C$为整个复杂网络被划分的社区数。
-\subsection{实验效果}
-我们应用SIR模型，对我们所提出的KSC指标与度、紧密性、介数和K-shell中心化指标进行了分析比较。实验模拟传播过程中，每次只选取网络中的一个节点作为初始传播节点，设定较短传播时间($t=10$)，对每个节点进行1000次重复实验取均值，最终感染与恢复的节点总数定义为影响力$F(t)$。
-\begin{figure}[H] 
-	\centering
-	\includegraphics[scale=1]{./chap3/chap03alphabeta}
-	\caption{KSC模型中内部影响因子$\alpha$与外部影响因子$\beta$取不同对传播影响力指标的影响分析}
-	\label{fig:chap03alphabeta}
-\end{figure}
-图~\ref{fig:chap03alphabeta}表示了在KSC模型中选取不同的内部影响因子$\alpha$与外部影响因子$\beta (\alpha +\beta =1)$对结果的影响程度。哲学范畴中事物的运动和变化，是由它本身固有的内部矛盾引起的，又是同它所处的一定的外在条件相联系的，内因和外因在事物发展中的地位和作用是不同的。这与模型中内部影响因子$\alpha$与外部影响因子$\beta$对传播影响假设完全一致。如在图~\ref{fig:chap03alphabeta}-c中局部放大了最具影响力的前10位，当$0\le \alpha \le 0.2$，$1\geq \beta \geq 0.8$，或$1\geq \alpha \geq 0.8$，$0\le \beta \le 0.2$，时可以看到，影响力曲线波动较大，影响力排名靠后的节点影响反而大。即只是单纯的考虑内部属性或外部属性对发现最具有影响的节点来说准确性，适用性较差。
-经实验分析得出四种不同拓扑结构网络的内、外影响因子经验取值情况，如表~\ref{tab:chap3alphabeta}所示。可以看出在不同类型的网络结构中，内、外因所起的权重是不同的，我们实验中的$\alpha$、$\beta$根据表~\ref{tab:chap3alphabeta}中取较好的经验值，这从另一方面证明了所提出模型的合理性及普遍性。
-\begin{table}[htbp]
-%		\centering
-	\begin{minipage}[t]{0.8\linewidth}		
-		\caption{内、外影响因子取值情况}
-		\label{tab:chap3alphabeta}
-		%\begin{tabular}{*{7}{p{.14\textwidth}}}
-		\begin{tabular}{*{4}{p{.26\textwidth}}}
-			\toprule[1.5pt]
-			网络名称 & \multicolumn{1}{c}{内部影响因子} & \multicolumn{1}{c}{外部影响因子} & \multicolumn{1}{c}{较好的经验取值}   \\
-			& \quad 取值范围$(\alpha)$ & \quad 取值范围$(\beta)$ & \qquad $\alpha $ \qquad $\beta$  \\ 
-			
-			\midrule[1pt]
-			Blogs & \qquad 0.1-0.4 & \qquad 0.9-0.6 & \quad 0.2 \qquad  0.8 \\
-			Netscience & \qquad 0.3-0.7 & \qquad 0.7-0.3 & \quad 0.4 \qquad  0.6 \\
-			Router & \qquad 0.3-0.8 & \qquad 0.7-0.2 & \quad 0.7 \qquad  0.3 \\
-			Email & \qquad 0.1-0.8 & \qquad 0.9-0.2 & \quad 0.5 \qquad  0.5 \\
-			\bottomrule[1.5pt]
-		\end{tabular}
-	\end{minipage}
-\end{table}
-图3所表示的是在不同的网络中，中心度指标与实际影响力之间的关系图。
+
+
+对于表格\ref{tab:chap3:datsetTable}中$n$表示结点个数，$m$表示边的条数，$\bar{k}$表示平均度数，$k_{max}$图中结点的最大度数，两个数据集的具体描述如下，
+\begin{enumerate}
+\item Blogs\cite{hu2013newACN}，该数据集拥有4K个结点，6K条边，显然这个数据集构成的图是比较稀疏的，其中$\frac{\#edges}{\#nodes}=1.70$。
+\item Facebook\cite{leskovec2012learning}，该数据集只是Facebook上部分的数据，拥有4K的结点，但是其变数达到了88K，相对于Blogs数据集来说，这个数据集是连接比较紧密的，其构成的图也是属于比较稠密的图，其中$\frac{\#edges}{\#nodes}=21.84$。
+\end{enumerate}
+
+为了模拟计算数据集的$\gamma$值我们采用了\cite{hu2015rmdn}当中描述的方法，并得到对表格\ref{tab:chap3:datsetTable}中的数据集进行模型，得到了如下图\ref{fig:blogs-facebook-gamma}的结果，
+
 \begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap03graphTblogs1}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs1}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTblogs2}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs2}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTblogs3}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs3}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTblogs4}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs4}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTblogs5}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTblogs5}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTemail1}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail1}}
-		
+\centering%
+	\subcaptionbox{Blogs $\gamma=2.453$}
+	{\includegraphics[scale=0.36]{./chap3/Blogs-gamma}}
+	\hspace{1mm}%
+	\subcaptionbox{Facebook $\gamma$=2.509}
+	{\includegraphics[scale=0.36]{./chap3/Facebook-gamma}}
+	\caption{数据集模拟$\gamma$值}
+	\label{fig:blogs-facebook-gamma}
 \end{figure}
 
-\addtocounter{figure}{-1}       %先欺骗LaTeX图形计数器
+
+我们将IC模型用于BRMDN算法，将BRMDN算法所得到的数据和目前的一些启发式算法进行了对比，我们将要作为对比的算法的描述如下，
+\begin{itemize}
+\item RandomHeuristic，随机选择$K$个满足条件的结点，速度最快。
+\item DegreeHeuristic，这是很基本的一个以度中心性的算法，选取网络图中度数排名前几的满足条件的结点作为初始结点集。
+\item SingleDiscount，选择结点之后，对该选择的结点的邻居结点度数减1，是针对DegreeHeuristic算法的改进。
+\item DegreeHeuristic，相比于SingleDiscount，该算法在计算要减去的度数的数值时，做到了更精确，从而能更好地模拟选中的结点对于之后结点的影响。
+\end{itemize}
+
+
+贪心算法在理论上能以$1-\frac{1}{e}=0.63$的程度接近最优值，但是其对于大型网络来说，计算时间消耗太长。在我们做实验的过程中，在Blogs数据集上迭代5次(通常情况下我们设置迭代次数为1000次)时，贪心算法\ref{alg:chap3:general-greedy}需要花费20.78个小时才能得出结果，然后同样条件下基于度数的启发式算法只需要0.05秒，这几乎是快了150万倍。所以在本文中我们不把贪心算法作为对比的对象。本文所有实验的环境配置为一台拥有24个Intel(R) Xeon(R) CPU，主频为2.50GHz，内存128个G。
+
+对于IC模型来说，如果传播概率$p$很大的话，那么对于不同的算法来说影响力的传播相互之间的差值不会很明显，所以本文对于传播概率设置为$p=0.01$。同样为了防止偶然出现的实验偏差，本文对于上面提到的每个算法都进行了$R=1000$次的迭代。同时图中结点的代价函数我们都是利用前面提到的PRBC模型来进行估值，在PRBC模型值的两个参数，我们分别设置为$\lambda=100$，$\delta=0.5$。
+
+
+\subsection{实验结果及相关分析}
+\subsubsection{实验结果}
+实验结果表明在IC传播模型下，BRMDN算法能达到和DegreeDiscount相近的传播效果，但是在运行时间上能比DegreeDiscount有更好的表现。具体的实验结果如图\ref{fig:chap3:blogs-seed}，图\ref{fig:chap3:facebook-seed}，图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}，图\ref{fig:chap3:running-time}。
+
+
 \begin{figure}[H]
-	\addtocounter{figure}{1}
 	\centering%
-	\subcaptionbox{\label{fig:chap03graphTemail2}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail2}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTemail3}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail3}}
-	\subcaptionbox{\label{fig:chap03graphTemail4}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail4}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTemail5}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTemail5}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTnetscience1}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience1}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTnetscience2}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience2}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTnetscience3}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience3}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTnetscience4}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience4}}	
-	%\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=600$\label{fig:chap3blogs-seed-600}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k600}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=900$\label{fig:chap3blogs-seed-900}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k900}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1200$\label{fig:chap3blogs-seed-1200}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k1200}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1500$\label{fig:chap3blogs-seed-1500}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k1500}}
+	\caption{Blogs数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
+	\label{fig:chap3:blogs-seed}
 \end{figure}
 
-\addtocounter{figure}{-1}       %先欺骗LaTeX图形计数器
+
 \begin{figure}[H]
-	\addtocounter{figure}{1}
 	\centering%
-	\subcaptionbox{\label{fig:chap03graphTnetscience5}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTnetscience5}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTrouter1}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter1}}	
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTrouter2}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter2}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTrouter3}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter3}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTrouter4}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter4}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap03graphTrouter5}}
-	{\includegraphics[scale=0.3]{./chap3/chap03graphTrouter5}}
-	\caption{节点影响力分析比对，5种不同中心化指标，4种不同的复杂网络环境。传播影响力$F(t)(t=10)$,每个初始节点重复运行1000次取均值。}
-	\label{fig:chap03ftall}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-seed-300}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k300}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-400}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k400}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-seed-500}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k500}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-600}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k600}}
+	\caption{Facebook数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
+	\label{fig:chap3:facebook-seed}
 \end{figure}
-在Blogs网络中，度、K-shell、介数指标与影响力$F(t)$关系都不是很明显，例如在介数指标结果中，一些介数大的节点$F(t)$比一些介数很小的节点影响力还要低，但KSC指标可以较好地区分出最具影响力的节点。Email网络中，所有指标表现都较好，紧密度与KSC更为理想，这与网络的拓扑结构有关系。在Netscience网络中，介数衡量结果最差，紧密度、K-shell与节点$F(t)$影响力关系也不明显，KSC的效果要优于度数。在路由网络(Router)中K-shell与KSC结果接近，其它指标结果很难得到传播力较大的节点。总之，在不同的网络中传统的中心度指标各有优缺点，但是我们提出的KSC整体效果最好，都能有效的区分出最具有影响力的节点，通用性较强。
-对于单个传播源的情形，最具有影响力的节点并非度数最大的节点或者介数最大的节点，而是K-shell最大的节点，这一结论在Kitsak\cite{kitsak2010identification}在《Nature Physics》指出。图~\ref{fig:chap03KSCKshell}比较了KSC与K-shell的实验效果，KSC比K-shell增加了外部属性的影响因素。例如在Email网络中，当K-shell为10时，传播影响力$F(t)(t=10)$并不稳定，而且变化范围较大，并且影响力随着KSC值的增大呈现增大趋势。在4种复杂网络中明显可以看出当KSC一定时$F(t)$相对稳定，颜色变化范围较小。
-\begin{figure}[H] 
-	\centering
-	\includegraphics[scale=0.8]{./chap3/chap03KSCKshell}
-	\caption{KSC与K-shell指标在4种不同复杂网络中的分析比较，横轴表示KSC的指标值，纵轴表示K-shell的指标值，颜色坐标代表SIR模型仿真出的实际影响力大小$F(t)$。}
-	\label{fig:chap03KSCKshell}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=600$\label{fig:chap3blogs-infl-600}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-600}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=900$\label{fig:chap3blogs-infl-900}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-900}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1200$\label{fig:chap3blogs-infl-1200}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1200}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1500$\label{fig:chap3blogs-infl-1500}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1500}}
+	\caption{Blogs数据集在不同预算下影响力传播效果}
+	\label{fig:chap3:blogs-infl}
 \end{figure}
-图~\ref{fig:chap03KSCKbetweenness}比较了KSC与介数的实验效果。可出看出在Email网络中，KSC与介数表现正向同步较好，都能较好地发出最具影响力的节点，但在其它三个网络环境中KSC表现明显优于介数指标。KSC与其它度数、紧密度指标比较省略。实验结果表明KSC方法明显优于已有4种典型方法。由此可见，考虑节点的外部属性对于找出最有影响力的节点意义重大，且具有较强的通用性，说明验证了我们所提出模型的合理性与普遍性。
-\begin{figure}[H] 
-	\centering
-	\includegraphics[scale=0.8]{./chap3/chap03KSCKbetweenness}
-	\caption{KSC与介数指标在4种不同复杂网络中的分析比较，横轴表示KSC的指标值，纵轴表示K-shell的指标值，颜色坐标代表SIR模型仿真出的实际影响力大小$F(t)$。}
-	\label{fig:chap03KSCKbetweenness}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-infl-300}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-300}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-400}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-400}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-infl-500}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-500}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-600}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-600}}
+	\caption{Facebook数据集在不同预算下影响力传播效果}
+	\label{fig:chap3:facebook-infl}
 \end{figure}
-如图~\ref{fig:chap03Finalresult}所示，在Blogs图中，KSC曲线的某一点$(x,y)$，横坐标表示此点用KSC指标值得出的排名为$x$，纵坐标表示此点在SIR仿真的实际影响力为$y$。理论上，一个好的指标方法应该表现为向右倾斜单调下降的曲线。因为对于一个好的指标方法，如果某个节点按该指标得出的排名越靠后，其实际影响力 应该随之减小。
-\begin{figure}[H] 
-	\centering
-	\includegraphics[scale=1.0]{./chap3/chap03Finalresult}
-	\caption{5种指标的影响力$F(t)(t=10)$前Top-K的均值结果，横轴代表按各种指标值的排序，纵轴表示影响力$F(t)$，不同颜色的曲线代表不同的方法。}
-	\label{fig:chap03Finalresult}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Blogs\label{fig:chap3blogs-time-k30}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-time-k30}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook \label{fig:chap3facebook-time-k30}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-time-k30}}
+	\caption{数据集Blogs和Facebook的运行时间}
+	\label{fig:chap3:running-time}
 \end{figure}
-从图~\ref{fig:chap03Finalresult}结果中分析，我们可以看到已有的4种典型方法在不同网络中影响力均有所波动，这些方法在不同网络中各有优劣，通用性不强，特别是在影响力前10中波动范围最为明显。指标值小的传播影响力反而比指标值大的传播影响力要大，特别是在Blogs网络中，已有的4种指标方法结果都不太精确，而我们提出的KSC指标几乎在所有的网络中都符合向右倾斜单调下降的理论曲线。
-本实验充分论证了节点影响力不但由内部属性决定，而且还与其外部属性密切相关，说明我们提出的KSC模型的合理性及普遍适用性。
+
+\subsubsection{实验分析}
+
 
 \section{本章小结}
 在复杂网络中发现最具影响力的节点，可以帮助我们提高新知识、新产品的传播效率，同时可以有效地制定相应的策略来阻止疾病及谣言传播。复杂网络中鉴别最具影响力的节点一直以来是研究的热点与难点，我们提出了KSC中心化指标模型。实验选取现实生活中常见的四种复杂网络，博客网、邮件网、路由网和科学合著网，通过SIR模型模拟节点传播过程，并对各种中心化指标得出的影响力进行排序分析，验证了方法的高效性和正确性。
 
 与传统的度、紧密度、介数和K-shell方法相比，传统方法在不同网络中各有优劣，通用性不强。而我们提出的KSC模型综合考虑了节点的内部属性与外部属性，实验证明用此方法鉴别节点的影响力要精确得多，适用范围更大。我们所提出的模型为这项具有挑战性研究提供了新的思想和方法，希望对以后的研究者给予启发。
-
