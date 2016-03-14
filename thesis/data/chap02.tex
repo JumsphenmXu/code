@@ -38,13 +38,16 @@
 
 \begin{figure}[H]
 \centering%
-	\subcaptionbox{$t=0$初始状态}
+	\subcaptionbox{$t=0, S_{0}=\{A\}$}
 	{\includegraphics[scale=0.66]{./chap2/IC1}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=1$第一次向邻居传播}
+	\subcaptionbox{$t=1, S_{1}=\{C\}$}
 	{\includegraphics[scale=0.66]{./chap2/IC2}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=2$最终传播状态}
+	\subcaptionbox{$t=2, S_{2}=\{D\}$}
+	{\includegraphics[scale=0.66]{./chap2/IC3}}
+	\hspace{1mm}%
+	\subcaptionbox{$t=3, S_{3}=\emptyset$，传播终止}
 	{\includegraphics[scale=0.66]{./chap2/IC3}}
 	\caption{IC传播模型示例}
 	\label{fig:IC-inf-diffusion}
@@ -56,18 +59,28 @@
 给定图$G=(V, E)$，以及给定$p(u, v), \forall u, v \in V$表示顶点$u$对顶点$v$的影响权重，还有一个初始选择的结点集合$S$。那么IC模型的传播过程如下：用$S_{t}$表示在传播过程中处于时间$t$时被影响(激活)的结点集合，那么就有$t=0, S_{t}=S$，在$t+1$时刻$\forall w \in S_{t}$，结点$w$依次独立以权重$p(w, z)$去传播给它的邻居结点$z, z \in \mathcal{N}(w) \bigcap (V \setminus \bigcup_{0 \leq i \leq t}S_{i})$，其中$\mathcal{N}(w)$表示$w$的邻居结点集合，而需要注意的是，任何结点只能接受一次激活过程。当某个时刻$t_{end}$，有$S_{t_{end}} = \emptyset$，那么我们称时刻$t_{end}$为终止时刻，而整个影响力传播的结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{IC}(S)$。
 
 
-如图\ref{fig:IC-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{A\}$，在时刻$t=1$时结点$A$向其邻居结点$(\mathcal{N}(A)=\{B, C, G, F\})$传播，而此刻结点$C$被影响$(S_{1}=\{C\})$，其他结点$B, G, F$因为已经被激活过一次，则颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$结点$C$影响到了它的邻居结点$D(S_{2}=\{D\})$，而下一步$t=3$则没有结点被影响，即$S_{3}=\emptyset$，整个传播过程终止。最后的结果为$\sigma_{IC}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, C, D\}$。
+如图\ref{fig:IC-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。IC传播过程示例分析如下，
+
+\begin{enumerate}
+\item 时刻$t=0$，初始结点集$S_{0}=\{A\}$。
+\item 时刻$t=1$，结点$A$向其邻居结点$(\mathcal{N}(A)=\{B, C, G, F\})$传播，而此刻结点$C$被影响，其他结点$B, G, F$因为已经被激活过一次，则颜色变为灰色表示以后不再接受其他结点的影响，故有$(S_{1}=\{C\})$。
+\item 时刻$t=2$，结点$C$影响到了它的邻居结点$D$，即$S_{2}=\{D\}$。
+\item 时刻$t=3$，没有结点被影响，即$S_{3}=\emptyset$，此时传播终止。那么最后的结果为$\sigma_{IC}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, C, D\}$。
+\end{enumerate}
 
 
 \begin{figure}[H]
 \centering%
-	\subcaptionbox{$t=0$初始状态}
+	\subcaptionbox{$t=0, S_{0}=\{B\}$}
 	{\includegraphics[scale=0.63]{./chap2/LT1}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=1$第一次向邻居传播}
+	\subcaptionbox{$t=1, S_{1}=\{A, E\}$}
 	{\includegraphics[scale=0.63]{./chap2/LT2}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=2$最终传播状态}
+	\subcaptionbox{$t=2, S_{2}=\{D\}$}
+	{\includegraphics[scale=0.63]{./chap2/LT3}}
+	\hspace{1mm}%
+	\subcaptionbox{$t=3, S_{3}=\emptyset$，传播终止}
 	{\includegraphics[scale=0.63]{./chap2/LT3}}
 	\caption{LT传播模型示例}
 	\label{fig:LT-inf-diffusion}
@@ -83,18 +96,27 @@
 那么结点$v$就被影响了，以上过程不断重复直到某个时刻$t_{end}$，$S_{t_{end}}=\emptyset$，和IC模型一样，LT模型传播过程中每个结点只能接受一次传播过程的影响。最后我们得到的影响传播结果可以表示为$\bigcup_{0 \leq i \leq t_{end}}S_{i}$，记为$\sigma_{LT}(S)$。
 
 
-如图\ref{fig:LT-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。在初始时刻$t=0,S_{0}=\{B\}$，在时刻$t=1$时结点$B$向其邻居结点$(\mathcal{N}(B)=\{A, C, E\})$传播，因为$p(B,A) \geq \theta_{A}, p(B,E) \geq \theta_{E}$，所以结点$A, E$被影响$(S_{1}=\{A, E\})$，其他结点$C$，因为$p(B,C) \leq \theta_{C}$，所以结点$C$没有被影响，而由于$C$已经被传播过一次，所以使其颜色变为灰色表示以后不再接受其他结点的影响。在时刻$t=2$，因为$p(A,D) \geq \theta_{D}$，所以结点$A$影响到了它的邻居结点$D(S_{2}=\{D\})$，同理，$p(A, F) \leq \theta_{F}$，所以$F$颜色也变成灰色。再下一步当$t=3$时则没有结点被影响，即$S_{3}=\emptyset$，整个传播过程终止。最后的结果为$\sigma_{LT}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, B, D, E\}$。
+如图\ref{fig:LT-inf-diffusion}所示，其中白色结点表示未被影响过，红色结点表示已经被影响了，灰色结点表示接受过影响传播的过程，但是没有被影响。LT传播过程示例分析如下，
+\begin{enumerate}
+\item 时刻$t=0$，初始结点集$S_{0}=\{B\}$。
+\item 时刻$t=1$，结点$B$向其邻居结点$(\mathcal{N}(B)=\{A, C, E\})$传播，因为$p(B,A) \geq \theta_{A}, p(B,E) \geq \theta_{E}$，所以结点$A, E$被影响，其他结点$C$，因为$p(B,C) \leq \theta_{C}$，所以结点$C$没有被影响，而由于$C$已经被传播过一次，所以使其颜色变为灰色表示以后不再接受其他结点的影响。此时有$S_{1}=\{A, E\}$。
+\item 时刻$t=2$，因为$p(A,D) \geq \theta_{D}$，所以结点$A$影响到了它的邻居结点$D$，$p(A, F) \leq \theta_{F}$，所以结点$F$没有被影响，颜色变成灰色，此时$DS_{2}=\{D\}$。
+\item 时刻$t=3$，没有结点被影响，即$S_{3}=\emptyset$，整个传播过程终止。最后的结果为$\sigma_{LT}(S)=\bigcup_{0 \leq i \leq 3}S_{i}=\{A, B, D, E\}$。
+\end{enumerate}
 
 
 \begin{figure}[H]
 \centering%
-	\subcaptionbox{$t=0$初始状态}
+	\subcaptionbox{$t=0, P_{0}=\{E\}, N_{0}=\{B\}$}
 	{\includegraphics[scale=0.63]{./chap2/CLT1}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=1$第一次向邻居传播}
+	\subcaptionbox{$t=1, P_{1}=\{F\}, N_{1}=\{A\}$}
 	{\includegraphics[scale=0.63]{./chap2/CLT2}}
 	\hspace{1mm}%
-	\subcaptionbox{$t=2$最终传播状态}
+	\subcaptionbox{$t=2, P_{2}=\emptyset, N_{2}=\{C\}$}
+	{\includegraphics[scale=0.63]{./chap2/CLT3}}
+	\hspace{1mm}%
+	\subcaptionbox{$t=3, P_{3}=\emptyset, N_{2}=\emptyset$，传播终止}
 	{\includegraphics[scale=0.63]{./chap2/CLT3}}
 	\caption{CLT传播模型示例}
 	\label{fig:CLT-inf-diffusion}
@@ -151,7 +173,7 @@ Xinran He\cite{he2012influence}在LT的基础上提出了CLT的模型，该模�
 	\item 结点$C$，此时式子\ref{eq:positive-activated}不成立，但式子\ref{eq:negative-activated}成立，所以被影响为$-activated$，颜色变为绿色。
 	\item 所有$P_{1}$，$N_{1}$的邻居结点传播完成，所以$P_{2}=\emptyset$，$N_{2}=\{C\}$。
 	\end{enumerate}
-\item 时刻$t=3$(图\ref{fig:CLT-inf-diffusion}未有给出，但是其状态和$t=2$状态相同)，所有结点都已经接受过一次影响，传播过程终止，即$P_{3}=\emptyset$，$N_{3}=\emptyset$。所以$\sigma_{CLT}(P)=\bigcup_{0 \leq i \leq 3}P_{i}=\{E, F\}$，$\sigma_{CLT}(N)=\bigcup_{0 \leq i \leq 3}N_{i}=\{A, B, C\}$。
+\item 时刻$t=3$，所有结点都已经接受过一次影响，传播过程终止，即$P_{3}=\emptyset$，$N_{3}=\emptyset$。所以$\sigma_{CLT}(P)=\bigcup_{0 \leq i \leq 3}P_{i}=\{E, F\}$，$\sigma_{CLT}(N)=\bigcup_{0 \leq i \leq 3}N_{i}=\{A, B, C\}$。
 \end{enumerate}
 
 

@@ -249,10 +249,10 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 
 
 对于表格\ref{tab:chap3:datsetTable}中$n$表示结点个数，$m$表示边的条数，$\bar{k}$表示平均度数，$k_{max}$图中结点的最大度数，两个数据集的具体描述如下，
-\begin{enumerate}
+\begin{itemize}
 \item Blogs\cite{hu2013newACN}，该数据集拥有4K个结点，6K条边，显然这个数据集构成的图是比较稀疏的，其中$\frac{\#edges}{\#nodes}=1.70$。
 \item Facebook\cite{leskovec2012learning}，该数据集只是Facebook上部分的数据，拥有4K的结点，但是其变数达到了88K，相对于Blogs数据集来说，这个数据集是连接比较紧密的，其构成的图也是属于比较稠密的图，其中$\frac{\#edges}{\#nodes}=21.84$。
-\end{enumerate}
+\end{itemize}
 
 为了模拟计算数据集的$\gamma$值我们采用了\cite{hu2015rmdn}当中描述的方法，并得到对表格\ref{tab:chap3:datsetTable}中的数据集进行模型，得到了如下图\ref{fig:blogs-facebook-gamma}的结果，
 
@@ -277,7 +277,7 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 \end{itemize}
 
 
-贪心算法在理论上能以$1-\frac{1}{e}=0.63$的程度接近最优值，但是其对于大型网络来说，计算时间消耗太长。在我们做实验的过程中，在Blogs数据集上迭代5次(通常情况下我们设置迭代次数为1000次)时，贪心算法\ref{alg:chap3:general-greedy}需要花费20.78个小时才能得出结果，然后同样条件下基于度数的启发式算法只需要0.05秒，这几乎是快了150万倍。所以在本文中我们不把贪心算法作为对比的对象。本文所有实验的环境配置为一台拥有24个Intel(R) Xeon(R) CPU，主频为2.50GHz，内存128个G。
+贪心算法在理论上能以$1-\frac{1}{e}=0.63$的程度接近最优值，但是其对于大型网络来说，计算时间消耗太长。在我们做实验的过程中，在Blogs数据集上迭代5次(通常情况下我们设置迭代次数为1000次)时，贪心算法\ref{alg:chap3:general-greedy}需要花费20.78个小时才能得出结果，然后同样条件下基于度数的启发式算法只需要0.05秒，这几乎是快了150万倍。所以在本文中我们不把贪心算法作为对比的对象。本文所有实验的环境配置为一台拥有24个Intel(R) Xeon(R) CPU，主频为2.50GHz，内存128个G的服务器，其运行的操作系统为Ubuntu 14.04 LTS。
 
 对于IC模型来说，如果传播概率$p$很大的话，那么对于不同的算法来说影响力的传播相互之间的差值不会很明显，所以本文对于传播概率设置为$p=0.01$。同样为了防止偶然出现的实验偏差，本文对于上面提到的每个算法都进行了$R=1000$次的迭代。同时图中结点的代价函数我们都是利用前面提到的PRBC模型来进行估值，在PRBC模型值的两个参数，我们分别设置为$\lambda=100$，$\delta=0.5$。
 
@@ -310,13 +310,13 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-seed-300}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k300}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-400}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=400$\label{fig:chap3facebook-seed-400}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k400}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-seed-500}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-500}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k500}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-600}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-seed-600}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k600}}
 	\caption{Facebook数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
 	\label{fig:chap3:facebook-seed}
@@ -346,13 +346,13 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-infl-300}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-infl-300}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-400}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=400$\label{fig:chap3facebook-infl-400}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-infl-400}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-infl-500}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-500}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-infl-500}}
 	\hspace{3em}%
-	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-600}}
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-infl-600}}
 	{\includegraphics[scale=0.3]{./chap3/facebook-infl-600}}
 	\caption{Facebook数据集在不同预算下影响力传播效果}
 	\label{fig:chap3:facebook-infl}
@@ -371,9 +371,19 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 \end{figure}
 
 \subsubsection{实验分析}
+本节将针对算法的两个方面进行分析，即算法的传播效果以及算法的运行时间。具体分析如下，
+\begin{itemize}
+\item 影响力传播(Influence Spread)，在图\ref{fig:chap3:blogs-infl}和图\ref{fig:chap3:facebook-infl}中我们可以看出DegreeDiscount，DegreeHeuristic，SingleDiscount在传播效果上是最好的，而RandomHeuristic则是最差的，从图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}中我们还可以看出BRMDN(算法\ref{alg:chap3:brmnd-alg})在不同的数据集下有着不同的表现，但是都很接近最好的那些算法。我们定义$\nabla_{fig}$为在上面结果图$fig$中算法BRMDN的传播效果与算法DD的传播效果之间的比值
+\begin{displaymath}
+\nabla_{fig} = 100\% \times \frac{\sigma_{BRMDN}(S)}{\sigma_{DD}(S)}
+\end{displaymath}
+其具体意义即是算法BRMDN接近最好算法的程度。那么对于图\ref{fig:chap3:blogs-infl}分析可得，$\nabla_{\ref{fig:chap3blogs-infl-600}}=95\%$，$\nabla_{\ref{fig:chap3blogs-infl-900}}=96\%$，$\nabla_{\ref{fig:chap3blogs-infl-1200}}=91\%$，$\nabla_{\ref{fig:chap3blogs-infl-1500}}=85\%$。然而在图\ref{fig:chap3:facebook-infl}中我们可以发现当选择的初始结点的大小$K<15$时，BRMDN算法接近DegreeDiscount算法的程度低于90\%，而当初始结点集大小$K \rightarrow 30$时，算法BRMDN的效果越来越接近DegreeDiscount算法，具体来说，$\nabla_{\ref{fig:chap3facebook-infl-300}}=93\%$，$\nabla_{\ref{fig:chap3facebook-infl-400}}=99\%$，$\nabla_{\ref{fig:chap3facebook-infl-500}}=99\%$，$\nabla_{\ref{fig:chap3facebook-infl-600}}=97\%$。综上图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}的结果，算法在影响力传播上有着很好的效果。
+\item 运行时间(Running time)，从图\ref{fig:chap3:running-time}中可以看出对于任何算法在同一个数据集下，不管预算$\mathcal{B}$值为多少，其运行时间曲线是一天近似的平行于横轴的直线，这意味着运行时间与预算$\mathcal{B}$相关性不大。从另一方面并结合表格\ref{tab:chap3:ncc-im-algs}中算法的时间复杂度，可以知道，RandomHeuristic运行时间最少，BRMDN则略高于RandomHeuristic，DegreeHeuristic排第三，SingleDiscount与DegreeDiscount最慢。从图\ref{fig:chap3blogs-time-k30}可以看出BRMDN比DegreeDiscount大约快了14倍，而从图\ref{fig:chap3facebook-time-k30}可以得到BRMDN比DegreeDiscount大约快了19倍。对于表格\ref{tab:chap3:datsetTable}中的两个数据集来说，他们的结点数$n$比较小，但是根据算法时间复杂度(见表\ref{tab:chap3:ncc-im-algs})来说，如果在结点很多的网络图中，那么BRMDN算法将比DegreeDiscount算法运行时间少更多。
+\end{itemize}
+
+
+注意在图\ref{fig:chap3blogs-infl-900}中我们看到了当初始结点集大小$K>23$时RandomHeuristic的传播效果超过了其他算法。从图\ref{fig:chap3blogs-seed-900}中我们可以发现，当预算$\mathcal{B}$很小时，其他算法找到了价值很高的结点，而RandomHeuristic则选择了较多的小价值结点，从而最后总的传播超过了其他算法。从图\ref{fig:chap3:facebook-infl}中可以发现当预算$\mathcal{B}>400$时，影响力传播效果并没有增加多少，但是从图\ref{fig:chap3facebook-seed-500}中可以得到解释，因为当预算$\mathcal{B}>400$时，在图中的有影响力的结点都已经被选入了初始结点集，而由于我们限制了初始结点集大小$K=30$，所以出现了增加预算而没有增加影响力的传播的现象。
 
 
 \section{本章小结}
-在复杂网络中发现最具影响力的节点，可以帮助我们提高新知识、新产品的传播效率，同时可以有效地制定相应的策略来阻止疾病及谣言传播。复杂网络中鉴别最具影响力的节点一直以来是研究的热点与难点，我们提出了KSC中心化指标模型。实验选取现实生活中常见的四种复杂网络，博客网、邮件网、路由网和科学合著网，通过SIR模型模拟节点传播过程，并对各种中心化指标得出的影响力进行排序分析，验证了方法的高效性和正确性。
-
-与传统的度、紧密度、介数和K-shell方法相比，传统方法在不同网络中各有优劣，通用性不强。而我们提出的KSC模型综合考虑了节点的内部属性与外部属性，实验证明用此方法鉴别节点的影响力要精确得多，适用范围更大。我们所提出的模型为这项具有挑战性研究提供了新的思想和方法，希望对以后的研究者给予启发。
+影响力最大化对于产品促销、信息传播、紧急事件疏散等各方面活动都能起着非常重要的作用。在网络中基于常数价格估值函数(单位估值函数)，找到$K$个初始传播结点使得在网络中的影响力最大已经被很多人所研究。本文首先提出非常数价格估值函数(PRBC模型)去评估网络中结点的代价，然后基于PRBC模型提出BRMDN算法去进行影响力的传播，并选择了现实生活中的两个常见的数据集进行了大量的实验。通过实验的结果，我们得出下面两个结论：(1)当选定初始结点集$K$的大小时，预算的大小对运行时间的影响不大；(2)BRMDN在达到与DegreeDiscount算法相当的传播效果时，在运行时间上有着一定的优势。综上可知，本文提出的算法能在影响力的传播效果与运行时间上达到很好的平衡。
