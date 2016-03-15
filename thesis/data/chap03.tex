@@ -1,0 +1,389 @@
+% 下面这句用以支持中文
+% !Mode:: "TeX:UTF-8"
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+
+\chapter{有预算限制的影响力最大化算法}
+\label{cha:3thChap03}
+
+\section{引言}
+基于web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。目前有很多研究者在做这方面的研究，但是他们的方法存在下面两方面的问题，
+\begin{enumerate}
+\item 需要全局了解整个网络的拓扑结构进行计算，这在用户越来越多，关系越来越复杂的现代社交网络中也越来越不容易，同时在运行时间以及传播效果上没有进行很好的平衡。
+\item 对于选取网络中结点的代价，没有提出很好的顶点估值模型，一般都是赋予任何结点都是同样的值，这并不符合现实生活中不同影响力的人有不同身价的现象。
+\end{enumerate}
+本节基于以上两点，首先基于PageRank值并融合顶点度中心性性质，提出了PRBC(PageRank Based Cost)顶点估值模型，然后利用复杂网络中无标度网络的特点提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法。实验结果表明我们的算法能在时间性能和传播效果上达到比较好的平衡。
+
+
+\section{相关工作介绍}
+\subsection{传播模型}
+本章节主要基于Kempe\cite{kempe2003maximizing}的IC、LT模型，具体传播过程可以参考\ref{sec:IC-model-desc}节IC模型示例和\ref{sec:LT-model-desc}节LT模型示例。
+
+
+\subsection{顶点估值模型}
+\label{sec:chap3:cost-model}
+给定社交网络$G=(V, E)$，需要给每个顶点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个顶点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个顶点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的顶点进行排名，然后进行一定的映射得出顶点的价值。
+
+
+具体来说，利用PageRank算法计算结点的PageRank值，然后再利用增长因子和调和系数对原有的PageRank值进一步进行调整，考虑到PageRank算法中一个不太重要的点连接到一个非常重要的点也会被认为是重要的，从而提高了其PageRank值，所以再利用结点度数以及周围邻居中最大度数进行适当的缩放。下面对本文的顶点估值模型PRBC(PageRank Based Cost Model)进行形式化定义。
+\begin{definition}
+\emph{顶点估值模型}
+给定社交网络$G=(V, E)$，一个预先定义好的增长因子$\delta$以及调和系数$\lambda$，那么对于任意结点$u \in V$，定义其在$PRBC$模型下价格数值为$PRBC(u)$，可以形式化表示为，
+
+\begin{equation}
+\label{eq:prbc}
+PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_{max} = \argmax_{v \in \mathcal{N}(u) \cup \{u\}}\mathcal{D}(v)
+\end{equation}
+
+其中$PR(u)$为对整个图利用PageRank算法计算得到的结点$u$的PageRank数值，其物理意义代表了结点的重要度，而$\mathcal{D}(\cdot)$表示为结点度数的函数，式子\ref{eq:prbc}中$\mathcal{D}(u), \mathcal{D}(v)$表示结点$u, v$的度数，$\mathcal{N}(\cdot)$为邻居结点集函数，即$\mathcal{N}(u)$表示结点$u$的邻居结点集。
+\end{definition}
+
+
+\subsection{非常值估值函数下的影响力最大化}
+\subsubsection{问题定义}
+由于价值估值函数要反映现实生活中的情况，故而采取\ref{sec:chap3:cost-model}节的估值模型，这种情况下的影响力最大化问题可以称之为非常值估值函数下的影响力最大化$NCC-IM$(Non-Constant Cost Influence Maximization)，这种比单位化估值函数情况下的问题要复杂一些，因为在预算$\mathcal{B}$的约束下，要找到一个集合$S$，使其满足以下式子\ref{eq:chap3:ncc-im-cond}是非常困难的。
+\begin{equation}
+\label{eq:chap3:ncc-im-cond}
+|S|=K, \sum_{v \in S} \mathcal{CF}(v) = \mathcal{B}
+\end{equation}
+
+
+由于在$NCC-IM$问题中满足式子\ref{eq:chap3:ncc-im-cond}比较难，而且容易陷入无限循环中。所以需要采取一些策略对条件\ref{eq:chap3:ncc-im-cond}进行改造或者对式子\ref{eq:chap3:ncc-im-cond}进行松弛，使得算法容易达到终止条件，而不会因为不满足上述式子而陷入无限循环，下面给出$NCC-IM$问题改造后的定义。
+
+
+\begin{definition}
+\label{def:chap3:ncc-im}
+\emph{(NCC-IM)}
+给定社交网路图$G=(V, E)$，常数$K$，价值估值函数$\mathcal{CF}(\cdot)$，一定的资源预算$\mathcal{B}$，可接受预算的误差值$\varepsilon$，需要找出一个初始结点集合$S$使其满足如下条件
+\begin{displaymath}
+\sigma(S) = \argmax_{|S| \leq K \wedge S \subset V} Inf(S), \mathcal{B} - \varepsilon \leq \sum_{v \in S} \mathcal{CF}(v) \leq \mathcal{B} + \varepsilon
+\end{displaymath}
+其中$\sigma(S)$表示初始集合$S$最终获得影响力的结果，$Inf(\cdot)$是影响力传播函数。
+\end{definition}
+
+
+注意在定义\ref{def:chap3:ncc-im}中将条件松弛为$|S| \leq K$，所以在我们所采用的算法中，都在原来单位化估值函数模型下进行了条件松弛，当满足$\sum_{v \in S}\mathcal{CF}(v) \geq \mathcal{B} - \varepsilon$时，我们会终止初始结点的寻找过程。
+
+
+\subsubsection{相关算法}
+目前的工作主要是在单位化价值估值函数下的影响力最大化，故而对于所有现有的算法，我们都对其进行的相关的调整，在满足原有方法的策略时使其满足定义\ref{def:chap3:ncc-im}中的相关条件限制，主要的算法详细参见下表，
+
+\begin{table}[htbp]
+\centering
+\begin{minipage}[t]{0.8\linewidth}
+	\caption{相关影响力最大化算法}
+	\label{tab:chap3:ncc-im-algs}
+	\begin{tabular}{*{3}{p{.33\textwidth}}}
+		\toprule[1.5pt]
+		算法 & 复杂度 & 描述  \\ 
+		\midrule[1pt]
+		$Greedy$ & $O(KnRm)$ & 详见\ref{sec:chap2-greedy-alg}节 \\
+		$Random$ & $O(K)$ & 详见\ref{sec:chap2-random-alg}节 \\
+		$DegreeHeuristic$ & $O(nlog(n))$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		$DegreeDiscount$ & $O(Klog(n) + m)$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		$SingleDiscount$ & $O(Klog(n) + m)$ & 详见\ref{sec:chap2-heuristic-alg}节 \\
+		\bottomrule[1.5pt]
+	\end{tabular}
+\end{minipage}
+\end{table}
+
+
+注意以上表\ref{tab:chap3:ncc-im-algs}中所有算法都在其原有的基础上进行了改动，使其满足$NCC-IM$的定义。
+
+
+\section{算法设计与分析}
+解决影响力最大化问题是NP-Hard的，所有基于General Greedy算法(见算法\ref{alg:chap3:general-greedy})改进的贪心算法虽然在效率有所提高，但是还是有很高的复杂度。然而拥有极低复杂度的随机算法在效果上没有保证。在文章\cite{barabasi1999emergence}\cite{adamic2000power}\cite{watts1998collective}中，研究者发现很多网络符合无标度网络的特点，也就是大量的网络结点是很稀疏地被连接，而有少部分的结点有则着很稠密的连接关系网。据此，我们无标度网络、小世界网络的特点，设计了我们的算法。
+
+\begin{algorithm}
+\caption{贪心算法：计算初始结点集$S$}
+\label{alg:chap3:general-greedy}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 初始结点集大小$K$, 算法迭代次数$R$
+\ENSURE 得到的初始结点集$S$，并且$S$的元素个数为$K$
+\STATE $S \leftarrow \emptyset; i \leftarrow 0;$
+\WHILE {$i < K$}
+	\FORALL {$v \in V \setminus S$}
+		\STATE $s_{v} \leftarrow 0;$
+		\FOR {$j = 0 \to R$}
+			\STATE $s_{v} \leftarrow s_{v} + \sigma(S \cup \{v\})$
+		\ENDFOR
+		\STATE $s_{v} \leftarrow s_{v}/R$
+	\ENDFOR
+	\STATE $S \leftarrow S \cup \argmax_{v \in V \setminus S}(s_{v})$
+	\STATE $i \leftarrow i + 1$
+\ENDWHILE
+\RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{BRMDN算法}
+受到随机算法以及网络的连接特点，以及新提出的价值估值模型PRBC，我们提出了预算范围内随机最大度邻居算法BRMDN(Budgeted Random Maximal Degree Neighbor)。在算法执行过程中，首先随机选择一个结点，然后根据这个结点的邻居结点集合，对这个局部结合中每个结点按照度数排序，选择满足预算$\mathcal{B}$的限制条件顶点加入初始结点集$S$，直到满足定义\ref{def:chap3:ncc-im}中的限制。
+
+
+\begin{algorithm}
+\caption{MDN：计算结点$u$最大度数的邻居结点}
+\label{alg:chap3:mdn-alg}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 结点$u$, 互斥集合$\mathcal{ES}$(Exclusive Set)
+\ENSURE 要加入初始结点集的候选结点结点$v_{max}$
+\STATE $v_{max} \leftarrow u; v_{degree} \leftarrow \mathcal{D}(u);$
+\FORALL {$nbr < \mathcal{N}(u)$}
+	\IF {$nbr \notin \mathcal{ES} \wedge v_{degree} < \mathcal{D}(nbr)$}
+		\STATE $v_{degree} \leftarrow \mathcal{D}(nbr);$
+		\STATE $v_{max} \leftarrow nbr;$
+	\ENDIF
+\ENDFOR
+\RETURN $v_{max}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{BRMDN：计算初始结点集$S$}
+\label{alg:chap3:brmnd-alg}
+\begin{algorithmic}
+\REQUIRE 图$G=(V,E)$; 初始结点集大小$K$, 预算$\mathcal{B}$;预算可接受误差值$\varepsilon$;价值估值函数$\mathcal{CF}(\cdot)$;
+\ENSURE 得到的初始结点集$S$;且满足$|S| \leq K \wedge \mathcal{B} - \varepsilon \leq \sum_{v \in S}\mathcal{CF}(v) \leq \mathcal{B} + \varepsilon$;
+\STATE $S \leftarrow \emptyset; i \leftarrow 0; totalcost \leftarrow 0;$
+\WHILE {$i < K$}
+	\STATE 随机选择一个结点 $u \in V \setminus S;$
+	\STATE 选择$u_{max} \leftarrow MDN(G, u, S);$
+	\IF {$\mathcal{CF}(u_{max}) + totalcost \leq \mathcal{B} + \varepsilon$}
+		\STATE $S \leftarrow S \cup \{u_{max}\};$
+		\STATE $totalcost \leftarrow \mathcal{CF}(u_{max}) + totalcost;$
+		\STATE $i \leftarrow i + 1;$
+		\IF {$totalcost \geq \mathcal{B} - \varepsilon$}
+			\STATE $ i \leftarrow K + 1;$
+		\ENDIF
+	\ENDIF
+\ENDWHILE
+\RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+
+注意在算法\ref{alg:chap3:brmnd-alg}中利用到算法\ref{alg:chap3:mdn-alg}，而在算法\ref{alg:chap3:mdn-alg}中我们可以发现，对于随机选择的一个节点，我们只需要了解其邻居结点的连接状态就可以，而不需要获得整个图的连接状态进行计算，这样就可以很大地降低算法的复杂性，从而提升算法的效率。
+
+
+\subsection{算法可行性分析}
+\label{sec:chap3:feasibility-analysis}
+在现实生活中无标度网络是很常见的一种网络状态，所以本文在无标度网络下分析算法\ref{alg:chap3:brmnd-alg}的可行性。在无标度网络中，结点度数为$k$的概率为$p(k)=ck^{-\gamma}$，定义$k_{max}$为网络中结点的最大度数，同理定义$k_{min}$为网络中结点的最小度数，那么根据概率的意义，可以有如下式子\ref{eq:chap3:max-infty}和式子\ref{eq:chap3:min-infty}成立，
+\begin{equation}
+\label{eq:chap3:max-infty}
+\int_{k_{max}}^{+\infty}p(k) dk = \frac{1}{n}
+\end{equation}
+
+\begin{equation}
+\label{eq:chap3:min-infty}
+\int_{k_{min}}^{+\infty}p(k) dk = 1
+\end{equation}
+
+求解等式\ref{eq:chap3:max-infty}和等式\ref{eq:chap3:min-infty}可以得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。对于任意结点$u$，由它连接出去的任意边$e=(u, \cdot) \in E$，那么$u$能以多大的概率连接到一个网络图的中心结点(称为图的hub结点，例如该结点的度数属于整个网络中结点的$Top-K$)。定义$p_{Top-K}$为结点$u$能连接到中心结点的概率，那么可以得到式子\ref{eq:chap3:p-top-k}，
+\begin{equation}
+\label{eq:chap3:p-top-k}
+p_{Top-K} = \int_{k_{Top-K}}^{k_{max}}p(k)dk = \frac{k_{max}^{2-\gamma} - k_{Top-K}^{2-\gamma}}{k_{max}^{2-\gamma} - k_{min}^{2-\gamma}}
+\end{equation}
+如果初始结点结合$S$的大小为$K$，那么算法\ref{alg:chap3:brmnd-alg}至少能获得一个中心结点(hub结点)的概率$p_{hub}$可以表示为
+\begin{equation}
+\label{eq:chap3:p-hub}
+p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
+\end{equation}
+
+
+上面式子\ref{eq:chap3:p-hub}中的$\epsilon$是在预算$\mathcal{B}$控制下的误差，可能使得初始结点的大小没有到$K$从而影响到概率$p_{hub}$。进一步说，假设$\zeta$是图中估值最大的结点的价格数值，也即$\zeta = max \{\mathcal{CF}(u) | u \in V\}$，那么当预算满足条件$\mathcal{B} \geq K\zeta$时，则概率误差$\epsilon = 0$。针对式子\ref{eq:chap3:p-hub}中的参数$K$，如果我们选择的初始集合的大小足够大(例如$K=30$)，那么就可以使得$(1-p_{Top-K})^{K} \rightarrow 0$，从而有$p_{hub} \approx 1 - \epsilon$。对于算法BRMDN中的概率误差，我们可以进行多次迭代从而让$\epsilon$进一步降低，也就是使得$p_{hub}$接近于1，这就说明算法能以很大概率选择到比较好的结点，同时不会陷入一种局部最优的情况，即富人俱乐部现象\cite{zhou2004rich}，该现象是指结点度数大的结点通常互联在一起，出现度数大的结点扎堆现象。而算法\ref{alg:chap3:brmnd-alg}中的随机选择过程能很好的避免这一情况。
+
+
+\subsection{时间复杂度分析}
+根据算法\ref{alg:chap3:brmnd-alg}，在随机选择一个结点后，我们需要遍历其邻居结点从而找到度数最大并且价格数值合适的那个结点，所以我们首先计算图中任意结点的邻居结点数的平均值$\bar{k}$，由于已知无标度网络中的度数与概率的关系，那么可得，
+\begin{equation}
+\label{eq:chap3:avg-degree-k}
+\bar{k} = \sum_{1}^{n} kp(k) = \sum_{1}^{n}kck^{-\gamma} = c\sum_{1}^{n}\frac{1}{k^{\gamma-1}},p(k)=ck^{-\gamma}
+\end{equation}
+
+
+\begin{lemma}
+\label{lemma:noexist-gamma-le2}
+给定网络图$G=(V, E)$，并且该网络满足无标度网络的性质，那么如果图$G$中没有自环，或者两个顶点之间不存在多条边，那么不存在这样的一个图$G$，使得其满足$1 < \gamma < 2$。
+\end{lemma}
+\begin{proof}
+在章节\ref{sec:chap3:feasibility-analysis}中，我们已经得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。现在假设存在图$G$满足无标度网络性质，并且有$1 < \gamma < 2$， 那么可以得到$0 < \gamma-1 < 1$，从而$n^{\frac{1}{\gamma-1}} > n$，进一步可以知道$k_{max} = k_{min}n^{\frac{1}{\gamma-1}} > n$，这就意味着一个结点的度数比图中结点的数量还要多，由于引理条件中已知图没有自环，并且两点顶点中不存在多条边，那么可以知道该假设与已知矛盾。证毕。
+\end{proof}
+
+
+根据引理\ref{lemma:noexist-gamma-le2}可知，$\gamma > 2$，那么对于式子\ref{eq:chap3:avg-degree-k}，可以作如下变换，
+\begin{equation}
+\label{eq:chap3:approximate-k}
+\bar{k} = c\sum_{1}^{n}\frac{1}{k^{\gamma-1}} \leq c\sum_{1}^{n}\frac{1}{k}=cln(n),n \rightarrow +\infty
+\end{equation}
+
+
+如果初始集的大小表示为$K$，那么算法\ref{alg:chap3:brmnd-alg}的复杂度可以由$K\bar{k}$计算，用式子\ref{eq:chap3:approximate-k}替代$\bar{k}$，可以得到算法的时间复杂度为$O(Klog(n))$。
+
+
+\section{实验结果与分析}
+在现实生活中，考虑到不同的社会媒体网络会有不同的结构，这里我们选择两个不同的数据集，这两个数据集都符合无标度网络的性质，且服从幂律分布，但是拥有不同的$\gamma$值，我们的实验表明算法\ref{alg:chap3:brmnd-alg}在这两个数据集上有着很好的效果，在时间上和传播效果上得到很好的平衡。
+
+\subsection{实验设置}
+对两个数据集的性质可以参考如下表格\ref{tab:chap3:datsetTable}，
+
+\begin{table}[htbp]
+	\centering
+	\begin{minipage}[t]{0.8\linewidth}
+		\caption{数据集相关参数}
+		\label{tab:chap3:datsetTable}
+		%\begin{tabular}{*{7}{p{.14\textwidth}}}
+		\begin{tabular}{*{6}{p{.16\textwidth}}}
+			\toprule[1.5pt]
+			Networks & {$n$} & {$m$} & {$\bar{k}$} & {$k_{max}$} & {$\gamma$} \\ 
+			\midrule[1pt]
+			Blogs & 3982 & 6803 & 3.42 & 189 & 2.453 \\
+			Facebook & 4039 & 88234 & 43.69 & 1045 & 2.509 \\
+			\bottomrule[1.5pt]
+		\end{tabular}
+	\end{minipage}
+\end{table}
+
+
+对于表格\ref{tab:chap3:datsetTable}中$n$表示结点个数，$m$表示边的条数，$\bar{k}$表示平均度数，$k_{max}$图中结点的最大度数，两个数据集的具体描述如下，
+\begin{itemize}
+\item Blogs\cite{hu2013newACN}，该数据集拥有4K个结点，6K条边，显然这个数据集构成的图是比较稀疏的，其中$\frac{\#edges}{\#nodes}=1.70$。
+\item Facebook\cite{leskovec2012learning}，该数据集只是Facebook上部分的数据，拥有4K的结点，但是其变数达到了88K，相对于Blogs数据集来说，这个数据集是连接比较紧密的，其构成的图也是属于比较稠密的图，其中$\frac{\#edges}{\#nodes}=21.84$。
+\end{itemize}
+
+为了模拟计算数据集的$\gamma$值我们采用了\cite{hu2015rmdn}当中描述的方法，并得到对表格\ref{tab:chap3:datsetTable}中的数据集进行模型，得到了如下图\ref{fig:blogs-facebook-gamma}的结果，
+
+\begin{figure}[H]
+\centering%
+	\subcaptionbox{Blogs $\gamma=2.453$}
+	{\includegraphics[scale=0.36]{./chap3/Blogs-gamma}}
+	\hspace{1mm}%
+	\subcaptionbox{Facebook $\gamma$=2.509}
+	{\includegraphics[scale=0.36]{./chap3/Facebook-gamma}}
+	\caption{数据集模拟$\gamma$值}
+	\label{fig:blogs-facebook-gamma}
+\end{figure}
+
+
+我们将IC模型用于BRMDN算法，将BRMDN算法所得到的数据和目前的一些启发式算法进行了对比，我们将要作为对比的算法的描述如下，
+\begin{itemize}
+\item RandomHeuristic，随机选择$K$个满足条件的结点，速度最快。
+\item DegreeHeuristic，这是很基本的一个以度中心性的算法，选取网络图中度数排名前几的满足条件的结点作为初始结点集。
+\item SingleDiscount，选择结点之后，对该选择的结点的邻居结点度数减1，是针对DegreeHeuristic算法的改进。
+\item DegreeHeuristic，相比于SingleDiscount，该算法在计算要减去的度数的数值时，做到了更精确，从而能更好地模拟选中的结点对于之后结点的影响。
+\end{itemize}
+
+
+贪心算法在理论上能以$1-\frac{1}{e}=0.63$的程度接近最优值，但是其对于大型网络来说，计算时间消耗太长。在我们做实验的过程中，在Blogs数据集上迭代5次(通常情况下我们设置迭代次数为1000次)时，贪心算法\ref{alg:chap3:general-greedy}需要花费20.78个小时才能得出结果，然后同样条件下基于度数的启发式算法只需要0.05秒，这几乎是快了150万倍。所以在本文中我们不把贪心算法作为对比的对象。本文所有实验的环境配置为一台拥有24个Intel(R) Xeon(R) CPU，主频为2.50GHz，内存128个G的服务器，其运行的操作系统为Ubuntu 14.04 LTS。
+
+对于IC模型来说，如果传播概率$p$很大的话，那么对于不同的算法来说影响力的传播相互之间的差值不会很明显，所以本文对于传播概率设置为$p=0.01$。同样为了防止偶然出现的实验偏差，本文对于上面提到的每个算法都进行了$R=1000$次的迭代。同时图中结点的代价函数我们都是利用前面提到的PRBC模型来进行估值，在PRBC模型值的两个参数，我们分别设置为$\lambda=100$，$\delta=0.5$。
+
+
+\subsection{实验结果及相关分析}
+\subsubsection{实验结果}
+实验结果表明在IC传播模型下，BRMDN算法能达到和DegreeDiscount相近的传播效果，但是在运行时间上能比DegreeDiscount有更好的表现。具体的实验结果如图\ref{fig:chap3:blogs-seed}，图\ref{fig:chap3:facebook-seed}，图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}，图\ref{fig:chap3:running-time}。
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=600$\label{fig:chap3blogs-seed-600}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k600}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=900$\label{fig:chap3blogs-seed-900}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k900}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1200$\label{fig:chap3blogs-seed-1200}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k1200}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1500$\label{fig:chap3blogs-seed-1500}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-seed-k1500}}
+	\caption{Blogs数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
+	\label{fig:chap3:blogs-seed}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-seed-300}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k300}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=400$\label{fig:chap3facebook-seed-400}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k400}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-500}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k500}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-seed-600}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k600}}
+	\caption{Facebook数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
+	\label{fig:chap3:facebook-seed}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=600$\label{fig:chap3blogs-infl-600}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-600}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=900$\label{fig:chap3blogs-infl-900}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-900}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1200$\label{fig:chap3blogs-infl-1200}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1200}}
+	\hspace{3em}%
+	\subcaptionbox{Blogs 预算$\mathcal{B}=1500$\label{fig:chap3blogs-infl-1500}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1500}}
+	\caption{Blogs数据集在不同预算下影响力传播效果}
+	\label{fig:chap3:blogs-infl}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-infl-300}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-300}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=400$\label{fig:chap3facebook-infl-400}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-400}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-infl-500}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-500}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-infl-600}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-infl-600}}
+	\caption{Facebook数据集在不同预算下影响力传播效果}
+	\label{fig:chap3:facebook-infl}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{Blogs\label{fig:chap3blogs-time-k30}}
+	{\includegraphics[scale=0.3]{./chap3/blogs-time-k30}}
+	\hspace{3em}%
+	\subcaptionbox{Facebook \label{fig:chap3facebook-time-k30}}
+	{\includegraphics[scale=0.3]{./chap3/facebook-time-k30}}
+	\caption{数据集Blogs和Facebook的运行时间}
+	\label{fig:chap3:running-time}
+\end{figure}
+
+\subsubsection{实验分析}
+本节将针对算法的两个方面进行分析，即算法的传播效果以及算法的运行时间。具体分析如下，
+\begin{itemize}
+\item 影响力传播(Influence Spread)，在图\ref{fig:chap3:blogs-infl}和图\ref{fig:chap3:facebook-infl}中我们可以看出DegreeDiscount，DegreeHeuristic，SingleDiscount在传播效果上是最好的，而RandomHeuristic则是最差的，从图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}中我们还可以看出BRMDN(算法\ref{alg:chap3:brmnd-alg})在不同的数据集下有着不同的表现，但是都很接近最好的那些算法。我们定义$\nabla_{fig}$为在上面结果图$fig$中算法BRMDN的传播效果与算法DD的传播效果之间的比值
+\begin{displaymath}
+\nabla_{fig} = 100\% \times \frac{\sigma_{BRMDN}(S)}{\sigma_{DD}(S)}
+\end{displaymath}
+其具体意义即是算法BRMDN接近最好算法的程度。那么对于图\ref{fig:chap3:blogs-infl}分析可得，$\nabla_{\ref{fig:chap3blogs-infl-600}}=95\%$，$\nabla_{\ref{fig:chap3blogs-infl-900}}=96\%$，$\nabla_{\ref{fig:chap3blogs-infl-1200}}=91\%$，$\nabla_{\ref{fig:chap3blogs-infl-1500}}=85\%$。然而在图\ref{fig:chap3:facebook-infl}中我们可以发现当选择的初始结点的大小$K<15$时，BRMDN算法接近DegreeDiscount算法的程度低于90\%，而当初始结点集大小$K \rightarrow 30$时，算法BRMDN的效果越来越接近DegreeDiscount算法，具体来说，$\nabla_{\ref{fig:chap3facebook-infl-300}}=93\%$，$\nabla_{\ref{fig:chap3facebook-infl-400}}=99\%$，$\nabla_{\ref{fig:chap3facebook-infl-500}}=99\%$，$\nabla_{\ref{fig:chap3facebook-infl-600}}=97\%$。综上图\ref{fig:chap3:blogs-infl}，图\ref{fig:chap3:facebook-infl}的结果，算法在影响力传播上有着很好的效果。
+\item 运行时间(Running time)，从图\ref{fig:chap3:running-time}中可以看出对于任何算法在同一个数据集下，不管预算$\mathcal{B}$值为多少，其运行时间曲线是一天近似的平行于横轴的直线，这意味着运行时间与预算$\mathcal{B}$相关性不大。从另一方面并结合表格\ref{tab:chap3:ncc-im-algs}中算法的时间复杂度，可以知道，RandomHeuristic运行时间最少，BRMDN则略高于RandomHeuristic，DegreeHeuristic排第三，SingleDiscount与DegreeDiscount最慢。从图\ref{fig:chap3blogs-time-k30}可以看出BRMDN比DegreeDiscount大约快了14倍，而从图\ref{fig:chap3facebook-time-k30}可以得到BRMDN比DegreeDiscount大约快了19倍。对于表格\ref{tab:chap3:datsetTable}中的两个数据集来说，他们的结点数$n$比较小，但是根据算法时间复杂度(见表\ref{tab:chap3:ncc-im-algs})来说，如果在结点很多的网络图中，那么BRMDN算法将比DegreeDiscount算法运行时间少更多。
+\end{itemize}
+
+
+注意在图\ref{fig:chap3blogs-infl-900}中我们看到了当初始结点集大小$K>23$时RandomHeuristic的传播效果超过了其他算法。从图\ref{fig:chap3blogs-seed-900}中我们可以发现，当预算$\mathcal{B}$很小时，其他算法找到了价值很高的结点，而RandomHeuristic则选择了较多的小价值结点，从而最后总的传播超过了其他算法。从图\ref{fig:chap3:facebook-infl}中可以发现当预算$\mathcal{B}>400$时，影响力传播效果并没有增加多少，但是从图\ref{fig:chap3facebook-seed-500}中可以得到解释，因为当预算$\mathcal{B}>400$时，在图中的有影响力的结点都已经被选入了初始结点集，而由于我们限制了初始结点集大小$K=30$，所以出现了增加预算而没有增加影响力的传播的现象。
+
+
+\section{本章小结}
+影响力最大化对于产品促销、信息传播、紧急事件疏散等各方面活动都能起着非常重要的作用。在网络中基于常数价格估值函数(单位估值函数)，找到$K$个初始传播结点使得在网络中的影响力最大已经被很多人所研究。本文首先提出非常数价格估值函数(PRBC模型)去评估网络中结点的代价，然后基于PRBC模型提出BRMDN算法去进行影响力的传播，并选择了现实生活中的两个常见的数据集进行了大量的实验。通过实验的结果，我们得出下面两个结论：(1)当选定初始结点集$K$的大小时，预算的大小对运行时间的影响不大；(2)BRMDN在达到与DegreeDiscount算法相当的传播效果时，在运行时间上有着一定的优势。综上可知，本文提出的算法能在影响力的传播效果与运行时间上达到很好的平衡。

@@ -1,0 +1,67 @@
+% 下面这句用以支持中文
+% !Mode:: "TeX:UTF-8"
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
+
+\chapter{引言}
+\label{cha:firstChap01}
+\section{研究背景}
+互联网快速发展为一种全球化的媒介，人们在互联网里可以超越以往国家的界限去获得信息，分享信息。现如今世界已经由亿万个网页互相连接起来，这亿万的网页充满了各种各样的资源，如web应用，视频站点，图片分享，短文交换站点，博客等等。提供各种服务的在线社会媒体(Online Social Network)也得到了蓬勃的发展，产生了大量的世界级的企业或产品如Facebook，Twitter，WeChat，Snapchat，Instagram，而这些产品都具有以下两个非常明显的特点：
+\begin{itemize}
+\item 易于使用，用户基数大，便携式设备的发展，使得人们越来越容易参与其中，产生了大量的数据流量，据eBizMBA调查的报告全球最负盛名的Facebook在2016年2月份估计的月访问次数达到了11亿次，而其后的Twitter，Linkedin，Pinterest等都有每月亿级的访问量\footnote{http://www.ebizmba.com/articles/social-networking-websites}。
+\item 交互性，用户社会媒体产品可以发布短文、图片、视频，用户之间可以分享、转发、评论等基本社交功能使得各大社会媒体网络上信息交换十分频繁，从而每时每分都在产生着大量的数据。
+\end{itemize}
+
+
+大量的社会媒体平台产生的各种各样的联系以及丰富的数据，很多研究者就开始利用这些资源平台抓取数据开始进行分析研究。人们发现在Facebook，Twitter等社交平台上，消息的传播有着很好的效果，所以加以营销的策略就可以实现特定目的产品、信息、理念在人群中广泛地进行推广\cite{he2012influence}。这种信息的传递的现象被称为信息传播(Influence Diffusion)。随着电子商务的大力发展，商家为了在电子商务平台上出售自己的产品，必须通过投放各种广告来引导消费者到该产品的买卖平台。通过对社会媒体信息的研究和分析，我们可以得知人们在日常生活中所关注的信息，以及这些信息是如何扩散的，并且哪些人能对信息产生更好的传播效应。这样我们就可以有目标地进行广告投放。除此之外，我们还可以利用社会媒体网络去做政策宣传，新理念推广，对不法消息进行辟谣等生活的方方面面。
+
+
+在信息传播过程中如何使得受众或者接纳该信息的人数最多，此类问题被定义为基于社会媒体网络的影响力最大化，并且该问题在近年来得到了大量研究\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}。
+
+
+\section{研究现状}
+%可以分三部分，影响力，最大化，信息传播模型
+在分析社会媒体平台影响力最大化时，基于平台的用户关系，可以用图$G(V, E)$来构建整个社会媒体网络，其中定点集合$V$表示OSN(Oline Social Network)上用户或者账号的集合，而边集合$E$表示OSN上用户与用户之间的关系。在考虑影响力传播的过程中，每条边$e \in E$都有其权重，标识用户与用户之间关系的强度或者影响力的大小，而每个顶点$v \in V$则有其价格数值标识选择该顶点所需要付出的代价。影响力最大化则需要在$V$中选择一定的用户数来进行消息传播。
+
+
+\subsection{顶点估值模型}
+在图$G(V, E)$中，顶点估值函数(Cost Function)为$\mathcal{CF}(\cdot)$，那么对于$\forall v \in V$，$v$的价格数值则为$\mathcal{CF}(v)$。目前的研究主要将每个顶点的价值定为常数，最常见的为单位化价格，比如\cite{he2012influence}\cite{kempe2003maximizing}\cite{chen2011influence}\cite{chen2010scalableKDD}\cite{chen2009efficient}将图$G(V, E)$中每个顶点的价格数值都赋值为1，也即$\forall v \in V$，$\mathcal{CF}(v) = 1$。在\cite{leskovec2007cost}中的研究例子1中，J. Leskovec等人用帖子的数量来表示文档的价格；在例子2中，他们只是说明了给每个结点赋了一个非负数值，而并没有详细提到如何给这个值，同样在\cite{han2014balanced}中也没有给出具体的估值函数。然而在\cite{nguyen2013budgeted}中，他们给每个顶点赋一个随机值来表示其价格数值。
+
+
+\subsection{信息传播模型}
+Domingos\cite{domingos2001mining}和Richardson\cite{richardson2002mining}首先利用OSN上用户的联系以马尔科夫场建立模型去进行商品推广。而Kempe\cite{kempe2003maximizing}等人对影响力最大化进行了定义，并证明了得到该问题的最优解是NP难的问题，并在文章中提出了两种信息传播模型，即独立级联模型IC(Independent Cascade)和线性阈值模型LT(Linear Threshold)。这两个模型以及基于IC或者LT改进的模型在后面的研究中被广泛地使用。
+
+
+\subsection{影响力最大化}
+长久以来，最有影响力的点在社会科学领域被广泛地研究\cite{lu2011leaders}\cite{qing2013new}\cite{zhuo2013node}\cite{kitsak2010identification}。社会媒体网络是由用户以及用户与用户之间的关系构成一种图结构，分析网络图用户之间的联系可以为网络营销，政治宣传等活动提供良好的推广策略。基于OSN的影响力最大化，即使采取一种推广策略得在OSN中接受某种信息的用户数量最多。而在一个OSN进行推广的产品、信息、思想等可以具有一个或多个，根据一个平台上传播的信源\footnote{信源指消息传播的来源，在OSN上传播的产品、信息、思想等需要推广的物品。}的多少，我们可以将影响力最大化分为以下两类：
+\begin{itemize}
+\item 单一信源的影响力最大化，或者无竞争的影响力最大化。即在推广产品信息的过程中，只有一种产品在传播推广，这是目前研究的最多的一个领域。
+\item 相对地，多信源的影响力最大化\footnote{一般情况下，多信源指代三种及以上，而在这里也包括两种信源。}，或者竞争环境下的影响力最大化。即在推广产品的过程中，有多种功能类似的产品在一个OSN上进行推广，这个相对于单一信源的影响力最大化，需要考虑方面更多，比如IC和LT模型提出时是基于单一信源的，那么研究多信源的影响力最大化，必然需要在此基础上提出新的传播模型或者不基于IC和LT直接提出新的模型，还有在传播的过程中多种产品在某个结点冲突了应该采用哪种策略等等。
+\end{itemize}
+
+
+\subsubsection{无竞争的影响力最大化}
+无竞争环境下的影响力最大化一直以来是信息传播领域的一个研究热点。在Kempe\cite{kempe2003maximizing}等人对影响力最大化进行了定义，并得到了一些初步结果之后，大量研究开始出现，旨在解决一方面需要影响传播的效果能得到保证，另一方面则需要尽可能提高算法的效率。正如\cite{kempe2003maximizing}中所得出的结果，得到完全最优解是不能在多项式时间内得到的。那么很多人将注意力集中在改进Kempe提出的贪心算法，这方面做的比较好的有J. Leskovec\cite{leskovec2007cost}发掘并利用了影响力最大化函数具有的子模(Submodularity)特性而提出的CELF，他能在效率上比Kempe提出的Greedy算法快700多倍，后面还有继续在J. Leskovec的研究上继续改进的CELF++\cite{goyal2011celf++}， UBLF\cite{zhou2013ublf}，还有Chen\cite{chen2009efficient}等人提出的NewGreedy算法。还有很多研究者提出了很多启发式的算法来提高效率，如随机性的算法Random\cite{kempe2003maximizing}\cite{chen2009efficient}。中心度在社交网络中也是一个研究热点，OSN中若是一个顶点有很多其他顶点连向他，那么一定程度上说明他的重要性，也即很可能是比较有影响力的人，由此Bonacich\cite{bonacich1972factoring}等人就提出了根据顶点度数选取网络图中度数排名前$k$的顶点的启发式算法，Chen\cite{chen2009efficient}等人也根据度数提出了改进的DegreeDiscount，SingleDiscount算法。
+
+
+\subsubsection{存在竞争的影响力最大化}
+Bharathi等人在\cite{bharathi2007competitive}竞争性影响力分析做了初步的分析，并给出了一些结论，贪心算法仍然可以获得很好($(1-\frac{1}{e}) S_{optimal}$)的结果，并将博弈论的知识引入到该问题中进行讨论。Alon\cite{alon2010note}分析了对于网络图在满足什么条件下影响力最大化可以达到纳什均衡(Nash Equilibrium)，他给出的结论是当整个网络图$G(V, E)$满足$\mathcal{D}(G) \le 2$时，那么在该网络中进行竞争性影响力最大化过程可以达到纳什均衡状态，其中函数$\mathcal{D}(u, v)$表示图中顶点$u$和顶点$v$的最短距离，$\mathcal{D}(G) \le 2$表示整个图任意两个顶点的距离都小于等于$2$，即$\forall u, v \in V$，$\mathcal{D}(u,v) \le 2$。而Takehara\cite{takehara2012comment}提出了在文献\cite{alon2010note}中的结论条件的不严谨，从而给出了一个更加严格的限制，即在图$G(V, E)$中，$\forall u, v \in V, z \in V\setminus (\mathcal{N}(u)\cup\mathcal{N}(v))$，如果$\mathcal{D}(u,z)=\mathcal{D}(v,z)$，那么竞争条件下的影响力最大化可以达到纳什均衡，其中$\mathcal{N}(\cdot)$为邻居结点集合函数，$\mathcal{N}(u)$为结点$u$的邻居结点集合(包括顶点$u$)。Tzoumas\cite{tzoumas2012game}等人在社交网络中对竞争环境下博弈的分析得出了计算纯纳什均衡(PNE, Pure Nash Equilibrium)策略的复杂度是指数级的。
+
+
+\section{论文贡献}
+本文利用近年来良好的互联网环境所带来的契机，基于快速增长的社会媒体网络，利用社会媒体网络上用户发布的信息，用户与用户之间的联系，发现有影响力的结点，利用这些有影响力的结点我们可以用来完成推广产品，宣传政策，传播新思维等目的。本文对影响力最大化进行了大量的文献调查研究，并分析了各种算法的利弊，然后针对现有算法的不足之处提出了相应解决方案，由此本文的有如下的主要贡献：
+\begin{itemize}
+\item 本文分别在竞争环境下和非竞争环境中对信息传播进行了研究，并提出相应算法解决现有算法的不足，使得算法在具有良好影响力传播效果的同时，具有较高的执行效率。
+\item 本文针对之前对于社会媒体网络中估值函数的问题，提出了基于结点PageRank值的估值模型PRBC(PageRank Based Cost Model)，能对结点的价值有更准确和合理的分析。
+\item 本文在原有的IC模型之上进行拓展，提出了针对竞争环境下的新的信息传播模型xIC(Extended Independent Cascade)。
+\item 本文还分别针对单位价值(Unit Cost Model)和非单位价值(None Unit Cost Model)的顶点估值函数提出了相应的影响力最大化算法。
+\item 本文对非竞争环境下的算法进行了大量的实验，实验表明本文提出的算法在时间以及信息的传播效果上有着很好的平衡。另外针对竞争环境下的影响力最大化也进行了大量的实验，结果表明本文提出的算法在信息传播范围有着很好的效果。
+\end{itemize}
+
+
+
+\section{论文结构}
+本文的组织结构为：第一章我们给出了全文的研究影响背景及意义，以及国内外研究状况。第二章描述与本论文相关的一些研究。第三章提出本论文的价格模型PRBC，以及基于PRBC而提出的影响力最大化算法BRMDN。第四章讨论竞争环境下的影响力最大化，并基于IC模型提出一种新的适用于竞争环境下的传播模型xIC，同时给出竞争环境下的算法。而第五章给出竞争环境下影响力最大化的实验结果，并对结果进行分析。最后，第六章中总结论文，并给出了相关研究的展望。
