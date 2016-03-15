@@ -145,7 +145,7 @@ class XBudgetedCIMext(object):
 
 			if target != -1:
 				S.append(target)
-				bsum += self.cost[to]
+				bsum += self.cost[target]
 
 			if bsum >= budget - epsilon:
 				break
