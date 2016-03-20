@@ -185,6 +185,7 @@ class XBudgetedCIMext(object):
 
 	def local_greedy_heuristic(self, T, budget, epsilon):
 		ft = time.time()
+		vertices = self.graph.get_all_vertices()
 		S = []
 		bsum = 0
 		for v in T:
