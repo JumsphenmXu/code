@@ -154,6 +154,90 @@ class XBudgetedCIMext(object):
 		print '#Comparable Heuristic Time consumed: %.2f secs' % (time_elapsed)
 		return S, time_elapsed
 
+	def local_degree_heuristic(self, T, budget, epsilon):
+		ft = time.time()
+		vertices = self.graph.get_all_vertices()
+		S = []
+		bsum = 0
+		for v in T:
+			r = random.choice(vertices)
+			r = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
+			target = r
+			maxd = len(self.graph.get_edges_by_vertice(r))
+			edges = self.graph.get_edges_by_vertice(v)
+			for e in edges:
+				to = e.get_dest()
+				d = len(self.graph.get_edges_by_vertice(to))
+				if maxd < d and bsum + self.cost[to] <= budget + epsilon:
+					maxd = d
+					target = to
+				
+			if target != -1 and bsum + self.cost[target] <= budget + epsilon:
+				S.append(target)
+				bsum += self.cost[to]
+
+			if bsum >= budget - epsilon:
+				break
+
+		time_elapsed = time.time() - ft
+		print '#Local Degree Heuristic Time consumed: %.2f secs' % (time_elapsed)
+		return S, time_elapsed
+
+	def local_greedy_heuristic(self, T, budget, epsilon):
+		ft = time.time()
+		S = []
+		bsum = 0
+		for v in T:
+			r = random.choice(vertices)
+			r = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
+			target = r
+			maxinf = -(1 << 20)
+
+			if self.cost[target] <= 0 or bsum + self.cost[target] > budget + epsilon:
+				target = -1
+			else:
+				Stmp = copy.deepcopy(S)
+				Stmp.append(target)
+				g = copy.deepcopy(self.graph)
+				prevS, _ = self.model.calc_influence(g, S, T)
+				g = copy.deepcopy(self.graph)
+				curS, _ = self.model.calc_influence(g, Stmp, T)
+				maxinf = float(curS - prevS)/self.cost[target]
+
+			edges = self.graph.get_edges_by_vertice(v)
+			for e in edges:
+				to = e.get_dest()
+				if to in T or to in S or self.cost[to] == 0:
+					continue
+
+				if target == -1:
+					target = to
+					g = copy.deepcopy(self.graph)
+					maxinf, _ = self.model.calc_influence(g, [target], T)
+					continue
+
+				g = copy.deepcopy(self.graph)
+				Ss = copy.deepcopy(S)
+				prevS, _ = self.model.calc_influence(g, S, T)
+				Ss.append(to)
+				g = copy.deepcopy(self.graph)
+				curS, _ = self.model.calc_influence(g, Ss, T)
+				fc = float(curS - prevS)/self.cost[to]
+				if maxinf < fc and bsum + self.cost[to] <= budget + epsilon:
+					maxinf = fc
+					target = to
+
+			if target != -1:
+				S.append(target)
+				bsum += self.cost[to]
+
+			if bsum >= budget - epsilon:
+				break
+
+		time_elapsed = time.time() - ft
+		print '#Local Greedy Heuristic Time consumed: %.2f secs' % (time_elapsed)
+		return S, time_elapsed		
+
 	def infmax(self, k, R, budget, epsilon, result_file):
 		ts = []
 		res = []
@@ -171,6 +255,14 @@ class XBudgetedCIMext(object):
 		ts.append((T, S))
 		res.append(('RMDN', 0, 0, rtimes))
 
+		S, ldtimes = self.local_degree_heuristic(T, budget, epsilon)
+		ts.append((T, S))
+		res.append(('Local_Degree', 0, 0, ldtimes))
+
+		S, lgtimes = self.local_greedy_heuristic(T, budget, epsilon)
+		ts.append((T, S))
+		res.append(('Local_Greedy', 0, 0, lgtimes))
+
 		for i in xrange(R):
 			print 'Round %d starts...' % (i + 1)
 			for j in xrange(len(ts)):
@@ -187,7 +279,6 @@ class XBudgetedCIMext(object):
 			print 'Failed to open file %s !' % result_file
 			return
 
-		line = 'greedy time consumed: ' + str(gtimes) + ' secs.\n'
 		fp.write(line)
 		for i in xrange(len(res)):
 			rt = float(res[i][1]) / R
@@ -204,12 +295,16 @@ if __name__ == '__main__':
 	k = 15
 	budget = 100
 	epsilon = 2
-	graph_file = '../../../graphdata/USAir_unweight.txt'
+	base_dir = '../../../graphdata/'
+	graph_files = ['USAir_unweight', 'BA_weight','blogs', 'facebook']
+	suffix = '.txt'
 	model = XDiffusionModel()
 
-	bcim = XBudgetedCIMext(graph_file, model)
-	for i in xrange(3):
-		k = (i + 2) * 5
-		budget += 50 * i
-		result_file = '../result/d2usa' + str(k) + '.txt'
-		bcim.infmax(k, 100, budget, epsilon, result_file)
+	for f in graph_files:
+		graph_file = base_dir + f + suffix
+		bcim = XBudgetedCIMext(graph_file, model)
+		for i in xrange(3):
+			k = (i + 2) * 5
+			budget += 50 * i
+			result_file = '../result/ext' + f + str(k) + suffix
+			bcim.infmax(k, 100, budget, epsilon, result_file)
