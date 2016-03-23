@@ -6,110 +6,309 @@
 %%% TeX-master: t
 %%% End:
 
-\chapter{RMDN影响力最大化发现方法}
+\chapter{竞争型传播模型设计以及影响力最大化算法实现}
 \label{cha:4thChap04}
-复杂网络中影响力最大化建模与分析是社会网络分析的关键问题之一，其研究在理论和现实应用中都有重大的意义。在给定s值的前提下，如何寻找发现s个最大影响范围的节点集，这是个组合优化问题，Kempe D等人已经证明该问题是NP-hard问题。目前已有的随机算法时间复杂度低，但是结果最差；其它贪心算法时间复杂度很高，不能适用于大型社会网络中，并且这些典型贪心算法必须以了解网络的全局信息为前提，而获取整个庞大复杂且不断发展变化的社会网络结构，是很难以做到的。我们提出了一种新的影响力最大化算法模型RMDN，及改进的算法RMDN++，算法模型只需要知道随机选择的节点以及其邻居节点信息，从而巧妙地回避了其它典型贪心算法中必须事先掌握整个网络全局信息的问题，算法的时间复杂度仅为$O(slog(n))$；然后，我们利用IC模型和LT模型在4种不同的真实数据集的实验显示，RMDN算法有着和现有典型算法相近的影响力传播效果，且有时还略优，同时在运行时间上则有显著的提高；同时我们从理论上证明了方法的可行性。本文所提出的模型算法适用性更广，可操作性更强，为这项具有挑战性研究提供了新的思路和方法。
+媒体网络的发展，互联网的普及让更多的人参与到这个世界最大的社区中去。大量的网络用户促使web服务商，互联网企业开发出了大量的产品，其中提供社会媒体功能的产品就有很多，这些产品每天都有大量的用户去访问，在上面发布文字图片，传导舆论，转发关注信息等等。利用这些平台，以及用户与用户之间的关系，可以进行各种信息的推广。每个人都可以在上面去进行推广自己的产品，所以会造成竞争关系，如何在这样的环境中使自己的消息得到很好的传播是一个很重要的研究问题。
+
 \section{引言}
-影响力分析是复杂网络的重要研究内容，现实世界中的诸多系统都以复杂网络（Complex Network）形式存在，比如互联网、社会系统、计算网络、生物网络和社交网络等。在很多科学领域中，都使用网络来表示系统中成员之间的关系，如在社交网络中用节点代表人，边代表人与人之间的联系，人们的行为和思想会受到其他人的影响而发生变化。特别是随着在线社交网络蓬勃发展，以交友、信息分享等为目的的社交网络成为我们传播信息、表达观点、分享信息、产生影响力的理想平台，同时为影响力研究提供了真实的经验数据支撑，这种复杂的社会网络关系对信息传播和扩散起着至关重要的作用。影响力最大化分析通过分析人们相互之间的影响模式和影响力传播方式，既能从社会学角度加深理解人们的社会行为，同时也能促进政治、经济和文化活动等领域的交流与传播，其在理论和现实应用中都有重大的意义。例如有效的控制疾病传播、流言散布、计算机病毒扩散，还可以传播新产品、新思想以推进社会化进程。复杂网络中影响力最大化问题一直是研究的热点和难点。
 
-影响力最大化问题（Influence Maximization）是在给定预算的前提下，如何选择s个初始传播种子节点，最终使得它们传播范围最大化。
-长期以来，最有影响的节点\cite{qing2013new,zhuo2013analysis,aral2012identifying}一直被社会科学研究，文献\cite{kitsak2010identification}提出了K-shell分解来确定最具有影响力的单源传播节点，对多节点传播集合也只是给出与传播节点之间的距离有关系的假设。文献\cite{renxiaolong2014,liujg2013}给出了复杂网络中最有影响力节点的相关研究进展及各种方法的分析综述。Domingos\cite{domingos2001mining}和Richardson\cite{richardson2002mining} 首先将影响力最大化问题归纳为一个算法问题，主要是在社交网络中找出最有影响力的成员，提供给他们免费的样品，希望通过他们向网络中其他成员推荐，从而达到营销的目的，这种通过口口相传（Word of Mouth）的影响力传播方式，商业营销目标以最小的费用将新产品最大范围地推广到整个网络。Kempe和Kleinberg等人（简称KKT算法）\cite{kempe2003maximizing}形式化表示了该问题，首次证明了求解复杂网络上的影响力最大化问题是个NP-hard问题，
-并给出与最优解比为$1-\frac{1}{e} \approx 0.63$的近似贪心算法Greedy Algorithm（GA），其主要缺点是时间复杂度大，速度慢。同时给出了独立级联（Independent Cascade）模型和线性阈值（Linear Threshold）模型。Leskovec\cite{leskovec2007cost}等人提出了最优化的贪心算法CELF（Cost-Effective Lazy Forward）框架，利用模型中子模函数的性质，算法在取得近似最优解的同时效率比贪心算法提高了近700倍。Goyal\cite{goyal2011celf++}等人提出的CELF++算法，Zhou C等人\cite{zhou2013ublf}提出的UBLF算法，都是基于CELF提出了时间复杂稍优的算法，但是总体在求解大规模网络问题时仍有问题。Chen等人\cite{chen2009efficient}提出了两种改进的贪心算法NewGreedy和MixGreedy算法，此外还提出了一种改进的度数最大算法DegreeDiscount算法。NewGreedy算法是从原始网络中去掉对传播没有影响的边，得到一个小网络，然后在小网络中做影响力传播，优点是不需要每次都从整个网络上去考虑。MixGreedy算法是先用NewGreedy算法计算第一步，后面用GELF算法，把两个算法结合起来使用，实验结果表明，这两个改进的算法都比贪心算法的时间复杂度低，但是相比度数最大的算法，时间复杂度还是很高。选取度数最大的算法是求解影响力最大化问题比较好的启发式方法，DegreeDiscount算法\cite{chen2009efficient}是对探索式算法的一种优化策略的改进，使得实验结果与贪心算法相近，而运行效率有了很大提升。Kimura等人\cite{kimura2006tractable}提出一种通过分解极大强连通子图寻找影响最大的节点算法，在此基础上又出现了基于用户间最大影响路径的方法\cite{chen2010scalableIM}，但是通过最短路径传播的假设限制性太强，Wang等人\cite{wang2010community}发现影响力的传播大多发生在社团之间，由此提出一种贪心策略结合动态规划的算法用于初始用户的选取，较大提升了算法的执行效率。
+在社会媒体繁荣发展的今天，社交网络就像是引力极大的黑洞，每天吸引着大量的互联网用户。世界范围内各国用户都有着自己的社交网络偏好，比如在欧美地区Facebook，Twitter，Linkedin等大受欢迎，国内的用户极度依赖微信，微博进行社交活动，俄罗斯用户也有着自己VK网络平台。图\ref{fig:chap4-most-pop-osns}中显示了2016年3月份更新的世界最受欢迎社交网络的排名前5名\footnote{http://www.ebizmba.com/articles/social-networking-websites}。可以看出Facebook，Twitter，Linkedin，Pinterest，Google Plus+每个月平均的访问量都达到了亿级以上。每个用户每个月只发布一段文字或者图片信息，那么这个数据量也是十分大的，并且内容也是非常丰富的。良好地利用这些数据以及平台的活跃性，可以在这些平台上着一些具有大量跟随者的人做一些私人的产品推广，可想而知受众基数则是非常大的。或者正对某类产品，可以邀请某些在相关专业领域有着良好口碑的人进行友好评价，也能使得产品得到很好的推广。另一方面，政府有关部门，非盈利组织机构也可以利用这些做宣传。例如利用一些公众人物进行活动的宣传也能得到很好的效果，在图\ref{fig:chap4-lbj-facebook}中NBA球星勒布朗詹姆斯的一个短文，得到了66万用户的关注，5956次的分享转发，7190次的评论。
 
-总之，影响力最大化问题在IC模型和LT模型下运行是NP-hard\cite{kempe2003maximizing}，在整个网络中随机选取$s$个节点的随机启发式算法（Random Heuristic）时间复杂度最少，但效果也是最差的；其它贪心算法和启发式算法都以不同精度接近近似最优解，但是必须以了解网络的全局信息为前提（如网络拓扑结构等），在许多情况下，了解整个庞大复杂且不断发展变化的社会网络，也是难以做到的；同时一些算法可能会陷入”富人俱乐部（Rich Club）”\cite{zhou2004rich}这一局部最优的现象。
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{./chap4/most-popular-osns}
+	\caption{最受欢迎的社会媒体网络排行榜(2016年3月)}
+	\label{fig:chap4-most-pop-osns}
+\end{figure}
 
-我们提出了一种新的影响力最大化算法模型称为随机节点最大度邻居方法（RMDN），该算法只需要知道被随机选择的节点以及与它直接相连的邻居节点信息，从而巧妙地回避了其它算法中必须事先掌握整个网络全局信息的问题。算法的时间复杂度仅为$O(slog(n))$，运行时间随着网络的规模地扩大，比最大度（Degree Heuristic）算法$O(m)$运行时间效果呈线倍数增加，但我们所提出的算法运行结果与已有典型算法相近，且有时还略优。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{./chap4/lbj-facebook}
+	\caption{勒布朗詹姆斯在Facebook的一次发文}
+	\label{fig:chap4-lbj-facebook}
+\end{figure}
+
+既然利用社会媒体平台可以进行信息宣传，那么产品商就能想到提供给一些有影响力的用户一些自己的产品进行销售，比如在篮球运动鞋上Nike签约了勒布朗，科比为你推广，Adidas签约了哈登，罗斯等人为其推广。这样就产生了竞争，如何在竞争环境下，使得自己的产品得到最广的传播，这就需要一定的策略去选择那些有影响力的用户为产品代言。
 
 \section{相关工作介绍}
-在社会网络中，影响力最大化问题可以帮助我们有效地控制疾病传播、流言散布、计算机病毒扩散，还可以传播新产品、新技术、新思想以加快推进社会化进程。由于影响力最大化问题是NP-hard的，时间复杂度高，而且在线社交网络的规模日益庞大，所以设计新的模型算法以期获得最优解和提高算法的执行效率一直是研究的重要方向。
-为了表述方便，表~\ref{tab:chap4:IMparam}列出了贯穿本章的重要变量参数。
+Shishir Bhrathi，David Kempe\cite{bharathi2007competitive}等人在2007年就提出了竞争型影响力最大化问题，作出了一定的研究，给出了一些理论结果。本节我们将阐述本文利用到的几个结论而不进行相应的证明。Tim Carnes\cite{carnes2007maximizing}的工作和本文的工作比较相似，他们基于IC模型提出了两个新的传播模型即Distance-based model和Wave Propagation Model，并将贪心算法运用到了这两个模型之上。Xinran He\cite{he2012influence}将竞争型影响力最大化利用到了正面/负面消息的传播中，试图找到一个传播正面消息的集合能最大化地阻塞(Blocking)负面消息的传播。Reiko Takehara\cite{takehara2012comment}等人将竞争型的影响力最大化作为博弈论去研究，试图去发现图满足什么样的条件的情况下能使得博弈能达到纯纳什均衡状态(Pure Nash Equilibria)。Alon\cite{alon2010note}同样适用博弈方法去研究，并对Reiko Takehara先前的结果进行了修正。
 
-\begin{table}[htbp]
-%\centering
-\begin{minipage}[t]{0.8\linewidth}
-	\caption{本章重要变量参数对照说明}
-	\label{tab:chap4:IMparam}
-	%\begin{tabular}{*{7}{p{.14\textwidth}}}
-	\begin{tabular}{*{4}{p{.24\textwidth}}}
-		\toprule[1.5pt]
-		变量参数 & 描述 & 变量参数 & 描述  \\ 
-		\midrule[1pt]
-		$n$ & 网络节点个数 & $m$ & 网络边的个数 \\
-		$S$ & 初始传播种子节点集合 & $T$ & 最终被传播节点集合 \\
-		$s$ & 被选中种子节点集合大小 & $K_{min}$ & 节点最小度数 \\
-		$p$ & 传播概率 & $K_{max}$ & 节点最大度数 \\
-		$R$ & 算法迭代循环的次数 & $P(k)$ & 节点度数是自然数k的概率 \\
-		\bottomrule[1.5pt]
-	\end{tabular}
-\end{minipage}
-\end{table}
-\subsection{最大化问题的定义}
-问题定义：给定网络$G=(V,E)$和常数$s \le |V|$，$V$代表为社会网络中个体节点，$E$代表个体之间的关系。如果初始传播种子节点集合为$S$，传播过程结束后预期激活节点集合为$T=\sigma (S)$，找出节点集合$S\subseteq V$，且$|S|=s$，使得传播范围$T=\sigma (S)$最大。
-\subsection{贪心算法}
-KKT算法\cite{kempe2003maximizing}给出了影响力最大化问题的一般贪心算法（如算法~\ref{alg:chap4:GeneralGreedy}所示）：从一个空集合开始，并且每轮迭代重复的添加一个当前最具影响力的节点；最后，得到大小为$s$的初始传播种子集合。已经证明算法的解以$1-\frac{1}{e}$近似逼近最优解，算法缺点非常明显，运行十分地耗时。CELF算法\cite{leskovec2007cost}利用IC模型的子模型特性改进了KKT算法。子模特性指当添加一个节点$u$到种子集合$S$时，如果$S$集合越小，$u$对影响范围的增量影响就越大。CELF利用子模特性，提出了一种“Lazy-Forward”优化机制选择初始种子节点时，大量节点的增量影响不需要被重新计算，这是因为它们在之前步骤中的值已经小于其它节点在当前步骤中的值。它比KKT算法的时间效率提高了700倍。即便如此，该算法求解大规模问题仍有不足。NewGreedy和MixGreedy算法\cite{chen2010scalableIM}是两种改进的贪心算法，NewGreedy算法是从原始网络中去掉对传播没有影响的边，得到一个小网络，然后从小网络中去做影响力传播，优点是不需要每次都从整个网络上去考虑。MixGreedy算法是先用NewGreedy算法计算第一步，后面用GELF算法，把两个算法结合起来使用，实验结果表明，这两个改进的算法都比贪心算法的时间复杂度低，但是相比度数最大的算法，时间复杂度还是很高。
-\begin{algorithm}
-	\caption{GeneralGreedy(G,s)}
-	\label{alg:chap4:GeneralGreedy}
-	\begin{algorithmic}[1]
-		\STATE initialize $S = \phi$,$R=10000$
-		\FOR {i = 1 to $s$}
-		\FOR {each vertex $v\in V \backslash S$}
-		\STATE $s_v=0$
-		\FOR {i=1 to $R$}
-		\STATE $s_v +=|\sigma (S\cup \left\lbrace v \right\rbrace )|$
-		\ENDFOR
-		\STATE $s_v=s_v /R$
-		\ENDFOR
-		\STATE $S=S \cup \left\lbrace argmax_{v \in V \backslash S}\left\lbrace s_v \right\rbrace \right\rbrace $
-		\ENDFOR
-		\RETURN $S$
-	\end{algorithmic}
-\end{algorithm}
 
-\subsection{基于度数的节点启发式算法}
-中心度是分析社会网络的一个最重要的和常用的概念工具之一。在一个社会网络中，节点度数越高，说明该节点在网络结构中的位置越重要或影响力越大。在复杂网络中以度数递减的顺序选择$s$个最大度数节点的启发式选择策略，是长期以为一个标准方法，在社会科学中被称为“度中心性”\cite{freeman1979centrality,sabidussi1966centrality}。此方法的一个缺点就是静态选择初始节点，没有考虑影响的扩散过程和网路具有“富人俱乐部”现象，影响范围会陷入局部最优，而不能保证最终全局最优。DegreeDiscount算法\cite{chen2009efficient}是对度数最大节点的一种改进，算法基本思想是当一个节点$u$的邻居节点中有一些节点已经被选作为初始的节点，在选取下一个度数最大的节点时，对节点u的度数重新计算，最后再选出打折后度数最大的节点，使得实验结果与贪心算法相近，而运行效率有了很大提升。影响力最大化相关典型算法的运行时间复杂度（如表~\ref{tab:chap4:AllalgCompare}所示）。
-\begin{table}[htbp]
-	\centering
-	\begin{minipage}[t]{0.8\linewidth}
-		\caption{影响力最大化典型算法的时间复杂度比较}
-		\label{tab:chap4:AllalgCompare}
-		\begin{tabular}{*{2}{p{.5\textwidth}}}
-			\toprule[1.5pt]
-			算法 & 时间复杂度  \\ 
-			\midrule[1pt]
-			Random Heuristic Algorithm & $O(s)$ \\
-			Degree Heuristic Algorithm & O(m) \\
-			Degree Discount Algorithm & O(slog(n)+m) \\
-			Single Discount Algorithm & O(slog(n)+m) \\
-			New Greedy IC Algorithm & O(sRm) \\
-			CELF Greedy Algorithm & O(snRm/700+) \\
-			General Greedy Algorithm & O(snRm) \\
-			\bottomrule[1.5pt]
-		\end{tabular}
-	\end{minipage}
-\end{table}
+\subsection{竞争型影响力最大化问题定义}
+竞争型影响力最大化(Competitive Influence Maximization)问题不同于一般的最大化问题主要在于其有多个信源在网络上进行传播，从而使得单一的传播模型不在适用，并且具体的问题也更为复杂，下面先给出Shishir Bhrathi，David Kempe\cite{bharathi2007competitive}等人比较普适的定义，再对其进行细化以适合本文的研究问题。
 
-\subsection{影响力的传播实验模型}
-对于复杂网络中每个节点有两种状态，激活状态和未激活状态：若一个节点已经接受了信息，则称为激活节点，否则为非激活节点。激活节点对于未激活节点存在影响，如果某节点邻居的激活节点越多，则该节点被激活的可能性就越大。新激活节点又会影响其它处于未激活状态的邻居节点。在网络环境中，最主要的交互活动就是信息的发布、分享和扩散，所以影响力在社会网络中的作用过程和信息的扩散过程有内在紧密的联系和十分相似的机制，因此传播模型在影响力传播问题的研究过程中发挥着非常重要的作用，独立级联模型和线性阈值模型是信息传播过程进行建模的重要方法。本章我们采用IC模型与LT模型为传播模型仿真实验过程。
-\section{模型与算法}
-由于影响力最大化问题是NP-hard的，时间复杂度高，目前算法都必须以了解网络的全局信息（如网络拓扑结构）为前提，但是在许多情况下，例如对于庞大复杂并且不断发展变化的社会网络来说，给出网络的整体结构关系这是难以做到的。同时已有算法可能会陷入“富人俱乐部（Rich Club）”这一局部现象，度数较大的节点都聚集连接在一起，局部最优并不能保证具有最好的最终影响范围。如表~\ref{tab:chap4:AllalgCompare}所示，随机启发式（Random Heuristic）算法执行时间复杂最好，度中心化启发式（Degree Heuristic Algorithm）算法时间复杂度及结果综合较优，但必须了解网络全局信息。结合目前社会网络基本都符合为幂律（Power Law）特征分布的无标度网络\cite{barabasi1999emergence,adamic2000power,gabaix2003theory,clauset2009power}，其度分布是呈集散分布：大部分的节点只有比较少的连接，而少数节点有大量的连接。且网络中任何节点之间连接的度数满足六度分隔理论\cite{milgram1967small,guare1990six,kiermer2006six}（Six Degree of Separation），且已在社交网络中被证实，如 Facebook为4.74度分隔\cite{backstrom2012four}，Twitter为4.67度分隔\footnote{http://www.sysomos.com/insidetwitter/sixdegrees/})。现实社会网络中，我们知道任何人（节点）至少知道他朋友的基本信息这一常理。
-\subsection{RDMN算法模型}
-基于以上知识，我们提出了随机节点最大度邻居启发式（RDMN）算法模型，如算法2所示，基本思想是：从具有$n$个节点的复杂网络中随机选出一个节点，再从此节点及其邻居节点中选出一个度最大的节点作为种子节点，一直到选择$s$个不同的传播源种子节点为止。算法思想简单易用，只需知道选择节点及其直接连接邻居节点信息，巧妙地避开了必须了解全局节点信息的问题。
-%在IC模型与IT模型实验最大影响力效果与度中心化算法相近，且有时运行效果好于度中心化算法；并且该算法的时间复杂度$O(slog(n))$只比随机启发式算法$O(s)$略高，而比度数启发式算法$O(m)$平均运行时间提高明显。我们且从理论上对所提出的算法执行结果的合理性进行了分析推导，发现了运行规律，扩展了应用范围。
-\begin{algorithm}
-	\caption{RandomMaxDegreefNeighbor(G,s)}
-	\label{alg:chap4:RandomMaxDegreefNeighbor}
-	\begin{algorithmic}[1]
-		\STATE initialize $S = \phi$
-		\WHILE {$i < s$} 
-		\STATE randomly select a node $u \in V\setminus S$ 
-		\STATE select $u_{max} = argmaxDegree_{u \in \mathcal{N}(u) \cup \{u\}} \mathcal{D}(u)$
-		\STATE $S = S \cup \{u_{max}\}$
-		\STATE $i = i + 1$
-		\ENDWHILE
-		\RETURN $S$
-	\end{algorithmic}
-\end{algorithm}
+\begin{definition}
+\label{def:chap4-bhrathi-kempe-cim}
+\emph{竞争型影响力最大化}
+给定网络图$G=(V,E)$，传播模型$M$，顶点的价格函数$\mathcal{CF}(\centerdot)$，以及信源或者玩家数量$b$，还有每个玩家的预算$\mathcal{B}_{i}$，每个玩家都需要在图$G$中选择各自的初始结点集$S_{i}$，使得每个玩家最后传播的影响力最大，并且满足如下式子
+\begin{displaymath}
+\sum_{u \in S_{i}}\mathcal{CF}(u) \leq \mathcal{B}_{i}, ~i=0,1,2,\cdots,b-1
+\end{displaymath}
+\end{definition}
+
+
+下面给出两个Bhrathi，David Kempe\cite{bharathi2007competitive}得到的重要结论，
+\begin{lemma}
+\label{lemma:chap4-functionalities}
+假设除了玩家$i$，其他玩家的初始结点集$S_{j}(j \neq i)$已经确定，那么玩家$i$的影响力最大化函数期望$E[|T_{i}|~|S_{0},\cdots ,S_{b-1}]$是关于$S_{i}$的一个单调函数，并且满足子模性质。其中$|T_{i}|$表示在选择初始结点集为$S_{i}$时最后的传播结果。
+\end{lemma}
+
+\begin{lemma}
+\label{lemma:chap4-opt-approximate}
+最后一个玩家$i$选择一个初始结点集$S_{i}$能够高效地获得以$1-\frac{1}{e}$比例接近最优选择得到的$S_{i}^{optimal}$。
+\end{lemma}
+
+上述的引理\ref{lemma:chap4-functionalities}和引理\ref{lemma:chap4-opt-approximate}说明最后玩家可以很好地获得比例接近其最优解的结果，本文的研究目标主要是两种信源($b=2$)的传播，所以给定一种信源(比如$A$)的初始结点集合，我们可以找出另一个信源(比如$B$)初始结点集使其能得到很好的传播效果，下面我们定义本文的研究问题，即两种信源竞争的影响力最大化问题。
+\begin{definition}
+\label{def:chap4-self-on-cim}
+给定网络图$G=(V,E)$，传播模型$M$，一种信源的初始结点集$S$，代价函数$\mathcal{CF}(\centerdot)$，另一种信源的预算$\mathcal{B}$，那么我们需要找出一个初始结点集$T$，是其传播的范围最广，并且满足以下条件，
+\begin{displaymath}
+\sum_{u \in T}\mathcal{CF}(u) \leq \mathcal{B}
+\end{displaymath}
+\end{definition}
+
+\subsection{代价估值函数}
+目前已有的研究大部分都选择了单位化的估值函数，然后给定的预算即为初始结点集合的大小，本文的研究将采用非常数的估值函数，具体模型参考章节\ref{sec:chap3:cost-model}，本章节将采用PRBC估值函数。
+
+% \begin{algorithm}
+% \caption{影响力传播模型Inf(G,S,T)}
+% \label{alg:chap4:GeneralGreedy}
+% \begin{algorithmic}[1]
+% \REQUIRE 图$G=(V,E)$; 两个初始结点集S，T
+% \ENSURE 两种初始结点集最后传播的范围Snum, Tnum
+% 	\STATE $resS \leftarrow \emptyset, resT \leftarrow \emptyset$
+% 	\FOR {s in S}
+% 		% \STATE $status \leftarrow G.get_vertice_status(s);$
+% 		% \STATE $status.set_current_color(XCOLOR.BLACK);$
+% 		% \STATE $status.set_mutation_flag(TRUE);$
+% 		% \STATE $status.black_visit_inc();$
+% 		\STATE $UpdateInfo(G, s);$
+% 	\ENDFOR
+
+% 	\FOR {t in T}
+% 		% \STATE $status \leftarrow G.get_vertice_status(t);$
+% 		% \STATE $status.set_current_color(XCOLOR.RED);$
+% 		% \STATE $status.set_mutation_flag(TRUE);$
+% 		% \STATE $status.red_visit_inc();$
+% 		\STATE $UpdateInfo(G, t);$
+% 	\ENDFOR
+
+% 	\FOR {s in S}
+% 		\STATE $edges \leftarrow G.get\_edges\_by\_vertice(s);$
+% 		\FOR {e in edges}
+% 			\STATE $to \leftarrow e.get\_dest();$
+% 			\STATE $status \leftarrow G.get\_vertice\_status(to);$
+% 			% \STATE $weight \leftarrow e.get_weight();$
+% 			% \STATE $threshold \leftarrow status.get_threshold;$
+% 			% \STATE $cur_color \leftarrow status.get_current_color();$
+% 			\STATE $Get ~ weight, ~ threshold, ~ cur\_color ~ from ~ status;$
+
+% 			\IF {$cur\_color == XCOLOR.RED ~ and ~ status.get\_mutation\_flag() ~ is ~ FALSE$}
+% 				\STATE $r \leftarrow random();$
+% 				\IF {$r < status.get\_mutation\_factor() ~ and ~ threshold < weight$}
+% 					\STATE $resS \leftarrow resS \cup \{to\};$
+% 					% \STATE $status.set_current_color(XCOLOR.BLACK);$
+% 					% \STATE $status.set_mutation_flag(TRUE);$
+% 					% \STATE $status.black_visit_inc();$
+% 					\STATE $UpdateInfo(G, to);$
+% 					\STATE $continue;$
+% 				\ENDIF
+% 			\ENDIF
+
+% 			\IF {$cur\_color != XCOLOR.GRAY ~ and ~ status.get\_black\_visit() > 0$}
+% 				\STATE $continue;$
+% 			\ENDIF
+
+% 			\IF {$theshold < weight$}
+% 				\STATE $resS \leftarrow resS \cup \{to\};$
+% 				\STATE $status.set\_current\_color(XCOLOR.BLACK);$
+% 			\ENDIF
+
+% 			\STATE $status.black\_visit\_inc();$
+% 		\ENDFOR
+% 	\ENDFOR
+
+% 	\FOR {t in T}
+% 		\STATE $edges \leftarrow G.get\_edges\_by\_vertice(t);$
+% 		\FOR {e in edges}
+% 			\STATE $to \leftarrow e.get\_dest();$
+% 			\STATE $status \leftarrow G.get\_vertice\_status(to);$
+% 			% \STATE $weight \leftarrow e.get_weight();$
+% 			% \STATE $threshold \leftarrow status.get_threshold;$
+% 			% \STATE $cur_color \leftarrow status.get_current_color();$
+% 			\STATE $Get ~ weight, ~ threshold, ~ cur\_color ~ from ~ status;$
+
+% 			\IF {$cur\_color == XCOLOR.BLACK ~ and ~ status.get\_mutation\_flag() ~ is ~ FALSE$}
+% 				\STATE $r \leftarrow random();$
+% 				\IF {$r < status.get\_mutation\_factor() and threshold < weight$}
+% 					\STATE $resT \leftarrow resT \cup \{to\};$
+% 					% \STATE $status.set_current_color(XCOLOR.RED);$
+% 					% \STATE $status.set_mutation_flag(TRUE);$
+% 					% \STATE $status.black_visit_inc();$
+% 					\STATE $UpdateInfo(G, to);$
+% 					\STATE $continue;$
+% 				\ENDIF
+% 			\ENDIF
+
+% 			\IF {$cur_color != XCOLOR.GRAY ~ and ~ status.get\_red\_visit() > 0$}
+% 				\STATE $continue;$
+% 			\ENDIF
+
+% 			\IF {$theshold < weight$}
+% 				\STATE $resT \leftarrow resT \cup \{to\};$
+% 				\STATE $status.set\_current\_color(XCOLOR.RED);$
+% 			\ENDIF
+
+% 			\STATE $status.red\_visit\_inc();$
+% 		\ENDFOR
+% 	\ENDFOR
+
+% 	\IF {$LENGTH(resS) == 0 ~ and ~ LENGTH(resT) == 0$}
+% 		\RETURN $LENGTH(S), LENGTH(T)$
+% 	\ENDIF
+
+% 	\STATE $s, t \leftarrow Inf(G, resS, resT);$
+% 	\RETURN $s+LENGTH(S), t+LENGTH(T)$
+% \end{algorithmic}
+% \end{algorithm}
+
+
+% \begin{algorithm}
+% 	\caption{GeneralGreedy(G,s)}
+% 	\label{alg:chap4:GeneralGreedy}
+% 	\begin{algorithmic}[1]
+% 		\STATE initialize $S = \phi$,$R=10000$
+% 		\FOR {i = 1 to $s$}
+% 		\FOR {each vertex $v\in V \backslash S$}
+% 		\STATE $s_v=0$
+% 		\FOR {i=1 to $R$}
+% 		\STATE $s_v +=|\sigma (S\cup \left\lbrace v \right\rbrace )|$
+% 		\ENDFOR
+% 		\STATE $s_v=s_v /R$
+% 		\ENDFOR
+% 		\STATE $S=S \cup \left\lbrace argmax_{v \in V \backslash S}\left\lbrace s_v \right\rbrace \right\rbrace $
+% 		\ENDFOR
+% 		\RETURN $S$
+% 	\end{algorithmic}
+% \end{algorithm}
+
+\subsection{竞争型影响力的传播模型}
+在竞争型影响力分析领域目前主要的模型有CLT，Distance-based，Wave Propagation等模型，具体内容可以参考章节\ref{sec:inf-xtran-models}中的描述。其中CLT是基于经典模型LT的，而Distance-based，Wave Propagation是基于经典IC模型的。本文将根据IC模型提出一种更能描述传播过程的一种竞争型影响力传播模型。
+
+
+\section{模型设计与算法实现}
+在章节\ref{sec:inf-xtran-models}描述的两种基于IC模型改进的竞争型传播模型中，Distance-based模型忽略了传播过程中被影响的结点也能影响其他结点的过程，Wave Propagation中为被影响的结点在周围被影响的结点中随机选择一种信源作为被影响的信源，这在现实生活中似乎淡化了个人影响力，而其实这种因素起着非常重要的作用。本文对IC模型进行扩展提出了一种新的传播模型xIC4C(Extended Independent Cascade for Competition)，并基于这个模型提出了相应的算法。
+
+
+\subsection{传播模型xIC4C}
+为了构建模型xIC4C，需要对之前的网络图顶点信息做一些修改，然后设置相应的顶点数据结构构造网络图，之后在该新的网络图中进行传播，下面先给出数据结构设计，然后再给出传播过程。
+
+\subsubsection{网络图构建}
+相比于IC模型的顶点结构，本模型中的顶点将多增加一些信息，具体增加的信息为结点颜色(color)，结点变异信息包括变异因子(mutation factor)，变异标识(mutation flag)，还有信源访问次数的计数器，由于是两种信源的传播，所以具体包括红色访问计数器(red visit count)以及黑色访问计数器(black visit count)，为了便于xIC4C模型的计算，图采用邻接表来存储，所以顶点还需有以该顶点为尾的边的集合(edges)。加上经典IC模型中的阈值(threshold)以及结点本身标识，所以每个结点的可以由一个下面的八元组来标示，
+\begin{displaymath}
+(labelID, ~color, ~mfactor, ~mflag, ~redcnt, ~blkcnt, ~edges, ~threshold)
+\end{displaymath}
+
+
+图的边信息由两部分构成，目的结点(destination/to)，影响权值(weight)，即边可以由下面二元组表示，
+\begin{displaymath}
+(to, ~weight)
+\end{displaymath}
+
+所以构建图的过程即以顶点的$labelID$为键，映射为该结点的存储信息，即上述的八元组。
+
+\subsubsection{顶点状态及转移过程}
+根据顶点在传播过程的状态变化，可以分为一个初始态，三个过程态，一个完成状态，具体描述如下，
+\begin{itemize}
+\item Initial state($I$)，初始状态结点，还未开始传播。
+\item Transient state($T$)，过渡状态，比如未被影响的状态要过渡到其他状态，或者已经被影响的状态要变异为其他状态。
+\item Adopted state($A$)，受到任意信源影响的状态。
+\item Mutation state($M$)，变异状态，主要是已经被一种信源影响的状态，转变为被另一种信源影响的状态。
+\item Done state($D$)，完成状态，完成状态是顶点的一种最终状态，并非类似$T, ~A, ~M$四种在传播过程态。
+% \begin{enumerate}
+% \item 没有被任意一种信源影响，但是经历过程波过程的结点状态；
+% \item 已经接受某种信源影响的结点状态；
+% \item 永不可能被传播到的状态；
+% \item 变异状态
+% \end{enumerate}
+\end{itemize}
+
+\begin{figure}[H]
+	\centering%
+	\includegraphics[scale=0.6]{./chap4/xIC4C-vertice-status}
+	\caption{顶点信息及部分状态表示}
+	\label{fig:chap4:vertice-status}
+\end{figure}
+
+
+图\ref{fig:chap4:vertice-status}中给出结点的信息，以及主要的一些状态。下面进一步根据图\ref{fig:chap4:state-xformation}描述一下顶点状态转移过程，具体转移过程如下分析，
+\begin{itemize}
+\item 状态$I$，那么可以进行以下两种状态转移，
+	\begin{enumerate}
+	\item $I \rightarrow T$，表示初始结点可以经历某种信源的影响，但是其最后结果是不确定的，具体分析要看状态$T$的转移。
+	\item $I \rightarrow D$，表示传播过程不可能传播到该结点，那么该结点可以直接转为完成态。
+	\end{enumerate}
+\item 状态$T$，该状态可以有以下两种转移过程
+	\begin{enumerate}
+	\item $T \rightarrow A$，表示被某种信源所影响。
+	\item $T \rightarrow I$，此时虽然转移为状态$I$，但是顶点信息需要更新一下信源访问计数器。
+	\end{enumerate}
+\item 状态$A$，该状态可以有以下两种转移过程，
+	\begin{enumerate}
+	\item $A \rightarrow M$，表示该结点进行了一次变异，由当前的信源变异为另一种信源；
+	\item $A \rightarrow D$，表示该结点不再活动，直接转入完成态。
+	\end{enumerate}
+\item 状态$M$，该状态只能向完成态转移。
+\item 状态$D$，其为结点的最终状态，不再进行转移。
+\end{itemize}
+
+\begin{figure}[H]
+	\centering%
+	\includegraphics[scale=0.6]{./chap4/xIC4C-state-transformation}
+	\caption{顶点状态转移过程}
+	\label{fig:chap4:state-xformation}
+\end{figure}
+
+
+\subsubsection{传播模型过程解析}
+本文提出的xIC4C模型是基于IC模型的一些基本传播概念，并在将这些概念移植到了竞争型环境中，所以下面我们简单描述一下该传播模型的整个过程是如何操作的。
+
+
+首先需要明确如下几个传播规则，
+\begin{enumerate}
+\item 每个结点只被一种信源影响一次。
+\item 已经受到影响的结点只能有一次机会向周边的结点继续扩展传播影响。
+\item 受到影响的结点可以接受变异的过程，但是一旦经历过一次变异，则此后不再接受变异。
+\end{enumerate}
+
+
+\subsubsection{xIC4C传播模型示例}
+对于上面的描述我们利用一个示例进一步进行阐述，
+
+\begin{figure}[H]
+	\centering%
+	\subcaptionbox{时刻$t=0$，初始态}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion0}}
+	\hspace{3em}%
+	\subcaptionbox{过渡态}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion1}}
+	\hspace{3em}%
+	\subcaptionbox{时刻$t=1$，经历第一次传播之后}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion2}}
+	\hspace{3em}%
+	\subcaptionbox{过渡态}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion3}}
+	\hspace{3em}%
+	\subcaptionbox{一种可能的传播完成态}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion4}}
+	\hspace{3em}%
+	\subcaptionbox{另一种可能的传播完成态}
+	{\includegraphics[scale=0.5]{./chap4/xIC4C-diffusion5p}}
+	\caption{xIC4C模型传播示例图}
+	\label{fig:chap4:xcic-demo}
+\end{figure}
+
 
 \subsection{算法理论分析推导}
 对于具有$n$个节点的无标度网络，对于度服从指数为$\gamma$的幂律分布，即度为$k$的节点出现的概率为$p_k$正比于$ck^{-\gamma}$，系统中节点度的最小值为$k_{min}$，由$\int_{k_{min}}^{\infty}p(k)dk=1$，得出$c=(\gamma -1)k_{min}^{\gamma -1}$，假设节点度的最大值$k_{max}$为一个节点，那么：
@@ -146,12 +345,12 @@ G_{0}'(x) = \int_{k=0}^{\infty}kp_kx^{k-1},G_{0}'(1)=<k>
 \frac{\sum_{1}^{k}kP_kx^k}{\sum_{1}^{k}kP_k}=x\frac{G_0'(x)}{G_0'(1)}
 \end{equation}
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[scale=1.0]{./chap4/chap4DegreeNeighbor}
-	\caption{随机选择节点及其邻居节点度的分布分析示意图}
-	\label{fig:chap4DegreeNeighbor}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering
+% 	\includegraphics[scale=1.0]{./chap4/chap4DegreeNeighbor}
+% 	\caption{随机选择节点及其邻居节点度的分布分析示意图}
+% 	\label{fig:chap4DegreeNeighbor}
+% \end{figure}
 
 当随时选择一节点$u$，设其任意连边的邻居节点$v$的度数为$m$，具体过程示意图如图~\ref{fig:chap4DegreeNeighbor}所示，$v$被选中的概率为$P_m$，除去$u\to v$的边时，节点$v$的度数变为$m',m'= m-1$。整个网络节点数为$n$，那么$u$被随机选中的概率为$\frac{1}{n}$，那么$v$除去$u$被选中的概率变为$P_{m'}=P_m-\frac{1}{n}$，当$n\to \infty $，$\frac{1}{n} \to 0$，因此$P_{m'}=P_m-\frac{1}{n} \approx P_m$。节点$v$的分布生成函数为$\sum_{m'}P_{m'}x^{m'} \approx \sum_{m'}P_{m'}x^{\frac{x^m}{x}} \approx \sum_{m'}P_{m}x^{\frac{x^m}{x}} $，与上式~\ref{equ:chap4:equ52}只差$x$的一次方。因此$G_1(x)=\frac{G_0'(x)}{G_0'(1)}$
 ，即对于任意节点连接的一度邻居离散型生成函数可以表示为:
@@ -197,12 +396,12 @@ G^{(m-1)}(G_{1}(x)), & if ~ m \geq 2
 \end{equation}
 
 那么选取的$s$个节点是$top-k$的Hubs节点的概率为：$1-(1-p_{top-k})^{s}$。根据以上理论推导，我们选取网络节点数为$n=10000$，$k_{min}=1$，种子节点集合大小$1\le s \le 30$，$2<\gamma <3$进行了模拟实验分析（结果如图~\ref{fig:chap4simdiffGamma}所示），网络随着$\gamma$增大，随机选取的$s$个传播源种子节点为整个网络中度数为$top-k$的概率逐渐下降；随着节点个数$s$的增大，命中$top-k$的概率也在增加。
-\begin{figure}[H]
-	\centering
-	\includegraphics[scale=0.45]{./chap4/chap4simdiffGamma}
-	\caption{随机选择一节点，其邻居节点在最大度数节点为$top-k$的概率随不同$\gamma$的复杂网络分布情况}
-	\label{fig:chap4simdiffGamma}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering
+% 	\includegraphics[scale=0.45]{./chap4/chap4simdiffGamma}
+% 	\caption{随机选择一节点，其邻居节点在最大度数节点为$top-k$的概率随不同$\gamma$的复杂网络分布情况}
+% 	\label{fig:chap4simdiffGamma}
+% \end{figure}
 \subsection{算法改进RMDN++}
 由上面节点理论推导分析可知，随着选取源种子节点集合的增多，RDMN算法选中$top-k$的Hubs节点的概率也明显增大，在不增加算法的时间复杂度的情况下，我们进行一步提出了RMND++算法（如算法3所示），算法基本思想是在基于RMND的基础上，首先，扩大$\alpha (\alpha \geq 1)$倍可选择预备源种子节点集合，然后再从$\alpha s$集合中选出$s$个度数最大的节点作为最终传播源种子节点，算法的时间复杂度为$O(s\log (n)+\alpha s)$，与RMND相近，算法中我们取$\alpha =2$。
 \begin{algorithm}
@@ -247,115 +446,115 @@ G^{(m-1)}(G_{1}(x)), & if ~ m \geq 2
 
 \subsection{实验效果}
 我们知道无标度网络中幂律分布可知有许多节点仅有几个链接，少数几个中枢节点（Hubs）拥有众多的链接，缓慢降低的幂律分布很自然地能和高度链接的中枢节点结合起来，在对数坐标系中，度的幂律分布一般将会是一条斜率介于-2到-3之间的直线，同时也具有小世界的特点。根据Clause\cite{clauset2009power} 和Barabasi\cite{albert1999internet}提出的幂律拟合极大似然估计方法和KS统计量拟合幂律分布$\gamma$指数，图~\ref{fig:chap4Powerlaw}给出了4个真实社会网络节点度的幂律拟合分布情况。从图~\ref{fig:chap4Powerlaw}中我们以很明显地看到在网络中的大部分节点只和很少节点连接，而有极少的节点与非常多的节点连接这一特征，具有20/80特性\cite{sen1970impossibility,chang2000liberal,newman2005power}。
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4USAir97Powerlaw}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAir97Powerlaw}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4BlogsPowerlaw}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsPowerlaw}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4FacebookPowerlaw}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookPowerlaw}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4TwitterPowerlaw}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterPowerlaw}}
-	\caption{美国航空线路网络USAir97（$\gamma=1.82$）、博客Blogs（$\gamma=2.45$）、社交网络Facebook（$\gamma=2.509$）、Twitter签到数据（$\gamma=2.638$）的互补累积分布函数和拟合幂律指数及对数正态分布情况}
-	\label{fig:chap4Powerlaw}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4USAir97Powerlaw}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAir97Powerlaw}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4BlogsPowerlaw}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsPowerlaw}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4FacebookPowerlaw}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookPowerlaw}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4TwitterPowerlaw}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterPowerlaw}}
+% 	\caption{美国航空线路网络USAir97（$\gamma=1.82$）、博客Blogs（$\gamma=2.45$）、社交网络Facebook（$\gamma=2.509$）、Twitter签到数据（$\gamma=2.638$）的互补累积分布函数和拟合幂律指数及对数正态分布情况}
+% 	\label{fig:chap4Powerlaw}
+% \end{figure}
 
 我们应用章节~\ref{chap2:ICModel}中所提到的IC模型和章节~\ref{chap2:LTModel}中所提到的LT模型，对本文所提出的RDMN、RDMN++算法与已有的典型算法在4个真实社会网络的传播范围情况进行了分析比较。为了保持实验的易读性，实验模拟传播过程中，每次选取传播种子节点$1\leq s\leq 30$作为传播源的种子集合，传播概率取$p=0.01$（如果节点的传播能力很强，很难区分单个个体的重要性），传播范围取10000次迭代的均值，横轴为根据各算法中传播影响力最大的节点进行排序所得的集合大小，纵轴为相应所选传播种子节点的传播范围大小。时间复杂度分析统一取$s=30$，时间取迭代运行10000次的平均运行时间。
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4USAirIM}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAirIM}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4USAirIMTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAirIMTime}}
-	\caption{IC模型下不同算法在美国航空线路网络（USAir97）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=332$，$m=4252$，$p=0.01$，$1\leq s\leq 30$）。}
-	\label{fig:chap4USAirIc}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4USAirIM}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAirIM}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4USAirIMTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAirIMTime}}
+% 	\caption{IC模型下不同算法在美国航空线路网络（USAir97）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=332$，$m=4252$，$p=0.01$，$1\leq s\leq 30$）。}
+% 	\label{fig:chap4USAirIc}
+% \end{figure}
 
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4BlogsIM}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsIM}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4BlogsIMTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsIMTime}}
-	\caption{IC模型下不同算法在博客网络（Blogs）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=3982$，$m=6803$，$p=0.01$，$1\leq s\leq 30$）。}
-	\label{fig:chap4BlogsIc}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4BlogsIM}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsIM}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4BlogsIMTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsIMTime}}
+% 	\caption{IC模型下不同算法在博客网络（Blogs）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=3982$，$m=6803$，$p=0.01$，$1\leq s\leq 30$）。}
+% 	\label{fig:chap4BlogsIc}
+% \end{figure}
 
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4FacebookIM}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookIM}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4FacebookIMTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookIMTime}}
-	\caption{ IC模型下不同算法在社交网络（Facebook）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=4039$，$m=88234$，$p=0.01$，$1\leq s\leq 30$）。}
-	\label{fig:chap4FacebookIc}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4FacebookIM}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookIM}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4FacebookIMTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookIMTime}}
+% 	\caption{ IC模型下不同算法在社交网络（Facebook）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=4039$，$m=88234$，$p=0.01$，$1\leq s\leq 30$）。}
+% 	\label{fig:chap4FacebookIc}
+% \end{figure}
 
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4TwitterIM}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterIM}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4TwitterIMTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterIMTime}}
-	\caption{IC模型下不同算法在社交网络（Twitter）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=554372$，$m=2402720$，$p=0.01$，$1\le s\leq 30$）。}
-	\label{fig:chap4TwitterIc}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4TwitterIM}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterIM}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4TwitterIMTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterIMTime}}
+% 	\caption{IC模型下不同算法在社交网络（Twitter）中运行时效分析比较；其中左图代表传播影响力最大化分析比较，右图代表运行时间复杂度比较（$n=554372$，$m=2402720$，$p=0.01$，$1\le s\leq 30$）。}
+% 	\label{fig:chap4TwitterIc}
+% \end{figure}
 从图~\ref{fig:chap4USAirIc}到图~\ref{fig:chap4TwitterIc}显示可以看出，RandomHeuristic算法运行影响力传播最大化效果是最差的，但是运行时间是最快的；DegreeDiscountIC、SingleDiscount 算法虽然在传播范围比DegreeHeuristic算法要稍优一点，但是运行时间也较DegreeHeuristic算法长，整体而言DegreeHeuristic算法的时效性较优。从图~\ref{fig:chap4USAirIc}、图~\ref{fig:chap4FacebookIc}(a)、图~\ref{fig:chap4USAirLT}及图~\ref{fig:chap4FacebookLT}可以看出我们提出的RDMN算法、RDMN++算法与几种算法运行效果接近，有时还略优；但运行时间比DegreeHeuristic算法快了一个数量级以上，特别指出的是在USAir97美国航空网络中General Greedy算法的影响力最大化运行时间为355.575秒，而RDMN算法是0.0016秒，速度提高了$2.2*10^5$倍以上。Blogs数据集上时间复杂是$8818.693/0.00442=1.995179*10^6$倍。Facebook中找出1个节点用时为：952.388999939秒，找出2个节点用时为： 13095.5039999。在Twitter中RMDN算法找出1个节点需要用时为：2.126秒，那么理论上General Greedy Algorithm所用时间为RMDN算法用时的$10^8$倍以上（1天=$8.64*10^4$秒），需要时间太长，所以文章没有具体给出与Greedy Algorithm算法的比较图。具体如图~\ref{fig:chap4addGreedTime}所示。
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4USAiraddGreedTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAiraddGreedTime}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4BlogsaddGreedTime}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsaddGreedTime}}
-	\caption{Greedy Algorithm算法在IC模型下与不同算法在USAir97、Blogs网络上时间分析。}
-	\label{fig:chap4addGreedTime}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4USAiraddGreedTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAiraddGreedTime}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4BlogsaddGreedTime}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsaddGreedTime}}
+% 	\caption{Greedy Algorithm算法在IC模型下与不同算法在USAir97、Blogs网络上时间分析。}
+% 	\label{fig:chap4addGreedTime}
+% \end{figure}
 总体来看，RDMN++算法整体优于RDMN算法，有时运行效果比其它经典算法还要好，因为对整个网络进行随机选择符合随机抽样原理，所以所得的种子节点也更能代表整个网络，而不至于陷入“富人俱乐部现象”局部传播之中；且运行时间只是RDMN的2.5倍，从上可以看出我们的算法在时间上的巨大优势。
 
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4USAirLT}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAirLT}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4BlogsLT}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsLT}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4FacebookLT}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookLT}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4TwitterLT}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterLT}}
-	\caption{LT模型下不同算法在4个网络中运行传播范围分析比较；其中a）美国航空线路网络（USAir97）运行结果；b）代表博客网络（Blogs）运行结果；c）代表社交网络（Facebook）运行结果； d）代表社交网络（Twitter）运行结果。（$1\le s\leq 30$）}
-	\label{fig:chap4IMLT}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4USAirLT}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAirLT}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4BlogsLT}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsLT}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4FacebookLT}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookLT}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4TwitterLT}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterLT}}
+% 	\caption{LT模型下不同算法在4个网络中运行传播范围分析比较；其中a）美国航空线路网络（USAir97）运行结果；b）代表博客网络（Blogs）运行结果；c）代表社交网络（Facebook）运行结果； d）代表社交网络（Twitter）运行结果。（$1\le s\leq 30$）}
+% 	\label{fig:chap4IMLT}
+% \end{figure}
 同样，我们对所提出算法在LT模型下进行分析比较，从图~\ref{fig:chap4IMLT}可以看出，整个算法运行效果与IC模型下运行结果相似，可以看出我们所提出的算法的适应性较好。
 
 
-\begin{figure}[H]
-	\centering%
-	\subcaptionbox{\label{fig:chap4USAirDiffalpha}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4USAirDiffalpha}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4BlogsDiffalpha}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsDiffalpha}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4FacebookDiffalpha}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookDiffalpha}}
-	%\hspace{3em}%
-	\subcaptionbox{\label{fig:chap4TwitterDiffalpha}}
-	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterDiffalpha}}
-	\caption{RMDN++算法中取不同的$\alpha$与DegreeDiscountIC算法在4个复杂网络中运行IC模型进行传播范围分析比较}
-	\label{fig:chap4IMDiffalpha}
-\end{figure}
+% \begin{figure}[H]
+% 	\centering%
+% 	\subcaptionbox{\label{fig:chap4USAirDiffalpha}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4USAirDiffalpha}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4BlogsDiffalpha}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4BlogsDiffalpha}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4FacebookDiffalpha}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4FacebookDiffalpha}}
+% 	%\hspace{3em}%
+% 	\subcaptionbox{\label{fig:chap4TwitterDiffalpha}}
+% 	{\includegraphics[width=7.3cm]{./chap4/chap4TwitterDiffalpha}}
+% 	\caption{RMDN++算法中取不同的$\alpha$与DegreeDiscountIC算法在4个复杂网络中运行IC模型进行传播范围分析比较}
+% 	\label{fig:chap4IMDiffalpha}
+% \end{figure}
 图~\ref{fig:chap4IMDiffalpha}中我们分析了在IC模型中对RMDN++算法中选取不同的$\alpha$值与DegreeDiscountIC算法运行效果的比较分析结果,实验显示RMDN++算法在USAir97美国航空网络中$\alpha =2$、Blogs网络中$\alpha =5$、Facebook网络中$\alpha =2$及在Twitter网络中$\alpha =13$时传播范围已很快近似或超过DegreeDiscountIC算法的运行效果.因此可以看出RMDN++算法模型在不同类型的复杂网络中的只需要较小的经验值$\alpha$,就能取得很好的影响力传播效果.
 
 以上我们对所提出的影响力最大化算法在现实社会网络进行了实验分析比较，1）充分论证了我们所提出的算法与理论推导高度一致性；2）我们只需知道随机选择节点及其直接连接邻居节点信息，巧妙地避开了必须了解全局节点信息的问题，且该算法执行结果与现在典型算法接近，且运行时间复杂度有了明显提高；3）算法在IC模型和LT模型两个不同模型中运行效果相似，可以看出算法适用性较强；4）我们提出的算法实际应用极其简单，可行性、适用性更强。
@@ -363,4 +562,3 @@ G^{(m-1)}(G_{1}(x)), & if ~ m \geq 2
 \section{本章小结}
 在现实社会中影响力最大化问题可帮助我们提高新知识、新产品的传播有效范围，同时也可以有效的预测、分析和控制疾病传播、流言散布、计算机病毒扩散。在给定的有限预算前提下，在复杂网络中找出影响力最大化传播种子集合一直以来都是研究的热点与难点，我们提出了RDMN算法、RDMN++算法。我们不但从现实生活中常见的4种领域，具有不同幂指数$\gamma$网络特征的复杂网络上证实了所提出算法时效性，验证了算法的高效性和可行性，而且给出了理论分析推导证明。
 通过实验分析结果与几个典型影响力最大化贪心算法相比，我们所提出的算法虽然运行效果接近或稍差一点，但是算法的运行时间随着网络规模的增加，时间复杂度的优势显著。且我们只需知道选择节点及其直接连接邻居节点的局部信息，巧妙地避开了必须知道全局节点信息为前提的问题，这使模型算法的适用性更广，可操作性更强。我们所提出的算法为这项具有挑战性研究提供了新的算法思路。
-

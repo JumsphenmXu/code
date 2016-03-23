@@ -280,6 +280,7 @@ class XBudgetedCIMext(object):
 			print 'Failed to open file %s !' % result_file
 			return
 
+		line = 'Greedy time consumed: ' + str(gtimes) + '\n'
 		fp.write(line)
 		for i in xrange(len(res)):
 			rt = float(res[i][1]) / R
