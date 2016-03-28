@@ -288,13 +288,15 @@ class XBudgetedCIMext(object):
 			return
 
 		line = 'Greedy time consumed: ' + str(gtimes) + '\n'
-		line = 'Budget: ' + str(budget) + '\n'
+		line += 'Budget: ' + str(budget) + '\n'
 		fp.write(line)
 		for i in xrange(len(res)):
 			rs = float(res[i][1]) / R
+			rs = round(rs, 2)
 			rt = float(res[i][2]) / R
+			rt = round(rt, 2)
 			line = res[i][0] + '\t' + str(rs) + '\t'
-			line += str(rt) + '%\tTIME' + str(res[i][3]) + '\n'
+			line += str(rt) + '\tTIME' + str(res[i][3]) + '\n'
 			fp.write(line)
 
 		fp.close()

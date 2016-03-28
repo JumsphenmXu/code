@@ -106,7 +106,7 @@ class XDiffusionModel(object):
 						weight += te.get_weight()
 
 				if threshold < weight:
-					resS.append(dest)
+					resT.append(dest)
 					status.set_current_color(XCOLOR.BLACK)
 
 				status.black_visit_inc()
