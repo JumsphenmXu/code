@@ -163,9 +163,12 @@ class XBudgetedCIMext(object):
 		bsum = 0
 		for v in S:
 			r = random.choice(vertices)
-			r = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
 			target = r
-			maxd = len(self.graph.get_edges_by_vertice(r))
+			x = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
+			if x != -1:
+				target = x
+
+			maxd = len(self.graph.get_edges_by_vertice(target))
 			edges = self.graph.get_edges_by_vertice(v)
 			for e in edges:
 				to = e.get_dest()
@@ -290,13 +293,16 @@ class XBudgetedCIMext(object):
 		line = 'Greedy time consumed: ' + str(gtimes) + '\n'
 		line += 'Budget: ' + str(budget) + '\n'
 		fp.write(line)
+		line = 'ALGORITHM\tLEN(S)\tLEN(T)\tINFLUENCE(S)\tINFLUENCE(T)\tTIME\n'
+		fp.write(line)
 		for i in xrange(len(res)):
 			rs = float(res[i][1]) / R
 			rs = round(rs, 2)
 			rt = float(res[i][2]) / R
 			rt = round(rt, 2)
-			line = res[i][0] + '\t' + str(rs) + '\t'
-			line += str(rt) + '\tTIME' + str(res[i][3]) + '\n'
+			line = '{0: >9}'.format(res[i][0]) + '\t' + '{0: >6}'.format(str(len(S))) + '\t'
+			line += '{0: >6}'.format(str(len(ts[i]))) + '\t' + '{0: >12}'.format(str(rs)) + '\t'
+			line += '{0: >12}'.format(str(rt)) + '\t' + '{0: >4}'.format(str(res[i][3])) + '\n'
 			fp.write(line)
 
 		fp.close()
