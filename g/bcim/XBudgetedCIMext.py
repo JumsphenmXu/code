@@ -106,7 +106,7 @@ class XBudgetedCIMext(object):
 				bsum += self.cost[vid]
 				T.append(vid)
 
-			if bsum >= budget - epsilon:
+			if bsum >= budget - epsilon or len(T) >= len(S):
 				break
 
 		time_elapsed = time.time() - ft
@@ -123,7 +123,8 @@ class XBudgetedCIMext(object):
 			target = -1
 			for e in edges:
 				to = e.get_dest()
-				if to in T or to in S or self.cost[to] <= 0:
+				# if to in T or to in S or self.cost[to] <= 0:
+				if to in T or to in S:
 					continue
 
 				if target == -1:
@@ -148,7 +149,7 @@ class XBudgetedCIMext(object):
 				T.append(target)
 				bsum += self.cost[target]
 
-			if bsum >= budget - epsilon:
+			if bsum >= budget - epsilon or len(T) >= len(S):
 				break
 
 		time_elapsed = time.time() - ft
@@ -177,7 +178,7 @@ class XBudgetedCIMext(object):
 				T.append(target)
 				bsum += self.cost[target]
 
-			if bsum >= budget - epsilon:
+			if bsum >= budget - epsilon or len(T) >= len(S):
 				break
 
 		time_elapsed = time.time() - ft
@@ -195,7 +196,8 @@ class XBudgetedCIMext(object):
 			target = r
 			maxinf = -(1 << 20)
 
-			if self.cost[target] <= 0 or bsum + self.cost[target] > budget + epsilon:
+			# if self.cost[target] <= 0 or bsum + self.cost[target] > budget + epsilon:
+			if bsum + self.cost[target] > budget + epsilon:
 				target = -1
 			else:
 				Ttmp = copy.deepcopy(T)
@@ -210,7 +212,8 @@ class XBudgetedCIMext(object):
 			edges = self.graph.get_edges_by_vertice(v)
 			for e in edges:
 				to = e.get_dest()
-				if to in T or to in S or self.cost[to] <= 0:
+				# if to in T or to in S or self.cost[to] <= 0:
+				if to in T or to in S:
 					continue
 
 				if target == -1:
@@ -235,7 +238,7 @@ class XBudgetedCIMext(object):
 				T.append(target)
 				bsum += self.cost[target]
 
-			if bsum >= budget - epsilon:
+			if bsum >= budget - epsilon or len(T) >= len(S):
 				break
 
 		time_elapsed = time.time() - ft
@@ -249,11 +252,11 @@ class XBudgetedCIMext(object):
 
 		T, dtimes = self.degree_heuristic(S, budget, epsilon)
 		ts.append(T)
-		res.append(('DegreeHeuristic', 0, 0, dtimes))
+		res.append(('DHeu', 0, 0, dtimes))
 
 		T, ctimes = self.comparable_heuristic(S, budget, epsilon)
 		ts.append(T)
-		res.append(('ComparableHeuristic', 0, 0, ctimes))
+		res.append(('CHeu', 0, 0, ctimes))
 		
 		T, rtimes = self.random_max_degree_neighbor(S, budget, epsilon)
 		ts.append(T)
@@ -261,11 +264,11 @@ class XBudgetedCIMext(object):
 
 		T, ldtimes = self.local_degree_heuristic(S, budget, epsilon)
 		ts.append(T)
-		res.append(('Local_Degree', 0, 0, ldtimes))
+		res.append(('LDeg', 0, 0, ldtimes))
 
 		T, lgtimes = self.local_greedy_heuristic(S, budget, epsilon)
 		ts.append(T)
-		res.append(('Local_Greedy', 0, 0, lgtimes))
+		res.append(('LGdy', 0, 0, lgtimes))
 
 		for i in xrange(R):
 			print 'Round %d starts...' % (i + 1)
@@ -273,6 +276,7 @@ class XBudgetedCIMext(object):
 				g = copy.deepcopy(self.graph)
 				s, t = self.model.calc_influence(g, S, ts[j])
 				print 'Round %d: %s-> #s = %d, #t = %d' % (i+1, res[j][0], s, t)
+				print 'len(S) = %d, len(T) = %d' % (len(S), len(T))
 				lres = list(res[j])
 				lres[1] += s
 				lres[2] += t
@@ -290,8 +294,7 @@ class XBudgetedCIMext(object):
 			rs = float(res[i][1]) / R
 			rt = float(res[i][2]) / R
 			line = res[i][0] + '\t' + str(rs) + '\t'
-			line += str(rt) + '\t' + str(100*abs(rt-rs)/max(rt, rs))
-			line += '%\tTIME' + str(res[i][3]) + '\n'
+			line += str(rt) + '%\tTIME' + str(res[i][3]) + '\n'
 			fp.write(line)
 
 		fp.close()
@@ -312,7 +315,7 @@ if __name__ == '__main__':
 		bcim = XBudgetedCIMext(graph_file, model)
 		for bstep in xrange(3):
 			budget = budget_base + 50 * (bstep + 1)
-			for i in xrange(5):
+			for i in xrange(6):
 				k = 5 * (i + 1)
 				result_file = '../result/final/' + f
 				result_file += '-B' + str(budget) + '-K' + str(k) + suffix
