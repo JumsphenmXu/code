@@ -232,7 +232,7 @@ class XBudgetedCIMext(object):
 					target = to
 
 			if target != -1:
-				S.append(target)
+				T.append(target)
 				bsum += self.cost[target]
 
 			if bsum >= budget - epsilon:
