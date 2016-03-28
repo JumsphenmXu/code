@@ -16,12 +16,16 @@ class XCOLOR(object):
 
 
 class XEdgeStatus(object):
-	def __init__(self, to, weight):
-		self.to = to
+	def __init__(self, src, dest, weight):
+		self.src = src
+		self.dest = dest
 		self.weight = weight
 
 	def get_dest(self):
-		return self.to
+		return self.dest
+
+	def get_src(self):
+		return self.src
 
 	def get_weight(self):
 		return self.weight
@@ -139,10 +143,10 @@ class XGraph(object):
 			if eid not in self.graph.keys():
 				self.graph[eid] = XVerticeStatus()
 
-			self.graph[sid].add_edge(XEdgeStatus(eid, weight))
+			self.graph[sid].add_edge(XEdgeStatus(sid, eid, weight))
 			self.edge_num += 1
 			if not self.directed_graph:
-				self.graph[eid].add_edge(XEdgeStatus(sid, weight))
+				self.graph[eid].add_edge(XEdgeStatus(eid, sid, weight))
 				self.edge_num += 1
 
 			line = fp.readline()
