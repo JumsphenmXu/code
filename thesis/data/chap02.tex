@@ -275,7 +275,7 @@ P_{A}(u|I_{A}, I_{B}, E_{a}) = \frac{\sum_{v \in \mathcal{R}(u)}P_{A}(v|I_{A}, I
 \end{equation}
 
 
-下面逐步对示例图\ref{fig:wavepro-inf-diffusion}进行分析，被$A$所影响的着色为蓝色，被$B$所影响的则着色为红色。其中\underline{图\ref{fig:wavepro-inf-diffusion}}中结点$u$的着色是因为其是概率性的，并不能确定是$A$还是$B$影响。
+下面逐步对示例图\ref{fig:wavepro-inf-diffusion}进行分析，被$A$所影响的着色为蓝色，被$B$所影响的则着色为红色。其中图\ref{fig:wavepro-inf-diffusion}中结点$u$的着色是因为其是概率性的，并不能确定是$A$还是$B$影响。
 \begin{enumerate}
 \item 初始时$d=0$，则$I_{A}=\{x, y\}$，$I_{B}=\{z\}$。
 \item 下一步进行对$d=1$点的传播，也即对结点$v, w$进行影响。
@@ -283,7 +283,7 @@ P_{A}(u|I_{A}, I_{B}, E_{a}) = \frac{\sum_{v \in \mathcal{R}(u)}P_{A}(v|I_{A}, I
 \item 结点$v$，因为与结点$v$相邻的两个结点$x \in I_{A}, y \in I_{B}$，那么根据式子\ref{eq:wave-proga-pro}，则$P_{A}(v|I_{A}, I_{B}, E_{a})=1$，所以结点$v$被$A$影响，着色为蓝色。
 \item 结点$w$，因为与结点$w$相邻的一个结点$z \in I_{B}$，那么根据式子\ref{eq:distant-based-pro}，则$P_{B}(w|I_{A}, I_{B}, E_{a})=1$，所以结点$w$被$B$影响，着色为红色。
 \end{enumerate}
-\item $d=1$的结点已经被传播完毕，所以开始传播$d=2$的结点，即结点$u$。而结点$u$的邻居结点$v \in I_{A}$，$w \in I_{B}$，因此根据式子\ref{eq:distant-based-pro}，那么此时$P_{A}(w|I_{A}, I_{B}, E_{a})=P_{B}(w|I_{A}, I_{B}, E_{a})=\frac{1}{2}$。因为以概率$\frac{1}{2}$进行传播，所以我们不能确定会被那个结点着色，所以对其进行特殊的着色(见\underline{图\ref{fig:wavepro-inf-diffusion}}结点$u$)。
+\item $d=1$的结点已经被传播完毕，所以开始传播$d=2$的结点，即结点$u$。而结点$u$的邻居结点$v \in I_{A}$，$w \in I_{B}$，因此根据式子\ref{eq:distant-based-pro}，那么此时$P_{A}(w|I_{A}, I_{B}, E_{a})=P_{B}(w|I_{A}, I_{B}, E_{a})=\frac{1}{2}$。因为以概率$\frac{1}{2}$进行传播，所以我们不能确定会被那个结点着色，所以对其进行特殊的着色(见图\ref{fig:wavepro-inf-diffusion}结点$u$)。
 \item 综上，根据式子\ref{eq:wave-proga-resultA}，则有$\pi(I_{A}|I_{B})=2+1+\frac{1}{2}=\frac{7}{2}$，同理根据式子\ref{eq:wave-proga-resultB}，可得$\pi(I_{A}|I_{B})=1+1+\frac{1}{2}=\frac{5}{2}$。
 \end{enumerate}
 

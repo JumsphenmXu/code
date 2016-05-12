@@ -10,7 +10,7 @@
 \label{cha:3thChap03}
 
 \section{引言}
-基于web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。目前有很多研究者在做这方面的研究，但是他们的方法存在下面两方面的问题，
+基于Web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。目前有很多研究者在做这方面的研究，但是他们的方法存在下面两方面的问题，
 \begin{enumerate}
 \item 需要全局了解整个网络的拓扑结构进行计算，这在用户越来越多，关系越来越复杂的现代社交网络中也越来越不容易，同时在运行时间以及传播效果上没有进行很好的平衡。
 \item 对于选取网络中结点的代价，没有提出很好的顶点估值模型，一般都是赋予任何结点都是同样的值，这并不符合现实生活中不同影响力的人有不同身价的现象。
@@ -23,7 +23,7 @@
 本章节主要基于Kempe\cite{kempe2003maximizing}的IC、LT模型，具体传播过程可以参考\ref{sec:IC-model-desc}节IC模型示例和\ref{sec:LT-model-desc}节LT模型示例。
 
 
-\subsection{顶点估值模型}
+\subsection{PRBC模型}
 \label{sec:chap3:cost-model}
 给定社交网络$G=(V, E)$，需要给每个顶点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个顶点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个顶点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的顶点进行排名，然后进行一定的映射得出顶点的价值。
 
@@ -308,16 +308,16 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 \begin{figure}[H]
 	\centering%
 	\subcaptionbox{Facebook 预算$\mathcal{B}=300$\label{fig:chap3facebook-seed-300}}
-	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k300}}
+	{\includegraphics[scale=0.24]{./chap3/facebook-seed-k300}}
 	\hspace{3em}%
 	\subcaptionbox{Facebook 预算$\mathcal{B}=400$\label{fig:chap3facebook-seed-400}}
-	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k400}}
+	{\includegraphics[scale=0.24]{./chap3/facebook-seed-k400}}
 	\hspace{3em}%
 	\subcaptionbox{Facebook 预算$\mathcal{B}=500$\label{fig:chap3facebook-seed-500}}
-	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k500}}
+	{\includegraphics[scale=0.24]{./chap3/facebook-seed-k500}}
 	\hspace{3em}%
 	\subcaptionbox{Facebook 预算$\mathcal{B}=600$\label{fig:chap3facebook-seed-600}}
-	{\includegraphics[scale=0.3]{./chap3/facebook-seed-k600}}
+	{\includegraphics[scale=0.24]{./chap3/facebook-seed-k600}}
 	\caption{Facebook数据集在不同预算下得到的初始结点集大小与预期的结点集大小比较}
 	\label{fig:chap3:facebook-seed}
 \end{figure}
@@ -326,16 +326,16 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 \begin{figure}[H]
 	\centering%
 	\subcaptionbox{Blogs 预算$\mathcal{B}=600$\label{fig:chap3blogs-infl-600}}
-	{\includegraphics[scale=0.3]{./chap3/blogs-infl-600}}
+	{\includegraphics[scale=0.24]{./chap3/blogs-infl-600}}
 	\hspace{3em}%
 	\subcaptionbox{Blogs 预算$\mathcal{B}=900$\label{fig:chap3blogs-infl-900}}
-	{\includegraphics[scale=0.3]{./chap3/blogs-infl-900}}
+	{\includegraphics[scale=0.24]{./chap3/blogs-infl-900}}
 	\hspace{3em}%
 	\subcaptionbox{Blogs 预算$\mathcal{B}=1200$\label{fig:chap3blogs-infl-1200}}
-	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1200}}
+	{\includegraphics[scale=0.24]{./chap3/blogs-infl-1200}}
 	\hspace{3em}%
 	\subcaptionbox{Blogs 预算$\mathcal{B}=1500$\label{fig:chap3blogs-infl-1500}}
-	{\includegraphics[scale=0.3]{./chap3/blogs-infl-1500}}
+	{\includegraphics[scale=0.24]{./chap3/blogs-infl-1500}}
 	\caption{Blogs数据集在不同预算下影响力传播效果}
 	\label{fig:chap3:blogs-infl}
 \end{figure}
