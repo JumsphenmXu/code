@@ -32,8 +32,11 @@ class XBudgetedCIMext(object):
 		ft = time.time()
 		while i < k:
 			v = random.choice(vertices)
+			max_v = v
 			es = list(set(T) | set(S))
-			max_v = self.graph.max_degree_neighbor(v, es)
+			v = self.graph.max_degree_neighbor(v, es)
+			if v != -1:
+				max_v = v
 
 			if max_v not in self.cost.keys():
 				continue
@@ -195,8 +198,11 @@ class XBudgetedCIMext(object):
 		bsum = 0
 		for v in S:
 			r = random.choice(vertices)
-			r = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
 			target = r
+			r = self.graph.max_degree_neighbor(r, list(set(T) | set(S)))
+			if r != -1:
+				target = r
+
 			maxinf = -(1 << 20)
 
 			# if self.cost[target] <= 0 or bsum + self.cost[target] > budget + epsilon:
