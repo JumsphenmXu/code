@@ -8,7 +8,8 @@
 
 \chapter{竞争型传播模型设计以及影响力最大化算法实现}
 \label{cha:4thChap04}
-媒体网络的发展，互联网的普及让更多的人参与到这个世界最大的社区中去。大量的网络用户促使Web服务商，互联网企业开发出了大量的产品，其中提供社会媒体功能的产品就有很多，这些产品每天都有大量的用户去访问，在上面发布文字图片，传导舆论，转发关注信息等等。利用这些平台，以及用户与用户之间的关系，可以进行各种信息的推广。每个人都可以在上面去进行推广自己的产品，所以会造成竞争关系，如何在这样的环境中使自己的消息得到很好的传播是一个很重要的研究问题。
+目前非竞争的影响力分析已经得到了大量的研究，而对于现实生活中更为常见的存在竞争的影响力分析的研究则比较缺乏，本章将针对竞争环境下的影响力分析进行探讨和研究。
+% 媒体网络的发展，互联网的普及让更多的人参与到这个世界最大的社区中去。大量的网络用户促使Web服务商，互联网企业开发出了大量的产品，其中提供社会媒体功能的产品就有很多，这些产品每天都有大量的用户去访问，在上面发布文字图片，传导舆论，转发关注信息等等。利用这些平台，以及用户与用户之间的关系，可以进行各种信息的推广。每个人都可以在上面去进行推广自己的产品，所以会造成竞争关系，如何在这样的环境中使自己的消息得到很好的传播是一个很重要的研究问题。
 
 \section{引言}
 
@@ -70,18 +71,18 @@ Shishir Bhrathi\cite{bharathi2007competitive}等人在2007年就提出了竞争�
 \end{definition}
 
 \subsection{代价估值函数}
-目前已有的研究大部分都选择了单位化的估值函数，然后给定的预算即为初始结点集合的大小，本文的研究将采用非常数的估值函数，具体模型参考章节\ref{sec:chap3:cost-model}，本章节将采用PRBC估值函数。
+目前已有的研究大部分都选择了单位化的估值函数，然后给定的预算即为初始结点集合的大小，本文的研究将采用非常数的估值函数，具体模型参考章节\ref{sec:chap3:cost-model}，本章采用PRBC估值函数。
 
 
 \subsection{竞争型影响力的传播模型}
-在竞争型影响力分析领域目前主要的模型有CLT，Distance-based，Wave Propagation等模型，具体内容可以参考章节\ref{sec:inf-xtran-models}中的描述。其中CLT是基于经典模型LT的，而Distance-based，Wave Propagation是基于经典IC模型的。本文将根据LT模型提出一种更能描述传播过程的一种竞争型影响力传播模型。
+在竞争型影响力分析领域目前主要的模型有CLT，Distance-based，Wave Propagation等模型，具体内容可以参考章节\ref{sec:inf-xtran-models}中的描述。其中CLT是基于经典模型LT的，而Distance-based，Wave Propagation是基于经典IC模型的。本章将根据LT模型提出一种更能描述传播过程的一种竞争型影响力传播模型。
 
 
 \section{模型设计与算法实现}
 在章节\ref{sec:inf-xtran-models}描述的两种基于IC模型改进的竞争型传播模型中，Distance-based模型忽略了传播过程中被影响的结点也能影响其他结点的过程，Wave Propagation中为被影响的结点在周围被影响的结点中随机选择一种信源作为被影响的信源，这在现实生活中似乎淡化了个人影响力，而其实这种因素起着非常重要的作用。本文对LT模型进行扩展提出了一种新的传播模型XLT4C(eXtended Linear Threshold for Competition)，并基于这个模型提出了相应的算法。
 
 
-\subsection{传播模型XLT4C}
+\subsection{XLT4C传播模型}
 为了构建模型XLT4C，需要对之前的网络图顶点信息做一些修改，然后设置相应的顶点数据结构构造网络图，之后在该新的网络图中进行传播，下面先给出数据结构设计，然后再给出传播过程。
 
 \subsubsection{数据结构设计}
@@ -150,7 +151,7 @@ Shishir Bhrathi\cite{bharathi2007competitive}等人在2007年就提出了竞争�
 
 \subsubsection{传播模型过程解析}
 \label{sec:xlt4c:model-analysis}
-本文提出的XLT4C模型是基于LT模型的一些基本传播概念，并在将这些概念移植到了竞争型环境中，所以下面我们简单描述一下该传播模型的整个过程是如何操作的。
+本章提出的XLT4C模型是基于LT模型的一些基本传播概念，并在将这些概念移植到了竞争型环境中，所以下面我们简单描述一下该传播模型的整个过程是如何操作的。
 
 首先需要明确如下几个传播规则，
 \begin{itemize}
@@ -347,7 +348,7 @@ Shishir Bhrathi\cite{bharathi2007competitive}等人在2007年就提出了竞争�
 需要注意的是我们在算法\ref{alg:chap4:xlt4c-inf-diffusion}中的第10行进行了递归调用，进行对信息传播的模拟从而使其符合我们的描述。而算法\ref{alg:chap4:xlt4c-inf-diffusion}中第5，6行引用了两个辅助函数分别表示对不同信源信息的传播过程，并且在算法\ref{alg:chap4:inf-spread-red}和算法\ref{alg:chap4:inf-spread-black}中的第9行只有在变异成功(以一定的概率变异成功)的时候才进行操作。
 
 \subsection{竞争型影响力最大算法实现与分析}
-根据上述XLT4C的传播模型以及在章节\ref{sec:chap4:def-for-problem}中的定义\ref{def:chap4-self-on-cim}，我们需要在已经给定一个初始结点集合(如$S$)的情况下，选择另一个初始结点集合(如$T$)使得$T$中的结点能传播的最广，或者说选择一些结点降低$S$的传播，从而使得$T$有更多可能的受众。在X. He\cite{he2012influence}中他们就是利用积极信息(Positive)去阻塞消极信息(Negative)。在此我们收到其算法的启发，提出下面两种算法，
+根据上述XLT4C的传播模型以及在章节\ref{sec:chap4:def-for-problem}中的定义\ref{def:chap4-self-on-cim}，我们需要在已经给定一个初始结点集合(如$S$)的情况下，选择另一个初始结点集合(如$T$)使得$T$中的结点能传播的最广，或者说选择一些结点降低$S$的传播，从而使得$T$有更多可能的受众。在X. He\cite{he2012influence}中他们就是利用积极信息(Positive)去阻塞消极信息(Negative)。在此我们受到其算法的启发，提出下面两种算法，
 \begin{itemize}
 \item Local Greedy for Competition算法，这个算法的思想是，如果信息需要传播那么其需要依赖其周围的一系列结点去级联传播，那么我们可以在原来集合$S$中的结点周围选择相应比较好的结点使其加入集合$T$作为初始结点集。这里的比较好的衡量准则为利用XLT4C进行传播模拟，哪个结点的传播范围最广则视为最佳候选结点加入。
 \item Local Degree Heuristic for Competition算法，该算法不同于Local Greedy for Competition的地方在于选择衡量集合$S$周围比较好的结点标准为选择其度数最大的结点，这也符合度中心性原则\cite{bonacich1972factoring}。
@@ -356,7 +357,7 @@ Shishir Bhrathi\cite{bharathi2007competitive}等人在2007年就提出了竞争�
 在以下章节中我们将算法Local Greedy for Competition和Local Degree Heuristic for Competition分别简称为$LG4C$和$LDH4C$。
 
 \subsubsection{算法实现}
-根据上面算法$LG4C$和$LDH4C$的思路，我们在此给出算法详细过程。
+根据算法$LG4C$和$LDH4C$的思路，我们在此给出算法详细过程。
 \begin{algorithm}[H]
 	\caption{$LG4C(G, S, \mathcal{CF}, \mathcal{B})$}
 	\label{alg:chap4:lg4c-proc}
@@ -548,9 +549,4 @@ Shishir Bhrathi\cite{bharathi2007competitive}等人在2007年就提出了竞争�
 
 
 \section{本章小结}
-本章将前面章节的内容进行了拓展，从没有竞争的影响力分析过渡到有竞争的影响力分析。我们对已有的方法进行了仔细的调研，发现现有算法在顶点价值估计上与现实不符，并且已有的传播模型都存在的一定的问题。基于这些发现的问题，本文主要贡献可以归结如下：
-\begin{itemize}
-\item 利用新的估值模型PRBC的顶点估值函数对网络中点进行代价评估。
-\item 基于经典的LT模型提出了XLT4C的传播模型，并对XLT4C模型进行了详细的描述，然后给出了相应的模型算法。
-\item 基于新提出的XLT4C模型，我们提出了启发式算法LDH4C以及LG4C，并在不同的数据集上进行实验，证实我们提出算法的有效性。
-\end{itemize}
+本章将前面章节的内容进行了拓展，从没有竞争的影响力分析过渡到有竞争的影响力分析。我们对已有的方法进行了仔细的调研，发现现有算法在顶点价值估计上与现实不符，并且已有的传播模型都存在的一定的问题。基于这些发现的问题，本章主要贡献可以归结如下：(1)利用新的估值模型PRBC的顶点估值函数对网络中点进行代价评估；(2)基于经典的LT模型提出了XLT4C的传播模型，并对XLT4C模型进行了详细的描述，然后给出了相应的模型算法；(3)基于新提出的XLT4C模型，我们提出了启发式算法LDH4C以及LG4C，并在不同的数据集上进行实验，证实我们提出算法的有效性。

@@ -5,7 +5,7 @@
 %%% End:
 \secretlevel{绝密} \secretyear{2100}
 
-\ctitle{竞争条件下基于社交网络的影响力最大化算法研究及其实现}
+\ctitle{社交网络中存在预算限制的影响力最大化研究}
 % 根据自己的情况选，不用这样复杂
 \makeatletter
 \ifthu@bachelor\relax\else
@@ -26,7 +26,7 @@
 \csupervisor{张勇副研究员}
 
 
-\etitle{Competitive Influence Maximization over Social Network} 
+\etitle{Budgeted Influence Maximization over Online Social Network} 
 
 \edegree{Master of Science} 
 \emajor{Computer Science and Technology} 
@@ -34,23 +34,24 @@
 \esupervisor{Associate Professor ZHANG Yong} 
 
 \begin{cabstract}
-互联网技术的日渐成熟，社交网络的蓬勃发展，使得越来越多的人开始加入互联网发布消息，订阅新闻，转发推文，评论热点问题。大量增长的用户带来了海量有用的数据，而研究分析这些数据可以为我们的决策提供十分有价值线索。影响力分析很早就开始为人们所注意并将其利用于产品推广，广告投放，舆论导向，政策宣传等目的，但是目前主要研究都集中于没有竞争的影响力分析，本文将依据双方针对相似资源的竞争来研究影响力的传播模型及相关的算法。本文主要的工作包括以下几个部分：
-\begin{itemize}
-\item 提出了一种新的网络结点代价估值模型PRBC(PageRank Based Cost Model)。
-\item 扩展了经典的LT模型，提出了XLT4C(eXtended Linear Threshold for Competition Model)传播模型用于存在竞争的影响力分析领域。然后根据XLT4C模型提出了LDH4C(Local Degree Heuristic for Competition)，LG4C(Local Greedy for Competition)算法。
-\item 利用不同的数据集做了大量的实验对本文提出的估值模型，传播模型，影响力最大化算法进行分析验证。
-\end{itemize}
-\end{cabstract}
+互联网技术快速发展，越来越多的人开始利用社交网络进行各种活动，如发布消息，订阅新闻，推广产品，宣传政策等等。这些活动可以得到很好的实施的原因在于人在互联网中的行为既可以影响别人又受到别人的影响。分析人们在怎样在社交网络中相互影响一直的近年来的研究热点问题，该问题被称之为影响力最大化。
+
+目前人们对于影响力最大化分析的很多研究存在下面这样两个问题，其一人们在建模时通常以统一的价值来选择网络中的结点，从而忽略了现实生活中人影响力越大价值越高的事实，其二人们对非竞争的影响力最大化进行了大量的研究而对有竞争关系的影响力最大化的研究则不够，而该问题在现实中其实更为常见。
+
+本论文针对以上存在的问题进行了充分的研究，我们首先提出了一种新的网络代价估值模型PRBC(PageRank Based Cost Model)，然后基于非竞争的影响力最大化问题提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法，最后基于竞争的影响力分析提出了XLT4C(eXtended Linear Threshold for Competition)传播模型，以及在XLT4C模型之上提出了LDH4C(Local Degree Heuristic for Competition)和LG4C(Local Greedy for Competition)算法。对于以上的算法，我们选取了现实生活中的数据进行的大量的实验，结果表明，我们的模型以及相关算法在运行效率以及传播范围上能达到很好的效果。
 
 \ckeywords{社交网络,代价估值模型,竞争的影响力传播模型,影响力最大化算法}
+\end{cabstract}
 
 \begin{eabstract} 
-With Internet technology rapidly growing mature and social networks acquiring their great success, more and more people are now joining into the Internet to publish information, subscribe news, forward  tweets, and comment hot topics. The growing number of netizens bring us massive useful data which can be helpful to help us to make right decisions if we study them carefully. Influence analysis has been noticed for long time that it can be used for products promotion, ads distribution, public opinion transformation, policies advocation et al., but the as far as now, the attention has most been paid on the non-competitive influence analysis, and in this paper we will simulate the situation which two groups compete for their influence spread. The main contributions of this paper can be sumarized as follows:
-\begin{itemize}
-\item We put forward a new cost evaluation model called PageRank Based Cost Model(PRBC).
-\item We extend the classical LT model to come up with eXtended Linear Threshold for Competition(XLT4C) which can be used in the competitive influence maxmization field. And then according to XLT4C, we propose two alogrithms to solve the competitive influence maxmization problem which we named Local Degree Heurisitc for Competition(LDH4C) and Local Greedy for Competition(LG4C).
-\item We conducts a lot of experiments on different data sets to analysis the performance of our methods and prove the effectiveness of our methods. 
-\end{itemize} 
-\end{eabstract}
+With the rapidly developing of Internet technology, more and more people are now engaging in lots of activities on social network, like publishing information, subscribing news, promoting products, advocating policy etc. The reason why all these activities can be well conducted based on the fact that people's actions on Internet can affect others and also can be affected by others.Analyzing how people influence each other on social network has been extensively studied through all recent years, and this problem are known as influence maximization.
 
-\ekeywords{Social Network, Cost Evaluation Model, Competitive Influence Spread Model, Influence Maximization Algorithm}
+
+So far as now, lots of studies on influence maximization exist some problems, firstly, people assign every one the same cost while choosing them as initial adoption seed, secondly, they put their focus mostly on non-competitive influence maximization which lefts competitive influence maximization rarely been studied though this situation is more common in reality.
+
+
+This paper dedicates to solving the aforementioned problems, we firstly propose PRBC(PageRank Based Cost Model) to assign cost to the nodes in the network, then for non-competitive influence maximization we put forward BRMDN(Budgeted Random Maximal Degree Neighbor) and for competitive influence maximization we based on classical LT model propose a new influence propagation model XLT4C(eXtended Linear Threshold for Competition) and two methods LDH4C(Local Degree Heuristic for Competiton), LG4C(Local Greedy for Competition) which are based on XLT4C. For the proposed models and algorithms, we conducts extensive experiments on them, and the results show that our methods can performance very well when both considering running time and influence spread.
+
+
+\ekeywords{Social Network, Cost Evaluation Model, Competitive Influence Propagation Model, Influence Maximization}
+\end{eabstract}
