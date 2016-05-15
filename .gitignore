@@ -1,6 +1,5 @@
 *.exe
 *.log
 log/
-conf/
 *.pyc
 *.o

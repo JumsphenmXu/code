@@ -5,7 +5,7 @@
 %%% End:
 \secretlevel{绝密} \secretyear{2100}
 
-\ctitle{竞争条件下基于社交网络的影响力最大化算法研究及其实现}
+\ctitle{社交网络中存在预算限制的影响力最大化研究}
 % 根据自己的情况选，不用这样复杂
 \makeatletter
 \ifthu@bachelor\relax\else
@@ -26,7 +26,7 @@
 \csupervisor{张勇副研究员}
 
 
-\etitle{Competitive Influence Maximization over Social Network} 
+\etitle{Budgeted Influence Maximization over Online Social Network} 
 
 \edegree{Master of Science} 
 \emajor{Computer Science and Technology} 
@@ -34,24 +34,24 @@
 \esupervisor{Associate Professor ZHANG Yong} 
 
 \begin{cabstract}
-	目前，信息传播是多交叉学科研究的热点问题。特别是随着Web2.0的爆炸式发展，人们利用微博、微信等社交媒体来发布、分享和传播信息。信息传播对于新思想、新技术、新产品等推广带来了无限的商机与机遇的同时也对社会稳定造成了极大的潜在危害，甚至引发社会动荡。通过研究信息传播模型及规律能够控制谣言、监控舆情、引导信息。我们基于复杂网络考虑了信息传播的内、外影响因素，同时从宏观、中观和微观三个层次角度对信息传播进行了建模分析与实验，研究具有重要的理论与实际意义。论文工作包括：
-	\begin{enumerate}[(1)]
-		\item 提出了一种新的复杂网络中最有影响力的节点发现方法--KSC模型。分析了经典的度数指标、介数指标、紧密度指标、K-shell指标的不足，提出了影响力节点由内、外因素决定的方法，在4类现实复杂网络中通过SIR模型对传播过程进行仿真，实验证明KSC模型方法能更精确的发现最有影响力节点，适用范围更大。
-		\item 提出了一种新的复杂网络影响力最大化发现方法--RMDN模型。影响力最大化问题是在一定限制条件下的多个影响力节点组合优化问题，也是NP-hard问题。通过随机选择节点及其直接连接邻居节点的局部信息，就能发现传播源种子节点，从而巧妙地避开了必须了解全局节点信息的问题，并给出了算法的理论推导分析，证明了其可行性。通过在4类实际复杂网络实验分析，结果显示RMDN与经典算法实验结果相近，有时还略优，时间复杂度的优势提升显著。
-		\item 提出了信息传播结构多样化模型--ISSD模型。分析了信息传播的时间变化特点及信息传播节点的内、外影响因素，提出了信息传播的5个假设，不但分析了信息传播中个体的内部属性特点，还特别考虑了个体接受信息的Ego网络的结构多样性影响，以及外界整个大信息环境这些外部影响因素。给出了信息传播机理及ISSD模型信息传播的形式化定义和描述。通过实验分析了信息传播过程中时间影响、结构多样化影响特点，通过模型研究、定量化分析可以使人们更加清晰的认识信息传播的过程。
-	\end{enumerate}
-	
+互联网技术快速发展，越来越多的人开始利用社交网络进行各种活动，如发布消息，订阅新闻，推广产品，宣传政策等等。这些活动可以得到很好的实施的原因在于人在互联网中的行为既可以影响别人又受到别人的影响。分析人们在怎样在社交网络中相互影响一直的近年来的研究热点问题，该问题被称之为影响力最大化。
+
+目前人们对于影响力最大化分析的很多研究存在下面这样两个问题，其一人们在建模时通常以统一的价值来选择网络中的结点，从而忽略了现实生活中人影响力越大价值越高的事实，其二人们对非竞争的影响力最大化进行了大量的研究而对有竞争关系的影响力最大化的研究则不够，而该问题在现实中其实更为常见。
+
+本论文针对以上存在的问题进行了充分的研究，我们首先提出了一种新的网络代价估值模型PRBC(PageRank Based Cost Model)，然后基于非竞争的影响力最大化问题提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法，最后基于竞争的影响力分析提出了XLT4C(eXtended Linear Threshold for Competition)传播模型，以及在XLT4C模型之上提出了LDH4C(Local Degree Heuristic for Competition)和LG4C(Local Greedy for Competition)算法。对于以上的算法，我们选取了现实生活中的数据进行的大量的实验，结果表明，我们的模型以及相关算法在运行效率以及传播范围上能达到很好的效果。
+
+\ckeywords{社交网络,代价估值模型,竞争的影响力传播模型,影响力最大化算法}
 \end{cabstract}
 
-\ckeywords{信息传播模型,最有影响力的节点, 影响力最大化,复杂网络}
-
 \begin{eabstract} 
-   Information diffusion has become a hot topic in interdisciplinary research. With the explosive growth of information available in Web2.0 era, surfers publish, share and disseminate information using social media such as Microblog and WeChat. While information diffusion bring unlimited business opportunities for the promotion of new idea, new technologies and new products, it also causes concern about its potential hazard to social stability, and may even lead to social unrest. By studying the models and rules of information diffusion, it's possible to control rumors, monitor public opinion and guide information. Taking into account its internal and external factors, we conduct experimental modeling and analysis on information diffusion at macro-, meso- and micro- levels based on the complex network, which holds great theoretical and practical significance. Our contributions are as follows:
-   \begin{enumerate}
-   	\item Propose a new approach to identify influence spreader in complex network---KSC model. We analyze the deficiencies of classical evaluation metrics including degree centrality, betweenness centrality, closeness centrality and K-shell centrality. We also propose a method where the influence spread is determined by internal and external factors. The SIR model is used to simulate the propagation process in four real complex networks. The experimental results demonstrate that our KSC model based method can select the most influential spreaders with higher precision and broader scope of application.
-   	\item Propose a new approach for influence maximization in complex network---RMDN model. Influence maximization is a combinatorial optimization problem of finding the most influential spreaders, which is shown to be NP hard. We find the seed nodes of propagating source with the local Information of randomly selected nodes and their directly connected neighbor nodes. We also give the theoretical derivation and analysis of our algorithm, and we prove its feasibility. The experimental results of our RMDN model are similar and sometimes slightly better than classical algorithms in four real complex network, while the time complexity is reduced significantly.
-   	\item Propose an information spread structural diversity model---ISSD model. We analyze both the temporal variations of information diffusion and the internal and external factors of spreaders. We propose five assumptions of information diffusion, analyze the internal attributes of individuals in the propagation process, and consider the structural diversity of a user's Ego network as well as the external environmental factors. Both the information diffusion mechanism and the information diffusion based on ISSD model are formalized in this paper. Our experimental analysis shows how time and structural diversity affect the information diffusion. The modeling and quantitative analysis also help in better understanding the process of information diffusion.
-   \end{enumerate}
-\end{eabstract}
+With the rapidly developing of Internet technology, more and more people are now engaging in lots of activities on social network, like publishing information, subscribing news, promoting products, advocating policy etc. The reason why all these activities can be well conducted based on the fact that people's actions on Internet can affect others and also can be affected by others.Analyzing how people influence each other on social network has been extensively studied through all recent years, and this problem are known as influence maximization.
 
-\ekeywords{Information Diffusion Model, Influential Spreaders, Influence Maximization, Complex Network}
+
+So far as now, lots of studies on influence maximization exist some problems, firstly, people assign every one the same cost while choosing them as initial adoption seed, secondly, they put their focus mostly on non-competitive influence maximization which lefts competitive influence maximization rarely been studied though this situation is more common in reality.
+
+
+This paper dedicates to solving the aforementioned problems, we firstly propose PRBC(PageRank Based Cost Model) to assign cost to the nodes in the network, then for non-competitive influence maximization we put forward BRMDN(Budgeted Random Maximal Degree Neighbor) and for competitive influence maximization we based on classical LT model propose a new influence propagation model XLT4C(eXtended Linear Threshold for Competition) and two methods LDH4C(Local Degree Heuristic for Competiton), LG4C(Local Greedy for Competition) which are based on XLT4C. For the proposed models and algorithms, we conducts extensive experiments on them, and the results show that our methods can performance very well when both considering running time and influence spread.
+
+
+\ekeywords{Social Network, Cost Evaluation Model, Competitive Influence Propagation Model, Influence Maximization}
+\end{eabstract}
