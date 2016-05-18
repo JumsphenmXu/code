@@ -14,6 +14,7 @@ class DBConnection(object):
 			print 'Failed to acquire DBConnection !!!'
 			raise ValueError('Invalid dbname<%s> !!!' % self.dbname)
 
+		db_cursor = None
 		try:
 			db_cursor = pickle.load(fp)
 		except:
@@ -34,6 +35,17 @@ class DBConnection(object):
 
 		pickle.dump(data, fp)
 		fp.close()
+
+	@classmethod
+	def is_user_existed(cls, cursor, uid, username, password):
+		if cursor is None or not isinstance(cursor, dict):
+			return False
+
+		if uid in cursor.keys():
+			user_info = cursor[uid]
+			return user_info['username'] == username and user_info['password'] == password
+
+		return False
 
 	def disconnect(self):
 		pass
