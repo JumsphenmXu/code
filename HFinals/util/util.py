@@ -4,11 +4,15 @@ from conf import conf
 from model import user, equipment
 import pickle, time
 
+class TYPE(object):
+	INT = 'INT'
+	FLOAT = 'FLOAT'
+	STRING = 'STRING'
+	BOOLEAN = 'BOOLEAN'
 
-def init_equipments():
-	fp = open(conf.WEAPON, 'wb')
-	if not fp:
-		print 'Failed to initiate equipments !!!'
-		raise ValueError('Wrong file name <%s> !!!' % conf.WEAPON)
 
-	
+class CMD(object):
+	LOGIN = 'LOGIN'
+	REGISTER = 'REGISTER'
+	REQUIRE_LEVEL_INFO = 'REQUIRE_LEVEL_INFO'
+	SPAWN_ENEMY = 'SPAWN_ENEMY'

@@ -9,11 +9,37 @@ if PROJECT_PATH not in sys.path:
 from conf import conf
 from model.user import User
 from util.dbconnection import DBConnection
+from util.util import TYPE, CMD
 import SocketServer
 
 
 class GameServerHandler(SocketServer.BaseRequestHandler):
+	# escape message if necessary
+	def __escape_msg(self, s, ch):
+		if not s or not isinstance(s, str) or len(s) == 0:
+			return s
 
+		t = ''
+		for c in s:
+			if c == ch:
+				t += '\\'
+			t += c
+
+		return t
+
+	# reply_info must be a list whose element is a 3-tuple of (key, value, type)
+	# where type can be BOOLEAN, STRING, INT, FLOAT
+	def pack_message(self, reply_info):
+		msg = ''
+		for ele in reply_info:
+			s = ele[0] + '#' + str(ele[1]) + '#' + ele[2]
+			if len(msg) > 0:
+				msg += '$'
+			msg += s
+
+		return msg
+
+	# login handler
 	def login(self, cmd_params):
 		username = cmd_params['username']
 		password = cmd_params['password']
@@ -23,16 +49,21 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 		cursor = dbconn.get_cursor()
 		return DBConnection.is_user_existed(cursor, user.get_uid(), username, password)
 
+	# register handler
 	def register(self, cmd_params):
 		username = cmd_params['username']
 		password = cmd_params['password']
 		user = User(username, password)
+		uid = user.get_uid()
 
 		dbconn = DBConnection(conf.DB_USER)
 		cursor = dbconn.get_cursor()
-		if DBConnection.is_user_existed(cursor, user.get_uid(), username, password):
+		if DBConnection.is_user_existed(cursor, uid, username, password):
 			print 'User %s has already been register, you can login directly.' % (username)
 			return True
+
+		if not cursor:
+			cursor = {}
 
 		data = {}
 		data['username'] = username
@@ -42,25 +73,40 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 		print 'User %s registers successfully.'
 		return True
 
+	def require_level_info(self):
+		pass
+
+	def spawn_enemy(self):
+		pass
+
+	# command dispatcher
 	def cmd_dispatch(self, cmd):
 		cmd_type = cmd['type']
 		cmd_params = cmd['params']
 		msg = None
-		if cmd_type == 'LOGIN':
+
+		if cmd_type == CMD.LOGIN:
 			msg = self.login(cmd_params)
-		elif cmd_type == 'REGISTER':
+		elif cmd_type == CMD.REGISTER:
 			msg = self.register(cmd_params)
+		elif cmd_type = CMD.REQUIRE_LEVEL_INFO:
+			msg = self.require_level_info()
+		elif cmd_type = CMD.SPAWN_ENEMY:
+			self.spawn_enemy()
 
 		return msg
 
 	def handle(self):
 		print 'handle......'
-		data = self.request.recv(1024)
-		print 'DATA recived:', data
+		data = self.request.recv(4096)
+		print 'DATA RECIVED:', data
 		cmd = json.loads(data)
-		print 'CMD recived:', cmd
+		print 'CMD RECIVED:', cmd
 		error = not self.cmd_dispatch(cmd)
-		self.request.sendall(json.dumps({'error': error}))
+		reply_info = [('error', error, TYPE.BOOLEAN)]
+		msg = self.pack_message(reply_info)
+		print 'REPLY MESSAGE:', msg
+		self.request.sendall(msg)
 
 
 class GameServer():
