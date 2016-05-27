@@ -9,7 +9,7 @@ if PROJECT_PATH not in sys.path:
 from conf import conf
 from model.user import User
 from util.dbconnection import DBConnection
-from util.util import TYPE, CMD
+from util.util import TYPE, CMD, Util
 import SocketServer
 
 
@@ -73,10 +73,20 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 		print 'User %s registers successfully.'
 		return True
 
-	def require_level_info(self):
-		pass
+	def require_level_info(self, cmd_params):
+		level = cmd_params['level']
+		level_info = Util.get_game_level_info()
+		keys = level_info.keys()
 
-	def spawn_enemy(self):
+		if 'max_level' in keys and level > level_info['max_level']:
+			return conf.INFINITY_EXP
+
+		if 'levels' in keys:
+			return level_info['levels'][level-1]
+
+		return conf.INFINITY_EXP
+
+	def spawn_enemy(self, cmd_params):
 		pass
 
 	# command dispatcher
@@ -90,9 +100,9 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 		elif cmd_type == CMD.REGISTER:
 			msg = self.register(cmd_params)
 		elif cmd_type = CMD.REQUIRE_LEVEL_INFO:
-			msg = self.require_level_info()
+			msg = self.require_level_info(cmd_params)
 		elif cmd_type = CMD.SPAWN_ENEMY:
-			self.spawn_enemy()
+			msg = self.spawn_enemy(cmd_params)
 
 		return msg
 
