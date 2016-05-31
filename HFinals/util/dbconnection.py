@@ -36,15 +36,20 @@ class DBConnection(object):
 		pickle.dump(data, fp)
 		fp.close()
 
+	def clear(self):
+		self.write_back(None)
+
 	@classmethod
-	def is_user_existed(cls, cursor, uid, username, password):
+	def is_user_existed(cls, cursor, user):
 		if cursor is None or not isinstance(cursor, dict):
 			return False
 
+		uid = user.get_uid()
 		if uid in cursor.keys():
 			user_info = cursor[uid]
-			return user_info['username'] == username and user_info['password'] == password
-
+			a = user_info['username'] == user.get_username()
+			b = user_info['password'] == user.get_password()
+			return a and b
 		return False
 
 	def disconnect(self):

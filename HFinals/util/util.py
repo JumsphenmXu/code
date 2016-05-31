@@ -16,6 +16,8 @@ class CMD(object):
 	LOGIN = 'LOGIN'
 	REGISTER = 'REGISTER'
 	REQUIRE_LEVEL_INFO = 'REQUIRE_LEVEL_INFO'
+	REQUIRE_USER_INFO = 'REQUIRE_USER_INFO'
+	SAVE_USER_INFO = 'SAVE_USER_INFO'
 	SPAWN_ENEMY = 'SPAWN_ENEMY'
 
 
@@ -55,3 +57,15 @@ class Util(object):
 			return None
 
 		return cursor['level_info']
+
+	@classmethod
+	def get_game_user_info(cls, username, password):
+		game_user = user.User(username, password)
+		dbconn = DBConnection(conf.DB_USER)
+		cursor = dbconn.get_cursor()
+
+		uid = game_user.get_uid()
+		if not cursor or uid not in cursor.keys():
+			return None
+
+		return cursor[uid]
