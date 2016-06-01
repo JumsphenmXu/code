@@ -32,7 +32,7 @@ class User(object):
 	def __uid(self):
 		return self.__str_hash(self.username_) ^ self.__str_hash(self.password_)
 
-	def __pack_user_info(self):
+	def pack_user_info(self):
 		user_info = {}
 		user_info['username'] = self.username_
 		user_info['password'] = self.password_
@@ -142,7 +142,7 @@ class User(object):
 
 		self.total_online_time_ += time.time() - self.login_time_
 		self.last_online_time_ = time.time()
-		user_info = self.__pack_user_info()
+		user_info = self.pack_user_info()
 		cursor[self.uid_] = user_info
 
 		dbconn.write_back(cursor)

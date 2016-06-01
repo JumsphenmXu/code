@@ -66,7 +66,7 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 		cursor = dbconn.get_cursor()
 		if DBConnection.is_user_existed(cursor, user):
 			print 'User %s has already been register, you can login directly.' % (username)
-			
+
 		user.save()
 		print 'User %s registers successfully.'
 		return [('error', error, TYPE.BOOLEAN)]
@@ -124,7 +124,7 @@ class GameServerHandler(SocketServer.BaseRequestHandler):
 			user_info = cursor[uid]
 
 		if not user_info:
-			user_info = {}
+			user_info = user.pack_user_info()
 		
 		user_info['experience'] = experience
 		user_info['level'] = level
