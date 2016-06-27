@@ -7,3 +7,4 @@ SERVER_ADDR=(SERVER_IP, SERVER_PORT)
 
 DB_USER='./../data/dbuser.pkl'
 DB_WEAPON='./../data/dbweapon.pkl'
+DB_GAMEINFO='./../data/dbgameinfo.pkl'

@@ -9,13 +9,15 @@
 \chapter{有预算限制的影响力最大化算法}
 \label{cha:3thChap03}
 
-\section{引言}
-基于Web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。目前有很多研究者在做这方面的研究，但是他们的方法存在下面两方面的问题，
+% \section{引言}
+% 基于Web或者移动设备的在线社交媒体网络蓬勃发展，例如国内的微信，博客，微博，国外的包括Facebook，Twitter等大型社交平台。人们每天都花大量的时间在社交网络上，其发布的短文、评论，图片等信息媒体也越容易被传播从而影响到别人。如何发现有很大影响力的人，并且让他们传播的产品，政治宣传，新思维能尽快地扩散到更广泛的人群中去，这种现象被称为影响力传播(Influence Propagation)。
+
+目前有很多研究者在做关于预算限制的影响力分析这方面的研究，但是他们的方法存在下面两方面的问题，
 \begin{enumerate}
 \item 需要全局了解整个网络的拓扑结构进行计算，这在用户越来越多，关系越来越复杂的现代社交网络中也越来越不容易，同时在运行时间以及传播效果上没有进行很好的平衡。
-\item 对于选取网络中结点的代价，没有提出很好的顶点估值模型，一般都是赋予任何结点都是同样的值，这并不符合现实生活中不同影响力的人有不同身价的现象。
+\item 对于选取网络中结点的代价，没有提出很好的结点估值模型，一般都是赋予任何结点都是同样的值，这并不符合现实生活中不同影响力的人有不同身价的现象。
 \end{enumerate}
-本章基于以上两点，首先基于PageRank值并融合顶点度中心性性质，提出了PRBC(PageRank Based Cost)顶点估值模型，然后利用复杂网络中无标度网络的特点提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法。实验结果表明我们的算法能在时间性能和传播效果上达到比较好的平衡。
+本章基于以上两点，首先基于PageRank值并融合结点度中心性性质，提出了PRBC(PageRank Based Cost)结点估值模型，然后利用复杂网络中无标度网络的特点提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法。实验结果表明我们的算法能在时间性能和传播效果上达到比较好的平衡。
 
 
 \section{相关工作介绍}
@@ -23,23 +25,23 @@
 本章节主要基于Kempe\cite{kempe2003maximizing}的IC、LT模型，具体传播过程可以参考\ref{sec:IC-model-desc}节IC模型示例和\ref{sec:LT-model-desc}节LT模型示例。
 
 
-\subsection{PRBC模型}
-\label{sec:chap3:cost-model}
-给定社交网络$G=(V, E)$，需要给每个顶点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个顶点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个顶点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的顶点进行排名，然后进行一定的映射得出顶点的价值。
+% \subsection{PRBC模型}
+% \label{sec:chap3:cost-model}
+% 给定社交网络$G=(V, E)$，需要给每个结点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个结点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个结点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的结点进行排名，然后进行一定的映射得出结点的价值。
 
 
-具体来说，利用PageRank算法计算结点的PageRank值，然后再利用增长因子和调和系数对原有的PageRank值进一步进行调整，考虑到PageRank算法中一个不太重要的点连接到一个非常重要的点也会被认为是重要的，从而提高了其PageRank值，所以再利用结点度数以及周围邻居中最大度数进行适当的缩放。下面对本文的顶点估值模型PRBC(PageRank Based Cost Model)进行形式化定义。
-\begin{definition}
-\emph{顶点估值模型}
-给定社交网络$G=(V, E)$，一个预先定义好的增长因子$\delta$以及调和系数$\lambda$，那么对于任意结点$u \in V$，定义其在$PRBC$模型下价格数值为$PRBC(u)$，可以形式化表示为，
+% 具体来说，利用PageRank算法计算结点的PageRank值，然后再利用增长因子和调和系数对原有的PageRank值进一步进行调整，考虑到PageRank算法中一个不太重要的点连接到一个非常重要的点也会被认为是重要的，从而提高了其PageRank值，所以再利用结点度数以及周围邻居中最大度数进行适当的缩放。下面对本文的结点估值模型PRBC(PageRank Based Cost Model)进行形式化定义。
+% \begin{definition}
+% \emph{结点估值模型}
+% 给定社交网络$G=(V, E)$，一个预先定义好的增长因子$\delta$以及调和系数$\lambda$，那么对于任意结点$u \in V$，定义其在$PRBC$模型下价格数值为$PRBC(u)$，可以形式化表示为，
 
-\begin{equation}
-\label{eq:prbc}
-PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_{max} = \argmax_{v \in \mathcal{N}(u) \cup \{u\}}\mathcal{D}(v)
-\end{equation}
+% \begin{equation}
+% \label{eq:prbc}
+% PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_{max} = \argmax_{v \in \mathcal{N}(u) \cup \{u\}}\mathcal{D}(v)
+% \end{equation}
 
-其中$PR(u)$为对整个图利用PageRank算法计算得到的结点$u$的PageRank数值，其物理意义代表了结点的重要度，而$\mathcal{D}(\cdot)$表示为结点度数的函数，式子\ref{eq:prbc}中$\mathcal{D}(u), \mathcal{D}(v)$表示结点$u, v$的度数，$\mathcal{N}(\cdot)$为邻居结点集函数，即$\mathcal{N}(u)$表示结点$u$的邻居结点集。
-\end{definition}
+% 其中$PR(u)$为对整个图利用PageRank算法计算得到的结点$u$的PageRank数值，其物理意义代表了结点的重要度，而$\mathcal{D}(\cdot)$表示为结点度数的函数，式子\ref{eq:prbc}中$\mathcal{D}(u), \mathcal{D}(v)$表示结点$u, v$的度数，$\mathcal{N}(\cdot)$为邻居结点集函数，即$\mathcal{N}(u)$表示结点$u$的邻居结点集。
+% \end{definition}
 
 
 \subsection{非常值估值函数下的影响力最大化}
@@ -69,7 +71,7 @@ PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_
 
 
 \subsubsection{相关算法}
-目前的工作主要是在单位化价值估值函数下的影响力最大化，故而对于所有现有的算法，我们都对其进行的相关的调整，在满足原有方法的策略时使其满足定义\ref{def:chap3:ncc-im}中的相关条件限制，主要的算法详细参见下表，
+目前的工作主要是在单位化价值估值函数下的影响力最大化，故而对于所有现有的算法，我们都对其进行了相关的调整，在满足原有方法的策略时使其满足定义\ref{def:chap3:ncc-im}中的相关条件限制，主要的算法详细参见下表，
 
 \begin{table}[htbp]
 \centering
@@ -92,6 +94,26 @@ PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_
 
 
 注意以上表\ref{tab:chap3:ncc-im-algs}中所有算法都在其原有的基础上进行了改动，使其满足$NCC-IM$的定义。
+
+
+\section{PRBC模型}
+\label{sec:chap3:cost-model}
+给定社交网络$G=(V, E)$，需要给每个结点赋予一个价格，根据现实生活中对于影响力比较大的人给予的身价一般越高，也需要给予图中每个结点相应不同的价值。L. Page\cite{page1999pagerank}等人提出了PageRank算法对网页根据重要程度进行排名，web网页由超链接连接起来，那么将每个网页都看作一个结点，链接网页的超链接看作边，那么整个互联网就是一个大的网络图。鉴于社交网络也构建为图模型，所以同样可以利用PageRank算法对图中的结点进行排名，然后进行一定的映射得出结点的价值。
+
+
+具体来说，利用PageRank算法计算结点的PageRank值，然后再利用增长因子和调和系数对原有的PageRank值进一步进行调整，考虑到PageRank算法中一个不太重要的点连接到一个非常重要的点也会被认为是重要的，从而提高了其PageRank值，所以再利用结点度数以及周围邻居中最大度数进行适当的缩放。下面对本文的结点估值模型PRBC(PageRank Based Cost Model)进行形式化定义。
+\begin{definition}
+\emph{结点估值模型}
+给定社交网络$G=(V, E)$，一个预先定义好的增长因子$\delta$以及调和系数$\lambda$，那么对于任意结点$u \in V$，定义其在$PRBC$模型下价格数值为$PRBC(u)$，可以形式化表示为，
+
+\begin{equation}
+\label{eq:prbc}
+PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_{max} = \argmax_{v \in \mathcal{N}(u) \cup \{u\}}\mathcal{D}(v)
+\end{equation}
+
+其中$PR(u)$为对整个图利用PageRank算法计算得到的结点$u$的PageRank数值，其物理意义代表了结点的重要度，而$\mathcal{D}(\cdot)$表示为结点度数的函数，式子\ref{eq:prbc}中$\mathcal{D}(u), \mathcal{D}(v)$表示结点$u, v$的度数，$\mathcal{N}(\cdot)$为邻居结点集函数，即$\mathcal{N}(u)$表示结点$u$的邻居结点集。
+\end{definition}
+
 
 
 \section{BRMDN算法设计与分析}
@@ -121,7 +143,7 @@ PRBC(u) = \frac{\lambda(PR(u) + \delta) \mathcal{D}(u)}{\mathcal{D}(v_{max})},v_
 
 
 \subsection{BRMDN算法}
-受到随机算法以及网络的连接特点，以及新提出的价值估值模型PRBC，我们提出了预算范围内随机最大度邻居算法BRMDN(Budgeted Random Maximal Degree Neighbor)。在算法执行过程中，首先随机选择一个结点，然后根据这个结点的邻居结点集合，对这个局部结合中每个结点按照度数排序，选择满足预算$\mathcal{B}$的限制条件顶点加入初始结点集$S$，直到满足定义\ref{def:chap3:ncc-im}中的限制。
+受到随机算法以及网络的连接特点，以及新提出的价值估值模型PRBC，我们提出了预算范围内随机最大度邻居算法BRMDN(Budgeted Random Maximal Degree Neighbor)。在算法执行过程中，首先随机选择一个结点，然后根据这个结点的邻居结点集合，对这个局部结合中每个结点按照度数排序，选择满足预算$\mathcal{B}$的限制条件结点加入初始结点集$S$，直到满足定义\ref{def:chap3:ncc-im}中的限制。
 
 
 \begin{algorithm}
@@ -207,10 +229,10 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 
 \begin{lemma}
 \label{lemma:noexist-gamma-le2}
-给定网络图$G=(V, E)$，并且该网络满足无标度网络的性质，那么如果图$G$中没有自环，或者两个顶点之间不存在多条边，那么不存在这样的一个图$G$，使得其满足$1 < \gamma < 2$。
+给定网络图$G=(V, E)$，并且该网络满足无标度网络的性质，那么如果图$G$中没有自环，或者两个结点之间不存在多条边，那么不存在这样的一个图$G$，使得其满足$1 < \gamma < 2$。
 \end{lemma}
 \begin{proof}
-在章节\ref{sec:chap3:feasibility-analysis}中，我们已经得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。现在假设存在图$G$满足无标度网络性质，并且有$1 < \gamma < 2$， 那么可以得到$0 < \gamma-1 < 1$，从而$n^{\frac{1}{\gamma-1}} > n$，进一步可以知道$k_{max} = k_{min}n^{\frac{1}{\gamma-1}} > n$，这就意味着一个结点的度数比图中结点的数量还要多，由于引理条件中已知图没有自环，并且两点顶点中不存在多条边，那么可以知道该假设与已知矛盾。证毕。
+在章节\ref{sec:chap3:feasibility-analysis}中，我们已经得到$k_{max} = k_{min}n^{\frac{1}{\gamma-1}}$。现在假设存在图$G$满足无标度网络性质，并且有$1 < \gamma < 2$， 那么可以得到$0 < \gamma-1 < 1$，从而$n^{\frac{1}{\gamma-1}} > n$，进一步可以知道$k_{max} = k_{min}n^{\frac{1}{\gamma-1}} > n$，这就意味着一个结点的度数比图中结点的数量还要多，由于引理条件中已知图没有自环，并且两点结点中不存在多条边，那么可以知道该假设与已知矛盾。证毕。
 \end{proof}
 
 
@@ -386,4 +408,4 @@ p_{hub} = 1 - (1-p_{Top-K})^{K} - \epsilon
 
 
 \section{本章小结}
-本文针对之前研究结点价值估算问题提出了非常数价格估值函数(PRBC模型)去评估网络中结点的代价，然后基于PRBC模型提出BRMDN算法去进行影响力的传播，并选择了现实生活中的两个常见的数据集进行了大量的实验。通过实验的结果，我们得出下面两个结论：(1)当选定初始结点集$K$的大小时，预算的大小对运行时间的影响不大；(2)BRMDN在达到与DegreeDiscount算法相当的传播效果时，在运行时间上有着一定的优势。综上可知，本章提出的算法能在影响力的传播效果与运行时间上达到很好的平衡。
+本章针对之前研究结点价值估算问题提出了非常数价格估值函数(PRBC模型)去评估网络中结点的代价，然后基于PRBC模型提出BRMDN算法去进行影响力的传播，并选择了现实生活中的两个常见的数据集进行了大量的实验。通过实验的结果，我们得出下面两个结论：(1)当选定初始结点集$K$的大小时，预算的大小对运行时间的影响不大；(2)BRMDN在达到与DegreeDiscount算法相当的传播效果时，在运行时间上有着一定的优势。综上可知，本章提出的算法能在影响力的传播效果与运行时间上达到很好的平衡。

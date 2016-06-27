@@ -34,11 +34,11 @@
 \esupervisor{Associate Professor ZHANG Yong} 
 
 \begin{cabstract}
-互联网技术快速发展，越来越多的人开始利用社交网络进行各种活动，如发布消息，订阅新闻，推广产品，宣传政策等等。这些活动可以得到很好的实施的原因在于人在互联网中的行为既可以影响别人又受到别人的影响。分析人们在怎样在社交网络中相互影响一直的近年来的研究热点问题，该问题被称之为影响力最大化。
+互联网技术快速发展，越来越多的人开始利用社交网络进行各种活动，如发布消息，订阅新闻，推广产品，宣传政策等等。这些活动可以得到很好的实施的原因在于人在互联网中的行为既可以影响别人又受到别人的影响。分析人们在社交网络中如何相互影响一直的近年来的研究热点问题，该问题被称之为影响力分析。
 
 目前人们对于影响力最大化分析的很多研究存在下面这样两个问题，其一人们在建模时通常以统一的价值来选择网络中的结点，从而忽略了现实生活中人影响力越大价值越高的事实，其二人们对非竞争的影响力最大化进行了大量的研究而对有竞争关系的影响力最大化的研究则不够，而该问题在现实中其实更为常见。
 
-本论文针对以上存在的问题进行了充分的研究，我们首先提出了一种新的网络代价估值模型PRBC(PageRank Based Cost Model)，然后基于非竞争的影响力最大化问题提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法，最后基于竞争的影响力分析提出了XLT4C(eXtended Linear Threshold for Competition)传播模型，以及在XLT4C模型之上提出了LDH4C(Local Degree Heuristic for Competition)和LG4C(Local Greedy for Competition)算法。对于以上的算法，我们选取了现实生活中的数据进行的大量的实验，结果表明，我们的模型以及相关算法在运行效率以及传播范围上能达到很好的效果。
+本论文针对以上存在的问题进行了充分的研究，我们首先提出了一种新的网络代价估值模型PRBC(PageRank Based Cost Model)，然后基于非竞争的影响力最大化问题提出了BRMDN(Budgeted Random Maximal Degree Neighbor)算法，最后基于竞争的影响力分析提出了XLT4C(eXtended Linear Threshold for Competition)传播模型，以及在XLT4C模型之上提出了LDH4C(Local Degree Heuristic for Competition)和LG4C(Local Greedy for Competition)算法。对于以上的算法，我们选取了现实生活中的数据进行了大量的实验，结果表明，我们的模型以及相关算法在运行效率以及传播范围上能达到很好的效果。
 
 \ckeywords{社交网络,代价估值模型,竞争的影响力传播模型,影响力最大化算法}
 \end{cabstract}
@@ -47,10 +47,10 @@
 With the rapidly developing of Internet technology, more and more people are now engaging in lots of activities on social network, like publishing information, subscribing news, promoting products, advocating policy etc. The reason why all these activities can be well conducted based on the fact that people's actions on Internet can affect others and also can be affected by others.Analyzing how people influence each other on social network has been extensively studied through all recent years, and this problem are known as influence maximization.
 
 
-So far as now, lots of studies on influence maximization exist some problems, firstly, people assign every one the same cost while choosing them as initial adoption seed, secondly, they put their focus mostly on non-competitive influence maximization which lefts competitive influence maximization rarely been studied though this situation is more common in reality.
+So far as now, lots of researches on influence maximization exist some problems, firstly, people assign every one the same cost while choosing them as initial adoption seed; secondly, they put their focus mostly on non-competitive influence maximization which lefts competitive influence maximization rarely been studied though this situation is more common in reality.
 
 
-This paper dedicates to solving the aforementioned problems, we firstly propose PRBC(PageRank Based Cost Model) to assign cost to the nodes in the network, then for non-competitive influence maximization we put forward BRMDN(Budgeted Random Maximal Degree Neighbor) and for competitive influence maximization we based on classical LT model propose a new influence propagation model XLT4C(eXtended Linear Threshold for Competition) and two methods LDH4C(Local Degree Heuristic for Competiton), LG4C(Local Greedy for Competition) which are based on XLT4C. For the proposed models and algorithms, we conducts extensive experiments on them, and the results show that our methods can performance very well when both considering running time and influence spread.
+This paper dedicates to solving the aforementioned problems, we firstly propose PRBC(PageRank Based Cost Model) to assign cost to the nodes in the network, then for non-competitive influence maximization we put forward BRMDN(Budgeted Random Maximal Degree Neighbor) and for competitive influence maximization we extend classical LT model to XLT4C(eXtended Linear Threshold for Competition) and two methods LDH4C(Local Degree Heuristic for Competiton), LG4C(Local Greedy for Competition) which are based on XLT4C. For the proposed models and algorithms, we conducts extensive experiments on them, and the results show that our methods can performance very well when both considering running time and influence spread.
 
 
 \ekeywords{Social Network, Cost Evaluation Model, Competitive Influence Propagation Model, Influence Maximization}
