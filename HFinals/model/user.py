@@ -14,6 +14,7 @@ class User(object):
 		self.login_time_ = time.time()
 		self.health_ = 1000
 		self.level_ = 1
+		self.experience_ = 0
 		self.wealth_ = 0
 		self.uid_ = self.__uid()
 
@@ -31,7 +32,7 @@ class User(object):
 	def __uid(self):
 		return self.__str_hash(self.username_) ^ self.__str_hash(self.password_)
 
-	def __pack_user_info(self):
+	def pack_user_info(self):
 		user_info = {}
 		user_info['username'] = self.username_
 		user_info['password'] = self.password_
@@ -40,6 +41,7 @@ class User(object):
 		user_info['last_online_time'] = self.last_online_time_
 		user_info['login_time'] = self.login_time_
 		user_info['health'] = self.health_
+		user_info['experience'] = self.experience_
 		user_info['wealth'] = self.wealth_
 		user_info['level'] = self.level_
 		return user_info
@@ -52,6 +54,13 @@ class User(object):
 
 	def set_username(self, username):
 		self.username_ = username
+		self.uid_ = self.__uid()
+
+	def get_password(self):
+		return self.password_
+
+	def set_username(self, password):
+		self.password_ = password
 		self.uid_ = self.__uid()
 
 	def get_equipments(self):
@@ -96,6 +105,12 @@ class User(object):
 	def set_level(self, level):
 		self.level_ = level
 
+	def get_experience(self):
+		return self.experience_
+
+	def set_experience(self, experience):
+		self.experience_ = experience
+
 	def increment_level(self):
 		self.level_ += 1
 
@@ -127,7 +142,7 @@ class User(object):
 
 		self.total_online_time_ += time.time() - self.login_time_
 		self.last_online_time_ = time.time()
-		user_info = self.__pack_user_info()
+		user_info = self.pack_user_info()
 		cursor[self.uid_] = user_info
 
 		dbconn.write_back(cursor)
