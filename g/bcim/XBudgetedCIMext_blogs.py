@@ -313,12 +313,12 @@ class XBudgetedCIMext(object):
 
 if __name__ == '__main__':
 	k = 15
-	budget_base = 100
+	budget_base = 200
 	rounds = 30
 	epsilon = 2
 	base_dir = '../../../graphdata/'
 	graph_files = ['USAir_unweight', 'BA_weight', 'blogs', 'facebook']
-	graph_files = ['blogs', 'BA_weight', 'facebook']
+	graph_files = ['blogs']
 	suffix = '.txt'
 	model = XDiffusionModel()
 
@@ -326,7 +326,7 @@ if __name__ == '__main__':
 		graph_file = base_dir + f + suffix
 		bcim = XBudgetedCIMext(graph_file, model)
 		for bstep in xrange(4):
-			budget = budget_base + 50 * (bstep + 1)
+			budget = budget_base + 100 * (bstep + 1)
 			for i in xrange(6):
 				k = 5 * (i + 1)
 				result_file = '../result/final/' + f

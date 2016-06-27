@@ -313,12 +313,12 @@ class XBudgetedCIMext(object):
 
 if __name__ == '__main__':
 	k = 15
-	budget_base = 100
+	budget_base = 200
 	rounds = 30
 	epsilon = 2
 	base_dir = '../../../graphdata/'
 	graph_files = ['USAir_unweight', 'BA_weight', 'blogs', 'facebook']
-	graph_files = ['blogs', 'BA_weight', 'facebook']
+	graph_files = ['BA_weight']
 	suffix = '.txt'
 	model = XDiffusionModel()
 
